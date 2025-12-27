@@ -241,143 +241,290 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>FileShare - {path}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
-        :root {{ --primary: #00d9ff; --bg: #1a1a2e; --surface: rgba(255,255,255,0.05); }}
+        :root {{ 
+            --primary: #00d9ff; 
+            --primary-hover: #00b3d6;
+            --bg-dark: #121212;
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-main: #e0e0e0;
+            --text-muted: #a0a0a0;
+        }}
+        
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        
         body {{
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            color: #eee;
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at top right, #1f2937, #111827);
+            color: var(--text-main);
             min-height: 100vh;
             padding: 20px;
+            font-size: 15px;
         }}
-        .container {{ max-width: 900px; margin: 0 auto; }}
+        
+        .container {{ 
+            max-width: 1000px; 
+            margin: 0 auto; 
+            animation: fadeIn 0.5s ease-out;
+        }}
+        
+        @keyframes fadeIn {{ from {{ opacity: 0; transform: translateY(10px); }} to {{ opacity: 1; transform: translateY(0); }} }}
+        
+        /* Header */
+        .header {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }}
+        
         h1 {{
-            color: #00d9ff;
-            margin-bottom: 10px;
-            font-size: 1.5em;
+            background: linear-gradient(90deg, #00d9ff, #0077ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 700;
+            font-size: 1.8rem;
         }}
+        
         .path {{
-            color: #888;
-            margin-bottom: 20px;
-            word-break: break-all;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            padding: 12px 20px;
+            border-radius: 12px;
+            color: var(--text-muted);
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.9em;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            backdrop-filter: blur(10px);
         }}
+        
+        /* Search */
         .search-box {{
-            padding: 8px 15px;
-            border-radius: 20px;
-            border: 1px solid rgba(255,255,255,0.2);
-            background: rgba(0,0,0,0.2);
+            padding: 10px 20px;
+            border-radius: 25px;
+            border: 1px solid var(--glass-border);
+            background: rgba(0,0,0,0.3);
             color: white;
             width: 100%;
             max-width: 300px;
-            margin-bottom: 20px;
-        }}
-        .upload-zone {{
-            border: 2px dashed rgba(255,255,255,0.2);
-            border-radius: 10px;
-            padding: 20px;
-            text-align: center;
-            margin-bottom: 20px;
             transition: all 0.3s;
-            cursor: pointer;
         }}
-        .upload-zone:hover, .upload-zone.dragover {{ border-color: var(--primary); background: rgba(0,217,255,0.1); }}
-        .upload-btn {{ display: none; }}
-        .upload-label {{ color: #aaa; cursor: pointer; display: block; }}
+        .search-box:focus {{
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 10px rgba(0, 217, 255, 0.2);
+        }}
         
-        table {{
-            width: 100%;
-            border-collapse: collapse;
-            background: rgba(255,255,255,0.05);
-            border-radius: 10px;
+        /* Upload Zone */
+        .upload-zone {{
+            border: 2px dashed var(--glass-border);
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 30px;
+            background: var(--glass);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
             overflow: hidden;
         }}
-        th, td {{
-            padding: 12px 15px;
-            text-align: left;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+        
+        .upload-zone:hover, .upload-zone.dragover {{ 
+            border-color: var(--primary); 
+            background: rgba(0, 217, 255, 0.05);
+            transform: translateY(-2px);
         }}
+        
+        .upload-icon {{ font-size: 32px; margin-bottom: 10px; display: block; }}
+        .upload-text {{ color: var(--text-muted); font-weight: 500; }}
+        .upload-btn {{ display: none; }}
+        
+        /* Table */
+        .table-wrapper {{
+            background: var(--glass);
+            border-radius: 16px;
+            border: 1px solid var(--glass-border);
+            overflow: hidden;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }}
+        
+        table {{ width: 100%; border-collapse: collapse; min-width: 600px; }}
+        
         th {{
-            background: rgba(0,217,255,0.2);
-            color: #00d9ff;
+            text-align: left;
+            padding: 16px 20px;
+            color: var(--text-muted);
+            font-weight: 600;
+            border-bottom: 1px solid var(--glass-border);
+            background: rgba(0,0,0,0.2);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.1em;
         }}
-        tr:hover {{ background: rgba(255,255,255,0.05); }}
-        a {{ color: #00d9ff; text-decoration: none; }}
-        a:hover {{ text-decoration: underline; }}
         
+        td {{
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--glass-border);
+            transition: background 0.2s;
+            vertical-align: middle;
+        }}
+        
+        tr:last-child td {{ border-bottom: none; }}
+        tr:hover td {{ background: rgba(255, 255, 255, 0.03); }}
+        
+        a {{ color: var(--text-main); text-decoration: none; font-weight: 500; display: flex; align-items: center; gap: 8px; }}
+        a:hover {{ color: var(--primary); }}
+        
+        .file-icon {{ font-size: 1.2em; opacity: 0.8; }}
+        
+        /* Buttons */
+        .btn-group {{ display: flex; gap: 8px; }}
         .btn {{
-            display: inline-block;
-            padding: 5px 12px;
-            border-radius: 5px;
-            font-size: 0.85em;
-            text-decoration: none !important;
-            margin-right: 5px;
-            color: #000 !important;
-            font-weight: bold;
-            cursor: pointer;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 0.8rem;
             border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+            text-decoration: none !important;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
         }}
-        .btn-dl {{ background: #00d9ff; }}
-        .btn-zip {{ background: #ff9800; }}
-        .btn-view {{ background: #4caf50; color: white !important; }}
-        .btn:hover {{ opacity: 0.8; }}
         
-        .footer {{
-            margin-top: 30px;
-            text-align: center;
-            color: #666;
-            font-size: 0.9em;
+        .btn-dl {{ background: rgba(0, 217, 255, 0.1); color: #00d9ff !important; border: 1px solid rgba(0, 217, 255, 0.2); }}
+        .btn-dl:hover {{ background: rgba(0, 217, 255, 0.2); transform: translateY(-1px); }}
+        
+        .btn-zip {{ background: rgba(255, 152, 0, 0.1); color: #ff9800 !important; border: 1px solid rgba(255, 152, 0, 0.2); }}
+        .btn-zip:hover {{ background: rgba(255, 152, 0, 0.2); transform: translateY(-1px); }}
+        
+        .btn-view {{ background: rgba(76, 175, 80, 0.1); color: #4caf50 !important; border: 1px solid rgba(76, 175, 80, 0.2); }}
+        .btn-view:hover {{ background: rgba(76, 175, 80, 0.2); transform: translateY(-1px); }}
+        
+        /* Loading Overlay */
+        .loading-overlay {{
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(5px);
+            z-index: 2000;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }}
+        
+        .spinner {{
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s ease-in-out infinite;
+            margin-bottom: 20px;
+        }}
+        
+        @keyframes spin {{ to {{ transform: rotate(360deg); }} }}
+        
+        .loading-text {{
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 500;
+            letter-spacing: 0.5px;
         }}
         
         /* Preview Modal */
-        .modal {{ display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; }}
-        .modal-content {{ max-width: 90%; max-height: 90%; background: #222; padding: 20px; border-radius: 10px; position: relative; display: flex; flex-direction: column; }}
-        .modal-close {{ position: absolute; top: 10px; right: 15px; color: white; font-size: 24px; cursor: pointer; }}
-        .preview-frame {{ width: 80vw; height: 80vh; border: none; background: white; }}
-        .preview-img {{ max-width: 100%; max-height: 80vh; object-fit: contain; }}
+        .modal {{ display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(5px); }}
+        .modal-content {{ max-width: 90%; max-height: 90%; background: #1e1e1e; padding: 20px; border-radius: 16px; position: relative; display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 1px solid var(--glass-border); }}
+        .modal-close {{ position: absolute; top: 15px; right: 20px; color: white; font-size: 24px; cursor: pointer; opacity: 0.7; transition: 0.2s; }}
+        .modal-close:hover {{ opacity: 1; }}
+        .preview-frame {{ width: 80vw; height: 80vh; border: none; background: white; border-radius: 8px; }}
+        .preview-img {{ max-width: 100%; max-height: 80vh; object-fit: contain; border-radius: 8px; }}
+        
+        .footer {{ margin-top: 40px; text-align: center; color: var(--text-muted); font-size: 0.85em; opacity: 0.7; }}
+        
+        @media (max-width: 768px) {{
+            .header {{ flex-direction: column; align-items: flex-start; }}
+            .search-box {{ max-width: 100%; }}
+            th, td {{ padding: 12px 15px; }}
+            .btn {{ padding: 6px 10px; }}
+        }}
     </style>
 </head>
 <body>
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="spinner"></div>
+        <div class="loading-text">Uploading files... please wait</div>
+    </div>
+
     <div class="container">
-        <h1>📁 FileShare</h1>
-        <p class="path">Path: {path}</p>
+        <div class="header">
+            <h1>📁 FileShare</h1>
+            <input type="text" id="searchInput" class="search-box" placeholder="🔍 Search files..." onkeyup="filterFiles()">
+        </div>
         
-        <input type="text" id="searchInput" class="search-box" placeholder="🔍 Search files..." onkeyup="filterFiles()">
+        <div class="path">
+            <span style="opacity:0.5">LOCATION</span> {path}
+        </div>
         
         <form action="{path}" method="post" enctype="multipart/form-data" id="uploadForm">
             <div class="upload-zone" id="dropZone">
-                <label for="fileInput" class="upload-label">
-                    ☁️ <strong>Drag & Drop files here</strong> or click to upload
+                <input type="file" name="files" id="fileInput" class="upload-btn" multiple onchange="submitUpload()">
+                <label for="fileInput" style="cursor: pointer">
+                    <span class="upload-icon">☁️</span>
+                    <div class="upload-text">Drag & Drop files here or click to browse</div>
+                    <div style="font-size: 0.8em; opacity: 0.6; margin-top: 5px">Max file size: Unlimited</div>
                 </label>
-                <input type="file" name="files" id="fileInput" class="upload-btn" multiple onchange="document.getElementById('uploadForm').submit()">
             </div>
         </form>
 
-        <table id="fileTable">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Size</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                {rows}
-            </tbody>
-        </table>
-        <p class="footer">🔒 FileShare v2.0 | {get_system_username()}@{get_local_ip()}</p>
+        <div class="table-wrapper">
+            <table id="fileTable">
+                <thead>
+                    <tr>
+                        <th width="50%">Name</th>
+                        <th width="20%">Size</th>
+                        <th width="30%">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {rows}
+                </tbody>
+            </table>
+        </div>
+        
+        <p class="footer">🔒 Secured by FileShare v2.5 | {get_system_username()}@{get_local_ip()}</p>
     </div>
 
     <!-- Preview Modal -->
     <div id="previewModal" class="modal" onclick="closeModal(event)">
         <div class="modal-content" onclick="event.stopPropagation()">
             <span class="modal-close" onclick="closeModal()">&times;</span>
-            <h3 id="previewTitle" style="color:white; margin-bottom:10px;"></h3>
+            <h3 id="previewTitle" style="color:white; margin-bottom:15px; font-weight:500">Preview</h3>
             <div id="previewContainer"></div>
         </div>
     </div>
 
     <script>
+        // Upload & Loading Logic
+        function submitUpload() {{
+            const fileInput = document.getElementById('fileInput');
+            if (fileInput.files.length > 0) {{
+                document.getElementById('loadingOverlay').style.display = 'flex';
+                document.getElementById('uploadForm').submit();
+            }}
+        }}
+
         // Search Filter
         function filterFiles() {{
             let input = document.getElementById('searchInput');
@@ -424,7 +571,7 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
             let dt = e.dataTransfer;
             let files = dt.files;
             document.getElementById('fileInput').files = files;
-            document.getElementById('uploadForm').submit();
+            submitUpload();
         }}
 
         // Preview Logic
@@ -434,7 +581,7 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
             let title = document.getElementById('previewTitle');
             
             title.innerText = name;
-            container.innerHTML = 'Loading...';
+            container.innerHTML = '<div style="color:white;text-align:center;padding:20px">Loading preview...</div>';
             modal.style.display = 'flex';
             
             let ext = name.split('.').pop().toLowerCase();
