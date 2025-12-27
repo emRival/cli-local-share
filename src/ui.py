@@ -84,7 +84,7 @@ def create_status_display(url: str, directory: str, password: str, token: str,
     
     files_text = "\n".join(files)
     
-    return info_table, files_text, qr_text
+    return info_table, files_text, None
 
 
 def create_log_display():
@@ -193,13 +193,10 @@ def run_server_with_ui(port: int, directory: str, password: str, token: str,
     protocol = "https" if use_https else "http"
     url = f"{protocol}://{ip}:{port}"
     
-    qr_text = generate_qr_text(url)
-    
     try:
         server, https_enabled = create_server(port, directory, password, token, use_https, allow_upload, allow_remove)
         if use_https and not https_enabled:
             url = f"http://{ip}:{port}"
-            qr_text = generate_qr_text(url)
     except OSError as e:
         console.print(f"[red]Error: Port {port} already in use![/red]")
         return
@@ -234,39 +231,34 @@ def run_server_with_ui(port: int, directory: str, password: str, token: str,
                     Layout(name="main"),
                     Layout(name="footer", size=3)
                 )
-                
-                layout["main"].split_row(
-                    Layout(name="left", ratio=1),
-                    Layout(name="right", ratio=1)
+                layout = Layout()
+                layout.split_column(
+                    Layout(name="header", size=3),
+                    Layout(name="main"),
+                    Layout(name="footer", size=3)
                 )
-                
+
+                # Header with Large URL
                 header_text = Text()
-                header_text.append("📡 FileShare Server Running", style="bold green")
-                header_text.append(f"  |  ⏱️ {remaining_str}", style="dim")
-                header_text.append(f"  |  🛡️ {len(WHITELIST_IPS)} whitelisted", style="dim")
-                layout["header"].update(Panel(header_text, box=box.ROUNDED))
+                header_text.append(f"🔗 {url}", style="bold cyan")
+                header_text.append("  |  ", style="dim")
+                header_text.append("📡 Server Running", style="bold green")
+                layout["header"].update(Panel(header_text, box=box.ROUNDED, style="blue"))
                 
-                info_table, files_text, qr = create_status_display(
-                    url, directory, password, token, timeout, https_enabled, qr_text
+                # Main Content (Full Width)
+                # Combine info and log into one view or simple vertical split if needed
+                # User wants "cleaner", so maybe just Log and minimal status
+                
+                info_table, files_text, _ = create_status_display(
+                    url, directory, password, token, timeout, https_enabled, ""
                 )
                 
-                left_content = Table.grid(padding=1, expand=True)
-                left_content.add_column(ratio=1)
-                left_content.add_row(Panel(info_table, title="📋 Info", border_style="cyan", box=box.ROUNDED))
-                left_content.add_row(Panel(files_text, title="📁 Files", border_style="blue", box=box.ROUNDED))
-                left_content.add_row(Panel(create_log_display(), title="📊 Log", border_style="green", box=box.ROUNDED))
-                
-                layout["left"].update(left_content)
-                
-                # Center QR code vertically and horizontally
-                qr_panel = Panel(
-                    Align.center(qr, vertical="middle"), 
-                    title="📱 QR Code", 
-                    border_style="yellow", 
-                    box=box.ROUNDED,
-                    padding=(1, 1)
-                )
-                layout["right"].update(qr_panel)
+                main_grid = Table.grid(padding=1, expand=True)
+                main_grid.add_column(ratio=1)
+                main_grid.add_row(Panel(info_table, title="📋 Info", border_style="cyan", box=box.ROUNDED))
+                main_grid.add_row(Panel(state.ACCESS_LOG_GROUP, title=f"📊 Live Access Log ({len(state.ACCESS_LOG)})", border_style="green", box=box.ROUNDED))
+
+                layout["main"].update(main_grid)
                 
                 layout["footer"].update(Panel(
                     "[bold red]Press Ctrl+C to stop server[/bold red]",

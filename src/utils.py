@@ -4,7 +4,6 @@ import socket
 import subprocess
 import time
 import ipaddress
-import qrcode
 from typing import Optional, List, Dict
 from rich.console import Console
 from rich.prompt import Prompt
@@ -48,37 +47,7 @@ def format_size(size_bytes):
     return f"{size_bytes:.1f} TB"
 
 
-def generate_qr_text(url: str) -> str:
-    """Generate QR code using Double-Char ANSI for perfect square aspect ratio"""
-    try:
-        qr = qrcode.QRCode(
-            version=1,
-            error_correction=qrcode.constants.ERROR_CORRECT_L,
-            box_size=1,
-            border=1,
-        )
-        qr.add_data(url)
-        qr.make(fit=True)
-        
-        matrix = qr.get_matrix()
-        lines = []
-        
-        # Iterate normally (row by row)
-        # Use 2 spaces per module to create a square (since terminal chars are ~1x2)
-        for row in matrix:
-            line = ""
-            for cell in row:
-                if cell:
-                    # Black module
-                    line += "[on black]  [/]"
-                else:
-                    # White module
-                    line += "[on white]  [/]"
-            lines.append(line)
-        
-        return "\n".join(lines)
-    except Exception as e:
-        return f"[QR Code for: {url}]"
+
 
 
 def ask_robust_int(prompt_text, default=None):

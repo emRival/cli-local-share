@@ -270,10 +270,10 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
                 
                 # Delete (Only if enabled)
                 if self.allow_remove:
+                    # Escape name for JS
+                    safe_name = item['name'].replace("'", "\\'")
                     actions += f'''
-                    <form action="{path}?action=delete&file={item['href']}" method="post" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete {item['name']}?');">
-                        <button type="submit" class="btn btn-del" style="color: #ff3333 !important; border-color: rgba(255, 51, 51, 0.3); background: rgba(255, 51, 51, 0.1);">🗑️</button>
-                    </form>
+                    <button onclick="deleteFile('{item['href']}', '{safe_name}')" class="btn btn-del">🗑️</button>
                     '''
             
             actions += '</div>'
@@ -290,16 +290,14 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
         upload_section = ""
         if self.allow_upload:
             upload_section = f'''
-            <form action="{path}" method="post" enctype="multipart/form-data" id="uploadForm">
-                <div class="upload-zone" id="dropZone">
-                    <input type="file" name="files" id="fileInput" class="upload-btn" multiple onchange="submitUpload()">
-                    <label for="fileInput" style="cursor: pointer">
-                        <span class="upload-icon">☁️</span>
-                        <div class="upload-text">Drag & Drop files here or click to browse</div>
-                        <div style="font-size: 0.8em; opacity: 0.6; margin-top: 5px">Max file size: Unlimited</div>
-                    </label>
-                </div>
-            </form>
+            <div class="upload-zone" id="dropZone">
+                <input type="file" name="files" id="fileInput" class="upload-btn" multiple onchange="uploadFiles(this.files)">
+                <label for="fileInput" style="cursor: pointer">
+                    <span class="upload-icon">☁️</span>
+                    <div class="upload-text">Drag & Drop files here or click to browse</div>
+                    <div style="font-size: 0.8em; opacity: 0.6; margin-top: 5px">Max file size: Unlimited</div>
+                </label>
+            </div>
             '''
 
         html = f'''<!DOCTYPE html>
@@ -510,6 +508,23 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
             font-size: 1.1rem;
             font-weight: 500;
             letter-spacing: 0.5px;
+            margin-bottom: 15px;
+        }}
+
+        .progress-container {{
+            width: 300px;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            overflow: hidden;
+            display: none; /* Hidden by default */
+        }}
+        
+        .progress-bar {{
+            height: 100%;
+            background: var(--primary);
+            width: 0%;
+            transition: width 0.2s linear;
         }}
         
         /* Preview Modal */
@@ -534,7 +549,11 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
     <!-- Loading Overlay -->
     <div id="loadingOverlay" class="loading-overlay">
         <div class="spinner"></div>
-        <div class="loading-text">Uploading files... please wait</div>
+        <div class="loading-text" id="loadingText">Processing...</div>
+        <div class="progress-container" id="progressContainer">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div id="progressPercent" style="color: #888; margin-top: 5px; font-size: 0.9em;"></div>
     </div>
     
     <div class="container">
@@ -577,13 +596,86 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
     </div>
 
     <script>
-        // Upload & Loading Logic
-        function submitUpload() {{
-            const fileInput = document.getElementById('fileInput');
-            if (fileInput.files.length > 0) {{
-                document.getElementById('loadingOverlay').style.display = 'flex';
-                document.getElementById('uploadForm').submit();
+        // Upload Logic (XHR for Progress)
+        function uploadFiles(files) {{
+            if (files.length === 0) return;
+            
+            const overlay = document.getElementById('loadingOverlay');
+            const progressContainer = document.getElementById('progressContainer');
+            const progressBar = document.getElementById('progressBar');
+            const progressPercent = document.getElementById('progressPercent');
+            const loadingText = document.getElementById('loadingText');
+            
+            overlay.style.display = 'flex';
+            progressContainer.style.display = 'block';
+            loadingText.innerText = "Uploading " + files.length + " file(s)...";
+            
+            const formData = new FormData();
+            for (let i = 0; i < files.length; i++) {{
+                formData.append('files', files[i]);
             }}
+            
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', window.location.href, true);
+            
+            xhr.upload.onprogress = function(e) {{
+                if (e.lengthComputable) {{
+                    const percentComplete = (e.loaded / e.total) * 100;
+                    progressBar.style.width = percentComplete + '%';
+                    progressPercent.innerText = Math.round(percentComplete) + '%';
+                }}
+            }};
+            
+            xhr.onload = function() {{
+                if (xhr.status === 200 || xhr.status === 303) {{
+                    loadingText.innerText = "✅ Upload Complete!";
+                    progressBar.style.width = '100%';
+                    setTimeout(() => window.location.reload(), 500);
+                }} else {{
+                    alert("Upload failed: " + xhr.statusText);
+                    overlay.style.display = 'none';
+                }}
+            }};
+            
+            xhr.onerror = function() {{
+                alert("Upload failed (Network Error)");
+                overlay.style.display = 'none';
+            }};
+            
+            xhr.send(formData);
+        }}
+
+        // Delete Logic (Fetch)
+        function deleteFile(url, name) {{
+            if (!confirm('Are you sure you want to delete ' + name + '?')) return;
+            
+            const overlay = document.getElementById('loadingOverlay');
+            const loadingText = document.getElementById('loadingText');
+            const progressContainer = document.getElementById('progressContainer');
+            
+            overlay.style.display = 'flex';
+            progressContainer.style.display = 'none'; // No progress bar for delete
+            loadingText.innerText = "Deleting " + name + "...";
+            
+            fetch(url, {{ method: 'POST' }})
+            .then(response => {{
+                if (response.ok) {{
+                    // Remove row from table for instant SPA feel
+                    // We need to find the row. URL contains href which links to row.
+                    // Actually, simpler to just reload to be safe, or remove if we have ID.
+                    // Let's assume re-render for consistency, but user wanted "Animation".
+                    // The "Deleting..." overlay IS the animation.
+                    loadingText.innerText = "🗑️ Deleted!";
+                    setTimeout(() => window.location.reload(), 500);
+                }} else {{
+                    alert("Delete failed!");
+                    overlay.style.display = 'none';
+                }}
+            }})
+            .catch(err => {{
+                alert("Delete error: " + err);
+                overlay.style.display = 'none';
+            }});
         }}
 
         // Search Filter
