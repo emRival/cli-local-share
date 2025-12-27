@@ -596,21 +596,121 @@ def run_server_with_ui(port: int, directory: str, password: str, token: str,
         console.print("\n[cyan]👋 Server stopped.[/cyan]\n")
 
 
+def browse_directory() -> str:
+    """Interactive directory browser"""
+    current_dir = os.getcwd()
+    
+    while True:
+        console.clear()
+        console.print(f"\n[bold cyan]📂 DIRECTORY BROWSER[/bold cyan]\n")
+        console.print(f"[dim]Current: {current_dir}[/dim]\n")
+        
+        # List contents
+        items = []
+        try:
+            # Add parent directory option
+            items.append({"name": "..", "type": "dir", "size": ""})
+            
+            for name in sorted(os.listdir(current_dir)):
+                path = os.path.join(current_dir, name)
+                if os.path.isdir(path):
+                    items.append({"name": name, "type": "dir", "size": ""})
+                else:
+                    size = format_size(os.path.getsize(path))
+                    items.append({"name": name, "type": "file", "size": size})
+        except PermissionError:
+            console.print("[red]❌ Permission denied![/red]")
+            current_dir = os.path.dirname(current_dir)
+            time.sleep(1)
+            continue
+        
+        # Display items
+        table = Table(show_header=True, box=box.SIMPLE)
+        table.add_column("#", style="dim", width=4)
+        table.add_column("Name", style="white")
+        table.add_column("Type", style="cyan", width=8)
+        table.add_column("Size", style="dim", width=10)
+        
+        for i, item in enumerate(items):
+            icon = "📁" if item["type"] == "dir" else "📄"
+            table.add_row(
+                str(i),
+                f"{icon} {item['name']}",
+                item["type"],
+                item["size"]
+            )
+        
+        console.print(table)
+        
+        console.print("\n[yellow]Commands:[/yellow]")
+        console.print("  [cyan]<number>[/cyan] - Enter directory / select")
+        console.print("  [cyan]s[/cyan]       - Select current directory")
+        console.print("  [cyan]p <path>[/cyan] - Go to path directly")
+        console.print("  [cyan]h[/cyan]       - Go to home directory")
+        console.print("  [cyan]q[/cyan]       - Cancel\n")
+        
+        choice = input("> ").strip().lower()
+        
+        if choice == 'q':
+            return os.getcwd()
+        elif choice == 's':
+            return current_dir
+        elif choice == 'h':
+            current_dir = os.path.expanduser("~")
+        elif choice.startswith('p '):
+            new_path = choice[2:].strip()
+            if os.path.isdir(new_path):
+                current_dir = os.path.abspath(new_path)
+            else:
+                console.print(f"[red]Path not found: {new_path}[/red]")
+                time.sleep(1)
+        elif choice.isdigit():
+            idx = int(choice)
+            if 0 <= idx < len(items):
+                selected = items[idx]
+                if selected["type"] == "dir":
+                    if selected["name"] == "..":
+                        current_dir = os.path.dirname(current_dir)
+                    else:
+                        current_dir = os.path.join(current_dir, selected["name"])
+                else:
+                    # If file selected, use its parent directory
+                    console.print(f"[yellow]Selected directory: {current_dir}[/yellow]")
+                    if Confirm.ask("Use this directory?", default=True):
+                        return current_dir
+
+
 def main():
+
     """Main entry point"""
     console.clear()
     print_banner()
     
     console.print("\n[bold cyan]📁 FILE SHARE SETUP[/bold cyan]\n")
     
-    # Directory
-    default_dir = os.getcwd()
-    console.print(f"[yellow]Directory to share[/yellow] [default: {default_dir}]")
-    directory = input("> ").strip() or default_dir
+    # Directory selection
+    console.print("[yellow]Select directory to share:[/yellow]")
+    console.print("  [cyan]1[/cyan] - Browse (interactive file browser)")
+    console.print("  [cyan]2[/cyan] - Type path manually")
+    console.print("  [cyan]3[/cyan] - Use current directory\n")
+    
+    dir_choice = Prompt.ask("Choice", choices=["1", "2", "3"], default="1")
+    
+    if dir_choice == "1":
+        directory = browse_directory()
+    elif dir_choice == "2":
+        console.print(f"[dim]Current: {os.getcwd()}[/dim]")
+        directory = input("Path> ").strip()
+        if not directory:
+            directory = os.getcwd()
+    else:
+        directory = os.getcwd()
     
     if not os.path.isdir(directory):
         console.print("[red]Error: Directory not found![/red]")
         return
+    
+    console.print(f"\n[green]✓ Selected: {directory}[/green]\n")
     
     # Port
     port = int(Prompt.ask("[yellow]Port[/yellow]", default="8080"))
