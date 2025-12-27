@@ -1053,7 +1053,11 @@ def main():
         console.print("[red]Error: Directory not found![/red]")
         return
     
-    console.print(f"\n[green]✓ Selected: {directory}[/green]\n")
+    # Clear screen to fix overlap issues from browser
+    console.clear()
+    print_banner()
+    console.print(f"\n[bold cyan]📁 FILE SHARE SETUP[/bold cyan]\n")
+    console.print(f"[green]✓ Selected: {directory}[/green]\n")
     
     # Port
     while True:
