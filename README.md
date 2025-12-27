@@ -65,8 +65,8 @@ just run
 
 ### Debian / Ubuntu
 ```bash
-sudo apt update && sudo apt upgrade -y
-sudo apt install git make python3 python3-pip -y
+apt update && apt upgrade -y
+apt install git make python3 python3-pip -y
 git clone https://github.com/emRival/scam-check.git
 cd scam-check
 make install
