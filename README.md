@@ -1,40 +1,36 @@
-<h1 align="center">FileShare</h1>
+<h1 align="center">FileShare v2.0</h1>
 
 <p align="center">
   <img src="https://img.shields.io/badge/Platform-Debian%20%7C%20Ubuntu%20%7C%20Linux-green?style=for-the-badge">
   <img src="https://img.shields.io/badge/Python-3.8+-blue?style=for-the-badge&logo=python&logoColor=white">
+  <img src="https://img.shields.io/badge/Security-Enhanced-red?style=for-the-badge&logo=security">
 </p>
 
 <p align="center">
-  <b>📁 Simple File Sharing Server with Password Protection</b>
+  <b>📁 Secure File Sharing Server with Enhanced Security</b>
 </p>
 
 ---
 
-## ✨ Fitur
+## 🔒 Security Features
 
-| Fitur | Deskripsi |
-|-------|-----------|
-| 📁 **File Sharing** | Share folder via HTTP, bisa diakses dari browser |
-| 🔐 **Password Protection** | Lindungi akses dengan password |
-| ⏱️ **Session Timeout** | Auto-stop setelah waktu tertentu |
-| 📱 **QR Code** | Scan untuk akses cepat dari HP |
-| 📊 **Live Log** | Lihat siapa yang mengakses secara real-time |
-| 🎨 **UI Interaktif** | Tampilan CLI yang menarik |
+| Feature | Description |
+|---------|-------------|
+| **🔐 HTTPS** | Self-signed SSL certificate |
+| **🎫 Access Token** | Random token untuk autentikasi |
+| **🛡️ Rate Limiting** | Block IP setelah 5x gagal login (15 menit) |
+| **📋 IP Whitelist** | Hanya IP tertentu yang bisa akses |
+| **🔍 Network Scanner** | Scan jaringan untuk pilih IP whitelist |
+| **⏱️ Session Timeout** | Auto-stop setelah waktu tertentu |
 
 ---
 
 ## ⚡ Instalasi
 
 ```bash
-# Clone repository
 git clone https://github.com/emRival/scam-check.git
 cd scam-check
-
-# Install dependencies
 pip3 install --break-system-packages -r requirements.txt
-
-# Jalankan
 python3 run.py
 ```
 
@@ -46,11 +42,28 @@ python3 run.py
 python3 run.py
 ```
 
-Lalu ikuti prompt:
-1. **Directory** - Folder yang ingin di-share (default: current directory)
+**Setup wizard akan memandu Anda:**
+
+1. **Directory** - Folder yang akan di-share
 2. **Port** - Port server (default: 8080)
-3. **Password** - Password untuk akses (opsional)
-4. **Timeout** - Berapa menit server aktif (default: 30 menit)
+3. **HTTPS** - Aktifkan enkripsi SSL
+4. **Password** - Password untuk akses
+5. **Token** - Generate random access token
+6. **Timeout** - Durasi session
+7. **IP Whitelist** - Pilih metode:
+   - Manual: Input IP satu per satu
+   - Scan: Scan jaringan dan pilih dari list
+   - Both: Kombinasi keduanya
+
+---
+
+## 🔑 Autentikasi
+
+Ada 3 cara login:
+
+1. **Password only**: Masukkan password saja
+2. **Token only**: Masukkan token sebagai password
+3. **Combined**: Masukkan `password:token`
 
 ---
 
@@ -59,28 +72,21 @@ Lalu ikuti prompt:
 ```
 ╔═══════════════════════════════════════════════════════════╗
 ║   ███████╗██╗██╗     ███████╗                             ║
-║   █████╗  ██║██║     █████╗                               ║
-║   ██║     ██║███████╗███████╗                             ║
-║   SHARE - Simple File Sharing with Password               ║
+║   SHARE v2.0 - Secure File Sharing                        ║
+║   🔒 HTTPS • 🛡️ Rate Limit • 📋 IP Whitelist             ║
 ╚═══════════════════════════════════════════════════════════╝
 
-📡 FileShare Server Running  |  ⏱️ Remaining: 29m 45s
+📡 FileShare Server Running  |  ⏱️ 29m 45s  |  🛡️ 3 whitelisted
 
-┌─ 📋 Server Info ─────────────────────────────────────────┐
-│  🌐 URL        http://192.168.1.100:8080                 │
-│  📁 Directory  /home/user/shared                          │
-│  🔐 Password   mypassword                                 │
-│  ⏱️  Timeout   30 menit                                   │
+┌─ 📋 Info ────────────────────────────────────────────────┐
+│  🌐 URL        https://192.168.1.100:8080                │
+│  🔐 Protocol   🔒 HTTPS                                   │
+│  🔑 Password   ********                                   │
+│  🎫 Token      abc123def456...                            │
+│  📋 Whitelist  3 IPs                                      │
+│  🚫 Blocked    0 IPs                                      │
 └──────────────────────────────────────────────────────────┘
 ```
-
----
-
-## 🔒 Keamanan
-
-- Password menggunakan HTTP Basic Auth
-- Session timeout untuk auto-stop
-- Akses log untuk monitoring
 
 ---
 
