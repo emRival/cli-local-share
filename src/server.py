@@ -334,10 +334,10 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
     def get_upload_path(self, filename: str) -> Optional[str]:
         """Securely resolve upload path"""
         import os
-        from werkzeug.utils import secure_filename as werkzeug_secure_filename
         
-        # Simple secure filename implementation if werkzeug not available
+        # Simple secure filename implementation (no external deps)
         def secure_filename(name):
+            # Keep only safe characters
             return "".join([c for c in name if c.isalpha() or c.isdigit() or c in '._-'])
             
         clean_name = secure_filename(os.path.basename(filename))
