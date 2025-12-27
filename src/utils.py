@@ -49,7 +49,7 @@ def format_size(size_bytes):
 
 
 def generate_qr_text(url: str) -> str:
-    """Generate QR code using Half-Block characters for perfect alignment"""
+    """Generate QR code using Double-Char ANSI for perfect square aspect ratio"""
     try:
         qr = qrcode.QRCode(
             version=1,
@@ -63,28 +63,17 @@ def generate_qr_text(url: str) -> str:
         matrix = qr.get_matrix()
         lines = []
         
-        # Iterate rows in steps of 2
-        for r in range(0, len(matrix), 2):
+        # Iterate normally (row by row)
+        # Use 2 spaces per module to create a square (since terminal chars are ~1x2)
+        for row in matrix:
             line = ""
-            row1 = matrix[r]
-            row2 = matrix[r+1] if r+1 < len(matrix) else [False]*len(row1)
-            
-            for c in range(len(row1)):
-                top = row1[c]
-                bot = row2[c]
-                
-                # Logic: True = Black (Dark), False = White (Light)
-                # '▀' (Upper Half Block) uses Foreground for Top, Background for Bottom
-                
-                if top and bot:     # Both Dark
-                    line += "[on black] [/]" # Space with black BG
-                elif top and not bot: # Top Dark, Bot Light
-                    line += "[black on white]▀[/]"
-                elif not top and bot: # Top Light, Bot Dark
-                    line += "[white on black]▀[/]"
-                else:               # Both Light
-                    line += "[on white] [/]" # Space with white BG
-            
+            for cell in row:
+                if cell:
+                    # Black module
+                    line += "[on black]  [/]"
+                else:
+                    # White module
+                    line += "[on white]  [/]"
             lines.append(line)
         
         return "\n".join(lines)

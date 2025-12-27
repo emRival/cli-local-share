@@ -157,9 +157,9 @@ def browse_directory() -> str:
 class ReusableTCPServer(socketserver.TCPServer):
     allow_reuse_address = True
 
-def create_server(port: int, directory: str, password: str = None, token: str = None, use_https: bool = False):
+def create_server(port: int, directory: str, password: str = None, token: str = None, use_https: bool = False, allow_upload: bool = False, allow_remove: bool = False):
     """Create HTTP/HTTPS server"""
-    handler = partial(SecureAuthHandler, password=password, token=token, directory=directory)
+    handler = partial(SecureAuthHandler, password=password, token=token, directory=directory, allow_upload=allow_upload, allow_remove=allow_remove)
     server = ReusableTCPServer(("", port), handler)
     
     if use_https:
@@ -179,22 +179,9 @@ def create_server(port: int, directory: str, password: str = None, token: str = 
 
 
 def run_server_with_ui(port: int, directory: str, password: str, token: str, 
-                        timeout: int, use_https: bool):
+                        timeout: int, use_https: bool, allow_upload: bool = False, allow_remove: bool = False):
     """Run server with live UI"""
     
-    # Needs to modify globals in state module? 
-    # Python imports are references, so modifying list/dict content works.
-    # But reassigning simple types (bool, int) needs care.
-    # SERVER_RUNNING is boolean, we need to handle it.
-    # For now, we assume this function controls the main loop.
-    
-    global SERVER_RUNNING
-    
-    # Re-import to ensure we have the reference if we need to modify 
-    # (though mutating the imported name won't affect other modules generally unless it's a mutable container)
-    # Actually, modifying SERVER_RUNNING here only affects the local name if we don't import it carefully.
-    # Refactoring approach: use a container or dedicated state manager.
-    # For this script, we can keep it simple: access state directly.
     import src.state as state
     
     state.ACCESS_LOG.clear()
@@ -209,7 +196,7 @@ def run_server_with_ui(port: int, directory: str, password: str, token: str,
     qr_text = generate_qr_text(url)
     
     try:
-        server, https_enabled = create_server(port, directory, password, token, use_https)
+        server, https_enabled = create_server(port, directory, password, token, use_https, allow_upload, allow_remove)
         if use_https and not https_enabled:
             url = f"http://{ip}:{port}"
             qr_text = generate_qr_text(url)

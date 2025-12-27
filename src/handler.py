@@ -12,10 +12,12 @@ from src.security import is_ip_blocked, is_ip_whitelisted, log_access, record_fa
 class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
     """HTTP handler with enhanced security and download UI"""
     
-    def __init__(self, *args, password=None, token=None, directory=None, **kwargs):
+    def __init__(self, *args, password=None, token=None, directory=None, allow_upload=False, allow_remove=False, **kwargs):
         self.auth_password = password
         self.auth_token = token
         self.share_directory = directory
+        self.allow_upload = allow_upload
+        self.allow_remove = allow_remove
         super().__init__(*args, directory=directory, **kwargs)
     
     def log_message(self, format, *args):
@@ -56,7 +58,7 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
         return full_path
 
     def do_POST(self):
-        """Handle file uploads"""
+        """Handle file uploads and deletions"""
         client_ip = self.client_address[0]
         
         # Security checks
@@ -71,7 +73,46 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
         if not self.check_auth():
             self.do_AUTHHEAD()
             return
+
+        # Check for query params (e.g. ?action=delete)
+        parsed_path = urllib.parse.urlparse(self.path)
+        query = urllib.parse.parse_qs(parsed_path.query)
+        
+        # Handle Deletion
+        if query.get('action') == ['delete']:
+            if not self.allow_remove:
+                self.send_error(403, "Content-Deletion-Forbidden: File deletion is disabled.")
+                return
+                
+            file_to_delete = query.get('file', [''])[0]
+            if not file_to_delete:
+                self.send_error(400, "Bad Request: No file specified")
+                return
             
+            # Translate path relative to current directory
+            base_dir = self.translate_path(parsed_path.path)
+            target_file = os.path.join(base_dir, os.path.basename(file_to_delete))
+            
+            if os.path.isfile(target_file):
+                try:
+                    os.remove(target_file)
+                    log_access(client_ip, f"🗑️ DELETE: {file_to_delete}", "✅ OK")
+                except Exception as e:
+                    log_access(client_ip, f"DELETE FAIL: {file_to_delete}", "❌ ERR")
+                    self.send_error(500, f"Error deleting file: {e}")
+                    return
+            
+            # Redirect back
+            self.send_response(303)
+            self.send_header('Location', parsed_path.path)
+            self.end_headers()
+            return
+
+        # Handle Upload
+        if not self.allow_upload:
+            self.send_error(403, "Content-Upload-Forbidden: Uploads are disabled.")
+            return
+
         # Check content type
         content_type = self.headers.get('Content-Type', '')
         if 'multipart/form-data' not in content_type:
@@ -102,19 +143,16 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
                                 f.write(content)
                             uploaded_files.append(os.path.basename(upload_path))
             
-            # Redirect back to the page
+            if uploaded_files:
+                log_access(client_ip, f"⬆️ Uploaded: {', '.join(uploaded_files)}", "✅ OK")
+                
             self.send_response(303)
             self.send_header('Location', self.path)
             self.end_headers()
             
-            if uploaded_files:
-                log_access(client_ip, f"⬆️ Uploaded: {', '.join(uploaded_files)}", "✅ OK")
-            else:
-                log_access(client_ip, "Upload attempt (no file)", "⚠️ FAIL")
-                
         except Exception as e:
-            self.send_error(500, f"Upload failed: {str(e)}")
             log_access(client_ip, "Upload error", "❌ ERR")
+            self.send_error(500, f"Upload error: {e}")
     
     def send_blocked_response(self):
         self.send_response(403)
@@ -218,23 +256,52 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
         # Generate HTML Rows
         rows = ""
         for item in items:
+            actions = '<div class="btn-group">'
+            
             if item['is_dir'] and item['name'] != '📁 ..':
-                download_btn = f'<a href="{item["download"]}" class="btn btn-zip">📦 ZIP</a>'
+                # Zip feature placeholder
+                actions += f'<a href="{item["download"]}" class="btn btn-zip">📦 ZIP</a>'
             elif not item['is_dir']:
-                download_btn = f'<a href="{item["download"]}" download class="btn btn-dl">⬇️ Download</a>'
+                # Download
+                actions += f'<a href="{item["download"]}" download class="btn btn-dl">⬇ DL</a>'
+                # Preview
                 if item['preview']:
-                    download_btn += f' <button onclick="previewFile(\'{item["href"]}\', \'{item["name"]}\')" class="btn btn-view">👁️ View</button>'
-            else:
-                download_btn = ''
+                    actions += f'<button onclick="previewFile(\'{item["href"]}\', \'{item["name"]}\')" class="btn btn-view">👁️ View</button>'
+                
+                # Delete (Only if enabled)
+                if self.allow_remove:
+                    actions += f'''
+                    <form action="{path}?action=delete&file={item['href']}" method="post" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete {item['name']}?');">
+                        <button type="submit" class="btn btn-del" style="color: #ff3333 !important; border-color: rgba(255, 51, 51, 0.3); background: rgba(255, 51, 51, 0.1);">🗑️</button>
+                    </form>
+                    '''
+            
+            actions += '</div>'
             
             rows += f'''
             <tr>
                 <td><a href="{item['href']}">{item['name']}</a></td>
                 <td>{item['size']}</td>
-                <td>{download_btn}</td>
+                <td>{actions}</td>
             </tr>
             '''
         
+        # Conditional Upload Form
+        upload_section = ""
+        if self.allow_upload:
+            upload_section = f'''
+            <form action="{path}" method="post" enctype="multipart/form-data" id="uploadForm">
+                <div class="upload-zone" id="dropZone">
+                    <input type="file" name="files" id="fileInput" class="upload-btn" multiple onchange="submitUpload()">
+                    <label for="fileInput" style="cursor: pointer">
+                        <span class="upload-icon">☁️</span>
+                        <div class="upload-text">Drag & Drop files here or click to browse</div>
+                        <div style="font-size: 0.8em; opacity: 0.6; margin-top: 5px">Max file size: Unlimited</div>
+                    </label>
+                </div>
+            </form>
+            '''
+
         html = f'''<!DOCTYPE html>
 <html>
 <head>
@@ -410,6 +477,9 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
         .btn-view {{ background: rgba(76, 175, 80, 0.1); color: #4caf50 !important; border: 1px solid rgba(76, 175, 80, 0.2); }}
         .btn-view:hover {{ background: rgba(76, 175, 80, 0.2); transform: translateY(-1px); }}
         
+        .btn-del {{ background: rgba(255, 51, 51, 0.1); color: #ff3333 !important; border: 1px solid rgba(255, 51, 51, 0.2); }}
+        .btn-del:hover {{ background: rgba(255, 51, 51, 0.2); transform: translateY(-1px); }}
+        
         /* Loading Overlay */
         .loading-overlay {{
             position: fixed;
@@ -466,7 +536,7 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
         <div class="spinner"></div>
         <div class="loading-text">Uploading files... please wait</div>
     </div>
-
+    
     <div class="container">
         <div class="header">
             <h1>📁 FileShare</h1>
@@ -477,24 +547,15 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
             <span style="opacity:0.5">LOCATION</span> {path}
         </div>
         
-        <form action="{path}" method="post" enctype="multipart/form-data" id="uploadForm">
-            <div class="upload-zone" id="dropZone">
-                <input type="file" name="files" id="fileInput" class="upload-btn" multiple onchange="submitUpload()">
-                <label for="fileInput" style="cursor: pointer">
-                    <span class="upload-icon">☁️</span>
-                    <div class="upload-text">Drag & Drop files here or click to browse</div>
-                    <div style="font-size: 0.8em; opacity: 0.6; margin-top: 5px">Max file size: Unlimited</div>
-                </label>
-            </div>
-        </form>
+        {upload_section}
 
         <div class="table-wrapper">
             <table id="fileTable">
                 <thead>
                     <tr>
-                        <th width="50%">Name</th>
-                        <th width="20%">Size</th>
-                        <th width="30%">Actions</th>
+                        <th width="35%">Name</th>
+                        <th width="15%">Size</th>
+                        <th width="50%">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -503,7 +564,7 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
             </table>
         </div>
         
-        <p class="footer">🔒 Secured by FileShare v2.5 | {get_system_username()}@{get_local_ip()}</p>
+        <p class="footer">🔒 Secured by FileShare v3.0 | {get_system_username()}@{get_local_ip()}</p>
     </div>
 
     <!-- Preview Modal -->

@@ -57,6 +57,8 @@ def main():
         default_https = config.get("use_https", True)
         default_auth = config.get("auth_choice", "1")
         default_timeout = str(config.get("timeout", "30"))
+        default_upload = config.get("allow_upload", False)
+        default_remove = config.get("allow_remove", False)
         
         if not os.path.isdir(default_dir):
             default_dir = os.getcwd()
@@ -147,6 +149,11 @@ def main():
         # Timeout
         timeout = ask_robust_int("[yellow]Session timeout (minutes, 0=unlimited)[/yellow]", default=default_timeout)
         
+        # Permissions
+        console.print("")
+        allow_upload = Confirm.ask("[yellow]Enable File Upload?[/yellow] (Allows visitors to upload files)", default=default_upload)
+        allow_remove = Confirm.ask("[yellow]Enable File Deletion? [/yellow] [red](WARNING: Visitors can delete files!)[/red]", default=default_remove)
+
         # Save config BEFORE starting server
         try:
             new_config = {
@@ -154,7 +161,9 @@ def main():
                 "port": port,
                 "use_https": use_https,
                 "auth_choice": auth_choice,
-                "timeout": timeout
+                "timeout": timeout,
+                "allow_upload": allow_upload,
+                "allow_remove": allow_remove
             }
             save_config(new_config)
             # console.print("[dim]Configuration saved.[/dim]")
@@ -165,7 +174,7 @@ def main():
         setup_whitelist()
         
         # Start Server
-        run_server_with_ui(port, directory, password, token, timeout, use_https)
+        run_server_with_ui(port, directory, password, token, timeout, use_https, allow_upload, allow_remove)
             
     except KeyboardInterrupt:
         print("\n\nExiting...")
