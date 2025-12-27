@@ -338,12 +338,14 @@ def main():
     
     # Get directory
     default_dir = os.getcwd()
-    directory = console.input(f"[yellow]Directory to share[/yellow] [{default_dir}]: ").strip()
+    # Use plain print for default_dir to avoid markup issues
+    console.print(f"[yellow]Directory to share[/yellow] [default: {default_dir}]")
+    directory = input("> ").strip()
     if not directory:
         directory = default_dir
     
     if not os.path.isdir(directory):
-        console.print(f"[red]Error: Directory '{directory}' tidak ditemukan![/red]")
+        console.print(f"[red]Error: Directory tidak ditemukan![/red]")
         return
     
     # Get port
