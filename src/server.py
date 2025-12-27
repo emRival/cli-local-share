@@ -630,6 +630,10 @@ def create_status_display(url: str, directory: str, password: str, token: str,
     if token: auth_status.append("Token")
     if not password and not token: auth_status.append("None")
     info_table.add_row("🔑 Auth", ", ".join(auth_status))
+    
+    # Show full token if present, wrapping if needed
+    if token:
+        info_table.add_row("🎫 Token", f"[bold]{token}[/bold]")
 
     # Files
     files = []
@@ -829,7 +833,11 @@ def run_server_with_ui(port: int, directory: str, password: str, token: str,
     finally:
         console.show_cursor(True)
         SERVER_RUNNING = False
-        server.shutdown()
+        try:
+            server.shutdown()
+            server.server_close()  # Release port immediately
+        except:
+            pass
         console.print("\n[cyan]👋 Server stopped.[/cyan]\n")
 
 
