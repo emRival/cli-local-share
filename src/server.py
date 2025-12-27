@@ -1001,6 +1001,23 @@ def browse_directory() -> str:
                         return current_dir
 
 
+def ask_robust_int(prompt_text: str, default: str) -> int:
+    """Robust integer input with ANSI code stripping"""
+    while True:
+        try:
+            val_input = Prompt.ask(prompt_text, default=default)
+            # Strip ANSI codes and non-digits
+            val_clean = ''.join(filter(str.isdigit, val_input))
+            
+            if not val_clean:
+                console.print("[red]❌ Invalid input! Please enter a number.[/red]")
+                continue
+                
+            return int(val_clean)
+        except ValueError:
+            console.print("[red]❌ Invalid input! Please enter a valid number.[/red]")
+
+
 def main():
 
     """Main entry point"""
@@ -1040,28 +1057,17 @@ def main():
     
     # Port
     while True:
-        try:
-            port_input = Prompt.ask("[yellow]Port[/yellow]", default="8080")
-            # Strip ANSI codes and non-digits which might appear if user presses arrow keys
-            port_clean = ''.join(filter(str.isdigit, port_input))
+        port = ask_robust_int("[yellow]Port[/yellow]", default="8080")
+        
+        if port < 1024 or port > 65535:
+            console.print("[red]❌ Port must be between 1024 and 65535[/red]")
+            continue
             
-            if not port_clean:
-                console.print("[red]❌ Invalid input! Please enter a number.[/red]")
-                continue
-                
-            port = int(port_clean)
-            
-            if port < 1024 or port > 65535:
-                console.print("[red]❌ Port must be between 1024 and 65535[/red]")
-                continue
-                
-            if is_port_in_use(port):
-                console.print(f"[red]❌ Port {port} is already in use by another application![/red]")
-                console.print("[yellow]Please choose a different port.[/yellow]")
-            else:
-                break
-        except ValueError:
-            console.print("[red]❌ Invalid input! Please enter a valid number.[/red]")
+        if is_port_in_use(port):
+            console.print(f"[red]❌ Port {port} is already in use by another application![/red]")
+            console.print("[yellow]Please choose a different port.[/yellow]")
+        else:
+            break
     
     # HTTPS
     use_https = Confirm.ask("[yellow]Enable HTTPS?[/yellow]", default=True)
@@ -1099,7 +1105,7 @@ def main():
         console.print("[yellow]⚠️ No authentication - anyone can access![/yellow]\n")
     
     # Timeout
-    timeout = int(Prompt.ask("[yellow]Session timeout (minutes, 0=unlimited)[/yellow]", default="30"))
+    timeout = ask_robust_int("[yellow]Session timeout (minutes, 0=unlimited)[/yellow]", default="30")
     
     # Whitelist
     setup_whitelist()
