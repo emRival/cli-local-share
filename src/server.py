@@ -63,6 +63,16 @@ WHITELIST_IPS: Set[str] = set()
 # Security settings
 MAX_FAILED_ATTEMPTS = 5
 BLOCK_DURATION_MINUTES = 15
+SYSTEM_USERNAME = ""
+
+
+def get_system_username() -> str:
+    """Get system username"""
+    import getpass
+    try:
+        return getpass.getuser()
+    except:
+        return "user"
 
 
 def get_local_ip() -> str:
@@ -237,11 +247,12 @@ def is_ip_whitelisted(ip: str) -> bool:
 
 
 class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
-    """HTTP handler with enhanced security"""
+    """HTTP handler with enhanced security and download UI"""
     
     def __init__(self, *args, password=None, token=None, directory=None, **kwargs):
         self.auth_password = password
         self.auth_token = token
+        self.share_directory = directory
         super().__init__(*args, directory=directory, **kwargs)
     
     def log_message(self, format, *args):
@@ -249,7 +260,8 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
     
     def do_AUTHHEAD(self):
         self.send_response(401)
-        self.send_header('WWW-Authenticate', 'Basic realm="FileShare Secure"')
+        realm = f'FileShare - User: {get_system_username()}'
+        self.send_header('WWW-Authenticate', f'Basic realm="{realm}"')
         self.send_header('Content-type', 'text/html')
         self.end_headers()
     
@@ -257,13 +269,13 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
         self.send_response(403)
         self.send_header('Content-type', 'text/html')
         self.end_headers()
-        self.wfile.write(b'<h1>403 Forbidden</h1><p>Your IP has been blocked due to too many failed attempts.</p>')
+        self.wfile.write(b'<h1>403 Forbidden</h1><p>Your IP has been blocked.</p>')
     
     def send_whitelist_denied(self):
         self.send_response(403)
         self.send_header('Content-type', 'text/html')
         self.end_headers()
-        self.wfile.write(b'<h1>403 Forbidden</h1><p>Your IP is not in the whitelist.</p>')
+        self.wfile.write(b'<h1>403 Forbidden</h1><p>Your IP is not whitelisted.</p>')
     
     def check_auth(self) -> bool:
         """Check authentication"""
@@ -282,48 +294,258 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
             decoded = base64.b64decode(auth_data).decode('utf-8')
             username, password = decoded.split(':', 1)
             
-            # Check password
+            # Check password or token
             if self.auth_password and password == self.auth_password:
                 return True
-            
-            # Check token (username can be 'token' and password is the token)
             if self.auth_token and password == self.auth_token:
                 return True
-            
-            # Check combined (password:token format)
-            if self.auth_password and self.auth_token:
-                if password == f"{self.auth_password}:{self.auth_token}":
-                    return True
             
             return False
         except:
             return False
     
+    def generate_html_page(self, path: str) -> bytes:
+        """Generate custom HTML page with download buttons"""
+        import urllib.parse
+        
+        full_path = self.translate_path(path)
+        
+        if not os.path.isdir(full_path):
+            return None
+        
+        items = []
+        try:
+            entries = os.listdir(full_path)
+        except OSError:
+            entries = []
+        
+        # Add parent directory link if not root
+        if path != '/':
+            items.append({
+                'name': '📁 ..',
+                'href': urllib.parse.quote(os.path.dirname(path.rstrip('/')) or '/'),
+                'size': '',
+                'is_dir': True,
+                'download': ''
+            })
+        
+        for name in sorted(entries):
+            if name.startswith('.'):
+                continue
+            item_path = os.path.join(full_path, name)
+            href = urllib.parse.quote(os.path.join(path, name))
+            
+            if os.path.isdir(item_path):
+                # Count items in folder
+                try:
+                    count = len(os.listdir(item_path))
+                    size = f"{count} items"
+                except:
+                    size = ""
+                items.append({
+                    'name': f'📁 {name}',
+                    'href': href + '/',
+                    'size': size,
+                    'is_dir': True,
+                    'download': f'?download_zip={urllib.parse.quote(name)}'
+                })
+            else:
+                size = format_size(os.path.getsize(item_path))
+                items.append({
+                    'name': f'📄 {name}',
+                    'href': href,
+                    'size': size,
+                    'is_dir': False,
+                    'download': href
+                })
+        
+        # Generate HTML
+        rows = ""
+        for item in items:
+            if item['is_dir'] and item['name'] != '📁 ..':
+                download_btn = f'<a href="{item["download"]}" class="btn btn-zip">📦 ZIP</a>'
+            elif not item['is_dir']:
+                download_btn = f'<a href="{item["download"]}" download class="btn btn-dl">⬇️ Download</a>'
+            else:
+                download_btn = ''
+            
+            rows += f'''
+            <tr>
+                <td><a href="{item['href']}">{item['name']}</a></td>
+                <td>{item['size']}</td>
+                <td>{download_btn}</td>
+            </tr>
+            '''
+        
+        html = f'''<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>FileShare - {path}</title>
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        body {{
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #eee;
+            min-height: 100vh;
+            padding: 20px;
+        }}
+        .container {{ max-width: 900px; margin: 0 auto; }}
+        h1 {{
+            color: #00d9ff;
+            margin-bottom: 10px;
+            font-size: 1.5em;
+        }}
+        .path {{
+            color: #888;
+            margin-bottom: 20px;
+            word-break: break-all;
+        }}
+        table {{
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+            overflow: hidden;
+        }}
+        th, td {{
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }}
+        th {{
+            background: rgba(0,217,255,0.2);
+            color: #00d9ff;
+        }}
+        tr:hover {{ background: rgba(255,255,255,0.05); }}
+        a {{ color: #00d9ff; text-decoration: none; }}
+        a:hover {{ text-decoration: underline; }}
+        .btn {{
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 5px;
+            font-size: 0.85em;
+            text-decoration: none !important;
+        }}
+        .btn-dl {{
+            background: #00d9ff;
+            color: #000 !important;
+        }}
+        .btn-zip {{
+            background: #ff9800;
+            color: #000 !important;
+        }}
+        .btn:hover {{ opacity: 0.8; }}
+        .footer {{
+            margin-top: 30px;
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📁 FileShare</h1>
+        <p class="path">Path: {path}</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Size</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {rows}
+            </tbody>
+        </table>
+        <p class="footer">🔒 FileShare v2.0 | {get_system_username()}@{get_local_ip()}</p>
+    </div>
+</body>
+</html>'''
+        return html.encode('utf-8')
+    
+    def create_zip_folder(self, folder_name: str) -> Optional[bytes]:
+        """Create zip of a folder and return bytes"""
+        import zipfile
+        import io
+        
+        folder_path = os.path.join(self.translate_path('/'), folder_name)
+        if not os.path.isdir(folder_path):
+            return None
+        
+        buffer = io.BytesIO()
+        with zipfile.ZipFile(buffer, 'w', zipfile.ZIP_DEFLATED) as zf:
+            for root, dirs, files in os.walk(folder_path):
+                for file in files:
+                    file_path = os.path.join(root, file)
+                    arcname = os.path.relpath(file_path, folder_path)
+                    try:
+                        zf.write(file_path, os.path.join(folder_name, arcname))
+                    except:
+                        pass
+        
+        return buffer.getvalue()
+    
     def do_GET(self):
         client_ip = self.client_address[0]
         
-        # Check if IP is blocked
+        # Security checks
         if is_ip_blocked(client_ip):
             self.send_blocked_response()
             log_access(client_ip, self.path, "🚫 BLOCKED")
             return
         
-        # Check whitelist
         if not is_ip_whitelisted(client_ip):
             self.send_whitelist_denied()
             log_access(client_ip, self.path, "⛔ NOT WHITELISTED")
             return
         
-        # Check auth
         if not self.check_auth():
             self.do_AUTHHEAD()
-            self.wfile.write(b'Authentication required. Use password or token.')
+            self.wfile.write(f'Login - Username: {get_system_username()}'.encode())
             record_failed_attempt(client_ip)
             log_access(client_ip, self.path, "🔒 AUTH FAILED")
             return
         
-        # Reset failed attempts on success
         FAILED_ATTEMPTS[client_ip] = 0
+        
+        # Handle zip download
+        if '?download_zip=' in self.path:
+            import urllib.parse
+            query = self.path.split('?download_zip=')[1]
+            folder_name = urllib.parse.unquote(query)
+            zip_data = self.create_zip_folder(folder_name)
+            
+            if zip_data:
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/zip')
+                self.send_header('Content-Disposition', f'attachment; filename="{folder_name}.zip"')
+                self.send_header('Content-Length', len(zip_data))
+                self.end_headers()
+                self.wfile.write(zip_data)
+                log_access(client_ip, f"📦 {folder_name}.zip", "✅ ZIP")
+                return
+        
+        # Check if directory - serve custom HTML
+        path = self.path.split('?')[0]  # Remove query string
+        full_path = self.translate_path(path)
+        
+        if os.path.isdir(full_path):
+            html = self.generate_html_page(path)
+            if html:
+                self.send_response(200)
+                self.send_header('Content-Type', 'text/html; charset=utf-8')
+                self.send_header('Content-Length', len(html))
+                self.end_headers()
+                self.wfile.write(html)
+                log_access(client_ip, path, "✅ OK")
+                return
+        
+        # Serve file normally
         log_access(client_ip, self.path, "✅ OK")
         super().do_GET()
     
@@ -732,20 +954,23 @@ def main():
     
     auth_choice = Prompt.ask("Choice", choices=["1", "2", "3"], default="1")
     
+    sys_user = get_system_username()
+    
     if auth_choice == "1":
         token = generate_access_token()
         password = None
-        console.print(f"\n[green]🔑 Your access token (use as password in browser):[/green]")
-        console.print(f"[bold cyan]{token}[/bold cyan]")
-        console.print("[dim]Username: anything (e.g., 'user' or leave empty)[/dim]")
-        console.print("[dim]Password: paste the token above[/dim]\n")
+        console.print(f"\n[green]🔑 Login credentials:[/green]")
+        console.print(f"  [cyan]Username:[/cyan] {sys_user}")
+        console.print(f"  [cyan]Password:[/cyan] [bold]{token}[/bold]")
+        console.print("[dim](copy the password/token above)[/dim]\n")
     elif auth_choice == "2":
         console.print("\n[yellow]Set your password:[/yellow]")
         password = input("> ").strip()
         token = None
         if password:
-            console.print(f"[green]✓ Password set[/green]")
-            console.print("[dim]Username: anything | Password: your password[/dim]\n")
+            console.print(f"\n[green]🔑 Login credentials:[/green]")
+            console.print(f"  [cyan]Username:[/cyan] {sys_user}")
+            console.print(f"  [cyan]Password:[/cyan] {password}\n")
         else:
             console.print("[yellow]⚠️ No password set - open access![/yellow]\n")
     else:
