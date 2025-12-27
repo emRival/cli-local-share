@@ -54,30 +54,34 @@ def main():
 
         console.print("\n[bold cyan]📁 FILE SHARE SETUP[/bold cyan]\n")
         
-        # Directory selection
-        console.print(f"[yellow]Directory to share:[/yellow]")
-        console.print("  [cyan]1[/cyan] - Browse (interactive file browser)")
-        console.print("  [cyan]2[/cyan] - Type path manually")
-        console.print("  [cyan]3[/cyan] - Use current directory")
-        console.print("  [cyan]u[/cyan] - Check for updates\n")
-        
-        dir_choice = Prompt.ask("Choice", choices=["1", "2", "3", "u"], default="1")
-        
-        if dir_choice == "u":
-            update_tool()
-            return
-        elif dir_choice == "1":
-            directory = browse_directory()
-        elif dir_choice == "2":
-            directory = input("Path> ").strip()
-            if not directory:
+        directory = None
+        while directory is None:
+            # Directory selection
+            console.print(f"[yellow]Directory to share:[/yellow]")
+            console.print("  [cyan]1[/cyan] - Browse (interactive file browser)")
+            console.print("  [cyan]2[/cyan] - Type path manually")
+            console.print("  [cyan]3[/cyan] - Use current directory")
+            console.print("  [cyan]u[/cyan] - Check for updates\n")
+            
+            dir_choice = Prompt.ask("Choice", choices=["1", "2", "3", "u"], default="1")
+            
+            if dir_choice == "u":
+                update_tool()
+                # Continue loop to show menu again
+                console.print("\n")
+                continue
+            elif dir_choice == "1":
+                directory = browse_directory()
+            elif dir_choice == "2":
+                directory = input("Path> ").strip()
+                if not directory:
+                    directory = os.getcwd()
+            else:
                 directory = os.getcwd()
-        else:
-            directory = os.getcwd()
-        
-        if not os.path.isdir(directory):
-            console.print("[red]Error: Directory not found![/red]")
-            return
+            
+            if not os.path.isdir(directory):
+                console.print("[red]Error: Directory not found![/red]")
+                directory = None # Loop again
         
         console.print(f"\n[green]✓ Selected: {directory}[/green]\n")
         
