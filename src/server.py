@@ -94,6 +94,12 @@ def get_network_range() -> str:
     return f"{parts[0]}.{parts[1]}.{parts[2]}.0/24"
 
 
+def is_port_in_use(port: int) -> bool:
+    """Check if port is already in use"""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        return s.connect_ex(('localhost', port)) == 0
+
+
 def scan_network() -> List[Dict[str, str]]:
     """Scan network for active hosts"""
     console.print("[yellow]🔍 Scanning network... (this may take a moment)[/yellow]")
@@ -958,7 +964,13 @@ def main():
     console.print(f"\n[green]✓ Selected: {directory}[/green]\n")
     
     # Port
-    port = int(Prompt.ask("[yellow]Port[/yellow]", default="8080"))
+    while True:
+        port = int(Prompt.ask("[yellow]Port[/yellow]", default="8080"))
+        if is_port_in_use(port):
+            console.print(f"[red]❌ Port {port} is already in use by another application![/red]")
+            console.print("[yellow]Please choose a different port.[/yellow]")
+        else:
+            break
     
     # HTTPS
     use_https = Confirm.ask("[yellow]Enable HTTPS?[/yellow]", default=True)
