@@ -256,7 +256,7 @@ def run_server_with_ui(port: int, directory: str, password: str, token: str,
                 main_grid = Table.grid(padding=1, expand=True)
                 main_grid.add_column(ratio=1)
                 main_grid.add_row(Panel(info_table, title="📋 Info", border_style="cyan", box=box.ROUNDED))
-                main_grid.add_row(Panel(state.ACCESS_LOG_GROUP, title=f"📊 Live Access Log ({len(state.ACCESS_LOG)})", border_style="green", box=box.ROUNDED))
+                main_grid.add_row(Panel(create_log_display(), title=f"📊 Live Access Log ({len(state.ACCESS_LOG)})", border_style="green", box=box.ROUNDED))
 
                 layout["main"].update(main_grid)
                 
