@@ -37,6 +37,7 @@ try:
     from rich.text import Text
     from rich.prompt import Prompt, Confirm
     from rich import box
+    from rich.align import Align
     import qrcode
 except ImportError:
     print("Installing dependencies...")
@@ -49,6 +50,7 @@ except ImportError:
     from rich.text import Text
     from rich.prompt import Prompt, Confirm
     from rich import box
+    from rich.align import Align
     import qrcode
 
 console = Console()
@@ -872,7 +874,16 @@ def run_server_with_ui(port: int, directory: str, password: str, token: str,
                 left_content.add_row(Panel(create_log_display(), title="📊 Log", border_style="green", box=box.ROUNDED))
                 
                 layout["left"].update(left_content)
-                layout["right"].update(Panel(qr, title="📱 QR Code", border_style="yellow", box=box.ROUNDED))
+                
+                # Center QR code vertically and horizontally
+                qr_panel = Panel(
+                    Align.center(qr, vertical="middle"), 
+                    title="📱 QR Code", 
+                    border_style="yellow", 
+                    box=box.ROUNDED,
+                    padding=(1, 1)
+                )
+                layout["right"].update(qr_panel)
                 
                 layout["footer"].update(Panel(
                     "[bold red]Press Ctrl+C to stop server[/bold red]",
