@@ -62,7 +62,7 @@ WHITELIST_IPS: Set[str] = set()
 
 # Security settings
 MAX_FAILED_ATTEMPTS = 5
-BLOCK_DURATION_MINUTES = 15
+BLOCK_DURATION_SECONDS = 300  # 5 minutes
 SYSTEM_USERNAME = ""
 
 
@@ -196,10 +196,10 @@ def generate_qr_text(url: str) -> str:
         # Use StringIO for text output (Python 3.13 compatibility)
         from io import StringIO
         output = StringIO()
+        # Use basic ASCII characters for better compatibility and alignment
         qr.print_ascii(out=output, invert=True)
         return output.getvalue()
     except Exception as e:
-        # Fallback if QR generation fails
         return f"[QR Code for: {url}]"
 
 
@@ -235,8 +235,8 @@ def record_failed_attempt(ip: str):
     FAILED_ATTEMPTS[ip] += 1
     
     if FAILED_ATTEMPTS[ip] >= MAX_FAILED_ATTEMPTS:
-        BLOCKED_IPS[ip] = datetime.now() + timedelta(minutes=BLOCK_DURATION_MINUTES)
-        log_access(ip, "-", f"🚫 BLOCKED ({BLOCK_DURATION_MINUTES}min)")
+        BLOCKED_IPS[ip] = datetime.now() + timedelta(seconds=BLOCK_DURATION_SECONDS)
+        log_access(ip, "-", f"🚫 BLOCKED ({BLOCK_DURATION_SECONDS}s)")
 
 
 def is_ip_whitelisted(ip: str) -> bool:
@@ -613,20 +613,24 @@ def format_size(size_bytes):
 def create_status_display(url: str, directory: str, password: str, token: str, 
                           timeout: int, use_https: bool, qr_text: str):
     """Create status display"""
-    info_table = Table(show_header=False, box=None, padding=(0, 2))
-    info_table.add_column("Key", style="cyan", width=15)
+    # Use explicit width for stability
+    info_table = Table(show_header=False, box=None, padding=(0, 2), expand=True)
+    info_table.add_column("Key", style="cyan", width=12)
     info_table.add_column("Value", style="white")
     
     protocol = "[bold green]🔒 HTTPS[/bold green]" if use_https else "[yellow]⚠️ HTTP[/yellow]"
     info_table.add_row("🌐 URL", f"[bold]{url}[/bold]")
     info_table.add_row("🔐 Protocol", protocol)
     info_table.add_row("📁 Directory", directory[:30])
-    info_table.add_row("� Password", password if password else "[dim]None[/dim]")
-    info_table.add_row("🎫 Token", token[:20] + "..." if token else "[dim]None[/dim]")
     info_table.add_row("⏱️  Timeout", f"{timeout}m" if timeout > 0 else "∞")
-    info_table.add_row("📋 Whitelist", f"{len(WHITELIST_IPS)} IPs" if WHITELIST_IPS else "[dim]All allowed[/dim]")
-    info_table.add_row("🚫 Blocked", f"{len(BLOCKED_IPS)} IPs" if BLOCKED_IPS else "[dim]None[/dim]")
+    info_table.add_row("🛡️ Rate Limit", f"Max 5 attempts / {BLOCK_DURATION_SECONDS}s ban")
     
+    auth_status = []
+    if password: auth_status.append("Password")
+    if token: auth_status.append("Token")
+    if not password and not token: auth_status.append("None")
+    info_table.add_row("🔑 Auth", ", ".join(auth_status))
+
     # Files
     files = []
     try:
@@ -634,9 +638,9 @@ def create_status_display(url: str, directory: str, password: str, token: str,
             path = os.path.join(directory, f)
             if os.path.isfile(path):
                 size = format_size(os.path.getsize(path))
-                files.append(f"📄 {f[:20]} ({size})")
+                files.append(f"📄 {f[:25]} ({size})")
             else:
-                files.append(f"📁 {f[:20]}/")
+                files.append(f"📁 {f[:25]}/")
     except:
         files = ["[dim]Cannot read[/dim]"]
     
@@ -650,8 +654,8 @@ def create_log_display():
     if not ACCESS_LOG:
         return "[dim]No access yet...[/dim]"
     
-    log_table = Table(show_header=True, box=box.SIMPLE, padding=(0, 1))
-    log_table.add_column("Time", style="dim", width=8)
+    log_table = Table(show_header=True, box=box.SIMPLE, padding=(0, 1), expand=True)
+    log_table.add_column("Time", style="dim", width=10)
     log_table.add_column("IP", style="cyan", width=15)
     log_table.add_column("Status", width=20)
     
@@ -766,7 +770,9 @@ def run_server_with_ui(port: int, directory: str, password: str, token: str,
     console.clear()
     
     try:
-        with Live(console=console, refresh_per_second=2) as live:
+        # Hide cursor for cleaner display
+        console.show_cursor(False)
+        with Live(console=console, refresh_per_second=4, screen=True) as live:
             while SERVER_RUNNING:
                 if end_time and datetime.now() >= end_time:
                     console.print("\n[yellow]⏱️ Session timeout![/yellow]")
@@ -794,31 +800,34 @@ def run_server_with_ui(port: int, directory: str, password: str, token: str,
                 header_text.append("📡 FileShare Server Running", style="bold green")
                 header_text.append(f"  |  ⏱️ {remaining_str}", style="dim")
                 header_text.append(f"  |  🛡️ {len(WHITELIST_IPS)} whitelisted", style="dim")
-                layout["header"].update(Panel(header_text, box=box.SIMPLE))
+                layout["header"].update(Panel(header_text, box=box.ROUNDED))
                 
                 info_table, files_text, qr = create_status_display(
                     url, directory, password, token, timeout, https_enabled, qr_text
                 )
                 
-                left_content = Table.grid(padding=1)
-                left_content.add_row(Panel(info_table, title="📋 Info", border_style="cyan"))
-                left_content.add_row(Panel(files_text, title="📁 Files", border_style="blue"))
-                left_content.add_row(Panel(create_log_display(), title="📊 Log", border_style="green"))
+                left_content = Table.grid(padding=1, expand=True)
+                left_content.add_column(ratio=1)
+                left_content.add_row(Panel(info_table, title="📋 Info", border_style="cyan", box=box.ROUNDED))
+                left_content.add_row(Panel(files_text, title="📁 Files", border_style="blue", box=box.ROUNDED))
+                left_content.add_row(Panel(create_log_display(), title="📊 Log", border_style="green", box=box.ROUNDED))
                 
                 layout["left"].update(left_content)
-                layout["right"].update(Panel(qr, title="📱 QR", border_style="yellow"))
+                layout["right"].update(Panel(qr, title="📱 QR Code", border_style="yellow", box=box.ROUNDED))
                 
                 layout["footer"].update(Panel(
-                    "[bold red]Ctrl+C to stop[/bold red]",
-                    box=box.SIMPLE
+                    "[bold red]Press Ctrl+C to stop server[/bold red]",
+                    box=box.ROUNDED,
+                    style="on black"
                 ))
                 
                 live.update(layout)
-                time.sleep(0.5)
+                time.sleep(0.25)
                 
     except KeyboardInterrupt:
         pass
     finally:
+        console.show_cursor(True)
         SERVER_RUNNING = False
         server.shutdown()
         console.print("\n[cyan]👋 Server stopped.[/cyan]\n")
