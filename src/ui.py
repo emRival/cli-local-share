@@ -247,7 +247,7 @@ def run_server_with_ui(port: int, directory: str, password: str, token: str,
                 )
                 
                 layout["main"].split_row(
-                    Layout(name="left", ratio=2),
+                    Layout(name="left", ratio=1),
                     Layout(name="right", ratio=1)
                 )
                 
