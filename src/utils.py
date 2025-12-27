@@ -49,7 +49,7 @@ def format_size(size_bytes):
 
 
 def generate_qr_text(url: str) -> str:
-    """Generate QR code using Rich style tags for perfect terminal compatibility"""
+    """Generate QR code using Half-Block characters for perfect alignment"""
     try:
         qr = qrcode.QRCode(
             version=1,
@@ -61,19 +61,30 @@ def generate_qr_text(url: str) -> str:
         qr.make(fit=True)
         
         matrix = qr.get_matrix()
-        
-        # Use Rich style tags for background colors
-        # This is more reliable than unicode block characters
         lines = []
-        for row in matrix:
+        
+        # Iterate rows in steps of 2
+        for r in range(0, len(matrix), 2):
             line = ""
-            for cell in row:
-                if cell:
-                    # Black module: black background with 2 spaces
-                    line += "[on black]  [/]"
-                else:
-                    # White module: white background with 2 spaces
-                    line += "[on white]  [/]"
+            row1 = matrix[r]
+            row2 = matrix[r+1] if r+1 < len(matrix) else [False]*len(row1)
+            
+            for c in range(len(row1)):
+                top = row1[c]
+                bot = row2[c]
+                
+                # Logic: True = Black (Dark), False = White (Light)
+                # '▀' (Upper Half Block) uses Foreground for Top, Background for Bottom
+                
+                if top and bot:     # Both Dark
+                    line += "[on black] [/]" # Space with black BG
+                elif top and not bot: # Top Dark, Bot Light
+                    line += "[black on white]▀[/]"
+                elif not top and bot: # Top Light, Bot Dark
+                    line += "[white on black]▀[/]"
+                else:               # Both Light
+                    line += "[on white] [/]" # Space with white BG
+            
             lines.append(line)
         
         return "\n".join(lines)
