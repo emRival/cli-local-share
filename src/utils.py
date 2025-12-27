@@ -88,9 +88,13 @@ def ask_robust_int(prompt_text, default=None):
     while True:
         val_input = Prompt.ask(prompt_text, default=default)
         
+        if val_input is None:
+            console.print("[red]❌ Invalid input. Please enter a number.[/red]")
+            continue
+        
         # Remove ANSI escape codes if present (rudimentary check)
         # Better: remove all non-digits
-        clean_input = "".join(filter(str.isdigit, val_input))
+        clean_input = "".join(filter(str.isdigit, str(val_input)))
         
         if not clean_input:
             console.print("[red]❌ Invalid input. Please enter a number.[/red]")
