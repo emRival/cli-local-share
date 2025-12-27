@@ -896,11 +896,12 @@ def create_status_display(url: str, directory: str, password: str, token: str,
                           timeout: int, use_https: bool, qr_text: str):
     """Create status display"""
     # Use explicit width for stability
-    info_table = Table(show_header=False, box=None, padding=(0, 2), expand=True)
+    info_table = Table(show_header=False, box=box.ROUNDED, padding=(0, 2), expand=True, border_style="blue")
     info_table.add_column("Key", style="cyan", width=12)
     info_table.add_column("Value", style="white")
     
     protocol = "[bold green]🔒 HTTPS[/bold green]" if use_https else "[yellow]⚠️ HTTP[/yellow]"
+    info_table.add_row("👤 User", f"[bold]{get_system_username()}[/bold]")
     info_table.add_row("🌐 URL", f"[bold]{url}[/bold]")
     info_table.add_row("🔐 Protocol", protocol)
     info_table.add_row("📁 Directory", directory[:30])
