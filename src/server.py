@@ -100,6 +100,55 @@ def is_port_in_use(port: int) -> bool:
         return s.connect_ex(('localhost', port)) == 0
 
 
+def check_updates() -> bool:
+    """Check if updates are available"""
+    try:
+        subprocess.run(["git", "fetch"], check=True, capture_output=True)
+        result = subprocess.run(
+            ["git", "status", "-uno"], 
+            check=True, 
+            capture_output=True, 
+            text=True
+        )
+        return "Your branch is behind" in result.stdout
+    except:
+        return False
+
+
+def update_tool():
+    """Update the tool from git"""
+    console.print("\n[yellow]📦 Checking for updates...[/yellow]")
+    
+    try:
+        # Check remote
+        subprocess.run(["git", "fetch"], check=True, capture_output=True)
+        
+        # Check status
+        status = subprocess.run(
+            ["git", "status", "-uno"], 
+            check=True, 
+            capture_output=True, 
+            text=True
+        )
+        
+        if "Your branch is behind" in status.stdout:
+            console.print("[green]✨ Update available! Installing...[/green]")
+            subprocess.run(["git", "pull"], check=True)
+            console.print("[green]✅ Update successful! Restarting...[/green]")
+            time.sleep(1)
+            
+            # Restart script
+            os.execv(sys.executable, [sys.executable] + sys.argv)
+        else:
+            console.print("[green]✅ You are using the latest version![/green]")
+            time.sleep(1)
+            
+    except Exception as e:
+        console.print(f"[red]❌ Update failed: {e}[/red]")
+        console.print("[yellow]Please try 'git pull' manually.[/yellow]")
+        input("\nPress Enter to continue...")
+
+
 def scan_network() -> List[Dict[str, str]]:
     """Scan network for active hosts"""
     console.print("[yellow]🔍 Scanning network... (this may take a moment)[/yellow]")
@@ -943,14 +992,19 @@ def main():
     console.print("[yellow]Select directory to share:[/yellow]")
     console.print("  [cyan]1[/cyan] - Browse (interactive file browser)")
     console.print("  [cyan]2[/cyan] - Type path manually")
-    console.print("  [cyan]3[/cyan] - Use current directory\n")
+    console.print("  [cyan]3[/cyan] - Use current directory")
+    console.print("  [cyan]u[/cyan] - Check for updates\n")
     
-    dir_choice = Prompt.ask("Choice", choices=["1", "2", "3"], default="1")
+    dir_choice = Prompt.ask("Choice", choices=["1", "2", "3", "u"], default="1")
     
-    if dir_choice == "1":
+    if dir_choice == "u":
+        update_tool()
+        # After update check (if no update), restart main
+        main()
+        return
+    elif dir_choice == "1":
         directory = browse_directory()
     elif dir_choice == "2":
-        console.print(f"[dim]Current: {os.getcwd()}[/dim]")
         directory = input("Path> ").strip()
         if not directory:
             directory = os.getcwd()
