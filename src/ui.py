@@ -249,16 +249,33 @@ def run_server_with_ui(port: int, directory: str, password: str, token: str,
                 # Combine info and log into one view or simple vertical split if needed
                 # User wants "cleaner", so maybe just Log and minimal status
                 
+                # Main Layout (Split: Info/Files on Left, Log on Right)
                 info_table, files_text, _ = create_status_display(
                     url, directory, password, token, timeout, https_enabled, ""
                 )
                 
-                main_grid = Table.grid(padding=1, expand=True)
-                main_grid.add_column(ratio=1)
-                main_grid.add_row(Panel(info_table, title="📋 Info", border_style="cyan", box=box.ROUNDED))
-                main_grid.add_row(Panel(create_log_display(), title=f"📊 Live Access Log ({len(state.ACCESS_LOG)})", border_style="green", box=box.ROUNDED))
+                # Left Column: Info + Files
+                left_grid = Table.grid(padding=(0, 1), expand=True)
+                left_grid.add_column(ratio=1)
+                left_grid.add_row(Panel(info_table, title="📋 Info", border_style="cyan", box=box.ROUNDED))
+                left_grid.add_row(Panel(files_text, title="📁 Hosted Files", border_style="blue", box=box.ROUNDED))
+                
+                # Right Column: Live Log
+                log_panel = Panel(
+                    create_log_display(), 
+                    title=f"📊 Live Access Log ({len(state.ACCESS_LOG)})", 
+                    border_style="green", 
+                    box=box.ROUNDED
+                )
 
-                layout["main"].update(main_grid)
+                # Combine into Main Split
+                main_split = Layout()
+                main_split.split_row(
+                    Layout(name="left", ratio=1, renderable=left_grid),
+                    Layout(name="right", ratio=1, renderable=log_panel)
+                )
+
+                layout["main"].update(main_split)
                 
                 layout["footer"].update(Panel(
                     "[bold red]Press Ctrl+C to stop server[/bold red]",
