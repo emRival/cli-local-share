@@ -724,17 +724,34 @@ def main():
     # HTTPS
     use_https = Confirm.ask("[yellow]Enable HTTPS?[/yellow]", default=True)
     
-    # Password
-    password = Prompt.ask("[yellow]Password[/yellow]", default="", password=True)
-    password = password if password else None
+    # Authentication - choose ONE method
+    console.print("[yellow]Authentication method:[/yellow]")
+    console.print("  [cyan]1[/cyan] - Token (recommended, auto-generated secure token)")
+    console.print("  [cyan]2[/cyan] - Password (set your own password)")
+    console.print("  [cyan]3[/cyan] - None (no authentication)\n")
     
-    # Token
-    use_token = Confirm.ask("[yellow]Generate access token?[/yellow]", default=True)
-    token = generate_access_token() if use_token else None
+    auth_choice = Prompt.ask("Choice", choices=["1", "2", "3"], default="1")
     
-    if token:
-        console.print(f"\n[green]🎫 Access Token: [bold]{token}[/bold][/green]")
-        console.print("[dim]Use this token as password, or combine: password:token[/dim]\n")
+    if auth_choice == "1":
+        token = generate_access_token()
+        password = None
+        console.print(f"\n[green]🔑 Your access token (use as password in browser):[/green]")
+        console.print(f"[bold cyan]{token}[/bold cyan]")
+        console.print("[dim]Username: anything (e.g., 'user' or leave empty)[/dim]")
+        console.print("[dim]Password: paste the token above[/dim]\n")
+    elif auth_choice == "2":
+        console.print("\n[yellow]Set your password:[/yellow]")
+        password = input("> ").strip()
+        token = None
+        if password:
+            console.print(f"[green]✓ Password set[/green]")
+            console.print("[dim]Username: anything | Password: your password[/dim]\n")
+        else:
+            console.print("[yellow]⚠️ No password set - open access![/yellow]\n")
+    else:
+        password = None
+        token = None
+        console.print("[yellow]⚠️ No authentication - anyone can access![/yellow]\n")
     
     # Timeout
     timeout = int(Prompt.ask("[yellow]Session timeout (minutes, 0=unlimited)[/yellow]", default="30"))
