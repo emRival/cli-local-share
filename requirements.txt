@@ -1,0 +1,6 @@
+rich>=13.0.0
+questionary>=2.0.0
+phonenumbers>=8.13.0
+requests>=2.31.0
+httpx>=0.25.0
+pydantic>=2.0.0

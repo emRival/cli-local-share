@@ -1,85 +1,44 @@
-# version 0.0.2
-# created by : Team ViewTech
-# date       : 2025-06-05 | 08.47 WIB
-# developer  : Xenzi & Polygon (pejuang kentang)
-########################################
-# Daftar package per OS
-PACKAGEBASH_TERMUX := curl python bc ncurses-utils file ossp-uuid uuid-utils less zsh boxes figlet ruby clang tree jq ripgrep coreutils xz-utils just fzf gum silversearcher-ag grep brotli toilet binutils python-pip bzip2 neofetch
-PACKAGEBASH_DEBIAN := curl python3 bc ncurses-bin file uuid-runtime less zsh boxes figlet ruby clang tree jq ripgrep coreutils xz-utils fzf silversearcher-ag grep brotli toilet binutils python3-pip python3-venv bzip2 openssl
-PACKAGEBASH_UBUNTU := $(PACKAGEBASH_DEBIAN)
+# Scam Check v2 - Makefile
+# Compatible with: Termux, Debian, Ubuntu
 
-PACKAGEPY := dnspython requests beautifulsoup4 rich pycryptodome rich-cli certifi npyscreen prompt_toolkit lzstring faker phonenumbers blessed geopy cloudscraper emoji
+.PHONY: install install-deps run clean help
 
-TERMUX_PATH := /data/data/com.termux/files/usr/bin/bash
-PYTHON_VERSION := $(shell python3 -V 2>/dev/null | sed 's/[[:space:]]//g' | cut -c 1-10 | tr '[:upper:]' '[:lower:]')
+# Default target
+help:
+	@echo "Scam Check v2 - Available commands:"
+	@echo "  make install    - Install all dependencies"
+	@echo "  make run        - Run the application"
+	@echo "  make clean      - Clean temporary files"
 
-# cek os type
-detectCLI:
-	@echo "[?] Mengecek lingkungan..."
-	@if [ -f "$(TERMUX_PATH)" ]; then \
-		echo "[✓] Termux terdeteksi!"; \
-		OS_TYPE="termux"; \
-	elif [ -f "/etc/debian_version" ]; then \
-		grep -qi ubuntu /etc/os-release && OS_TYPE="ubuntu" || OS_TYPE="debian"; \
-		echo "[✓] $$OS_TYPE terdeteksi!"; \
+# Detect environment
+detect:
+	@if [ -d "/data/data/com.termux" ]; then \
+		echo "termux" > .env_type; \
 	else \
-		echo "[!] OS tidak didukung!"; \
-		exit 1; \
-	fi; \
-	echo $$OS_TYPE > .os_type
-
-# install package for bash
-install-system: detectCLI
-	@echo "[?] Menginstall package dari bash..."
-	@OS_TYPE=$$(cat .os_type); \
-	if [ "$$OS_TYPE" = "termux" ]; then \
-		PACKAGES="$(PACKAGEBASH_TERMUX)"; \
-		INSTALL_CMD="pkg install -y"; \
-	elif [ "$$OS_TYPE" = "debian" ] || [ "$$OS_TYPE" = "ubuntu" ]; then \
-		PACKAGES="$(PACKAGEBASH_DEBIAN)"; \
-		INSTALL_CMD="apt-get install -y"; \
-	fi; \
-	for pkg in $$PACKAGES; do \
-		echo "[>] Menginstall $$pkg..."; \
-		$$INSTALL_CMD $$pkg >/dev/null 2>&1; \
-		if command -v $$pkg >/dev/null 2>&1 || dpkg -l | grep -qw $$pkg; then \
-			echo "[✓] Berhasil menginstall $$pkg"; \
-		else \
-			echo "[✗] Gagal menginstall $$pkg"; \
-			echo "[!] Jalankan manual: $$INSTALL_CMD $$pkg"; \
-		fi; \
-	done
-
-# install package for python
-install-py: detectCLI
-	@OS_TYPE=$$(cat .os_type); \
-	if command -v python3 >/dev/null 2>&1; then \
-		echo "[✓] Python3 ditemukan"; \
-		echo "[>] Menginstall Python package: $(PACKAGEPY)..."; \
-		pip3 install --break-system-packages $(PACKAGEPY) 2>/dev/null || pip3 install $(PACKAGEPY); \
-		echo "[>] Python Berhasil DI setup"; \
-	else \
-		echo "[✗] Python3 tidak ditemukan! Silakan install terlebih dahulu."; \
+		echo "linux" > .env_type; \
 	fi
 
-	@if ! test -d "$$HOME/.local"; then \
-		mkdir "$$HOME/.local"; \
+# Install dependencies
+install: detect
+	@echo "[*] Installing dependencies..."
+	@ENV_TYPE=$$(cat .env_type); \
+	if [ "$$ENV_TYPE" = "termux" ]; then \
+		pkg install -y python python-pip; \
+	else \
+		apt-get install -y python3 python3-pip 2>/dev/null || true; \
 	fi
+	@echo "[*] Installing Python packages..."
+	@pip3 install --break-system-packages -r requirements.txt 2>/dev/null || \
+		pip3 install -r requirements.txt 2>/dev/null || \
+		pip install -r requirements.txt
+	@echo "[✓] Installation complete!"
 
-# UPDATE REPO 
-update: detectCLI
-	@echo "[>] Melakukan update ..";sleep 1
-	@git pull
+# Run the application
+run:
+	@python3 src/main.py 2>/dev/null || python src/main.py
 
-install: install-system install-py
-
-fix:
-	rm -rf $$PREFIX/lib/$(PYTHON_VERSION)/site-packages/requests
-	pip3 uninstall requests -y --break-system-packages 2>/dev/null || pip3 uninstall requests -y
-	pip3 uninstall psutil -y --break-system-packages 2>/dev/null || pip3 uninstall psutil -y
-	pip3 install requests --break-system-packages 2>/dev/null || pip3 install requests
-	pip3 install "urllib3<2" --break-system-packages 2>/dev/null || pip3 install "urllib3<2"
-
-all: install
-
-.PHONY: detectCLI install-system install-py update fix install all
+# Clean temporary files
+clean:
+	@rm -rf __pycache__ src/__pycache__ src/modules/__pycache__
+	@rm -f .env_type .os_type
+	@echo "[✓] Cleaned!"

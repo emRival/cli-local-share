@@ -1,4 +1,4 @@
-<h1 align="center">Scam Check</h1>
+<h1 align="center">Scam Check v2</h1>
 
 <p align="center">
   <img src="https://img.shields.io/badge/Platform-Termux%20%7C%20Debian%20%7C%20Ubuntu-green?style=for-the-badge">
@@ -7,47 +7,26 @@
 </p>
 
 <p align="center">
-  <b>Alat investigasi berbasis CLI untuk mengidentifikasi nomor WhatsApp yang berpotensi scammer</b>
+  <b>🔍 OSINT Phone Lookup Tool - Verifikasi nomor sebelum transaksi</b>
 </p>
 
 ---
 
 ## 📖 Tentang
 
-**Scam Check** adalah alat penyelidikan berbasis CLI yang memanfaatkan teknik perhitungan berdasarkan data yang sudah dikumpulkan. Berfungsi untuk mengidentifikasi apakah sebuah nomor WhatsApp termasuk golongan scammer atau aman sebelum memulai transaksi.
+**Scam Check** adalah alat OSINT berbasis CLI untuk membantu verifikasi nomor telepon sebelum melakukan transaksi online. Alat ini memberikan informasi tentang operator, lokasi, dan format nomor untuk membantu Anda bertransaksi dengan lebih aman.
 
-> *"Sedia Payung Sebelum Hujan"* - Gunakan Scam Check sebelum bertransaksi!
-
----
-
-## 🔎 Data yang Dikumpulkan
-
-| Kategori | Informasi |
-|----------|-----------|
-| 📍 Profil | Foto profile WhatsApp |
-| 🧪 Umum | Nomor HP dan informasi dasar |
-| 🧾 Analisis | Hasil perhitungan algoritma untuk investigasi |
-| 🕵️ Mendalam | Nama, tanggal lahir, pendidikan, lokasi |
-| ☠️ Sangat Dalam | Nama lengkap, lokasi terdekat, gender, detail kota/kabupaten |
+> *"Sedia Payung Sebelum Hujan"* 🌂
 
 ---
 
-## 🧩 Fitur Utama
+## 🧩 Fitur
 
-### OSINT Nomor Handphone
-- ✅ Analisis Nomor Handphone (Search)
-- ✅ Show Tag Victim (Detail Tag)
-- ✅ Check Nama E-Wallet
-- ✅ Check Komentar pada Nomor
-- ✅ Doxing Nomor (Lokasi, Nama, Gender, Tanggal Lahir, BPJS, dll)
-
-### Other OSINT
-- 📦 SPX Tracking
-- 👤 OSINT Name
-- 🚗 Lookup Plat Kendaraan
-- 🎓 Search Mahasiswa/Dosen (Nama & ID)
-- 📱 Lookup IMEI
-- 💼 Search Pekerja via NIK/Nama
+| Fitur | Deskripsi |
+|-------|-----------|
+| 📱 **Phone Lookup** | Cek info carrier, lokasi, format nomor |
+| 💳 **E-Wallet Check** | Cek registrasi e-wallet (demo mode) |
+| 🌍 **Format Konversi** | Konversi ke format E164, International, National |
 
 ---
 
@@ -56,61 +35,67 @@
 ### Termux (Android)
 ```bash
 pkg update && pkg upgrade
-pkg install git make just -y
+pkg install git python python-pip
 git clone https://github.com/emRival/scam-check.git
 cd scam-check
-make install
-just run
+pip install -r requirements.txt
+python src/main.py
 ```
 
 ### Debian / Ubuntu
 ```bash
 apt update && apt upgrade -y
-apt install git make python3 python3-pip -y
+apt install git python3 python3-pip -y
 git clone https://github.com/emRival/scam-check.git
 cd scam-check
-make install
-python3 src/app.py
+pip3 install --break-system-packages -r requirements.txt
+python3 src/main.py
 ```
 
 ---
 
 ## 🎮 Penggunaan
 
-### Ukuran Layar yang Disarankan
-| Mode | Ukuran |
-|------|--------|
-| Portrait | x: 101, y: 35 |
-| Landscape | x: 181, y: 70 |
-
-### Kontrol
-- Gunakan **kursor / tombol panah** untuk navigasi
-- Gunakan **keyboard** untuk input
-- Cubit layar untuk mengatur ukuran (Termux)
-
----
-
-## 🔧 Troubleshooting
-
-Jika mengalami error Python:
 ```bash
-make fix
+# Cara 1: Langsung
+python3 src/main.py
+
+# Cara 2: Dengan Make
 make install
+make run
+
+# Cara 3: Dengan Just (jika terinstall)
+just install
+just run
 ```
 
 ---
 
-## � Keamanan
+## 📸 Screenshot
 
-Script ini dilengkapi dengan:
-- Anti MITM
-- Obfuscate versi 10
+```
+╔═══════════════════════════════════════════════════════════════╗
+║   ███████╗ ██████╗ █████╗ ███╗   ███╗                         ║
+║   ██╔════╝██╔════╝██╔══██╗████╗ ████║                         ║
+║   ███████╗██║     ███████║██╔████╔██║                         ║
+║   ╚════██║██║     ██╔══██║██║╚██╔╝██║                         ║
+║   ███████║╚██████╗██║  ██║██║ ╚═╝ ██║                         ║
+║   ╚══════╝ ╚═════╝╚═╝  ╚═╝╚═╝     ╚═╝                         ║
+║   CHECK - OSINT Phone Lookup Tool                              ║
+╚═══════════════════════════════════════════════════════════════╝
+
+? Pilih menu:
+❯ 📱 Phone Lookup - Cek informasi nomor HP
+  💳 E-Wallet Check - Cek nama e-wallet
+  ℹ️  About - Tentang aplikasi
+  🚪 Exit - Keluar
+```
 
 ---
 
-## 📺 Tutorial
+## 🔒 Disclaimer
 
-[![YouTube Tutorial](https://img.shields.io/badge/YouTube-Tutorial-red?style=for-the-badge&logo=youtube)](https://youtu.be/cMBJ_GvPey4)
+Tool ini hanya untuk tujuan **edukasi dan verifikasi**. Gunakan dengan bijak dan bertanggung jawab. Kami tidak bertanggung jawab atas penyalahgunaan tool ini.
 
 ---
 
