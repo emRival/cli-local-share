@@ -5,11 +5,34 @@ import questionary
 from rich.console import Console
 from rich.panel import Panel
 
-from .modules.utils import print_banner
-from .modules.phone_lookup import phone_lookup_interactive
-from .modules.ewallet import ewallet_check_interactive
-
 console = Console()
+
+
+def get_utils():
+    """Import utils module"""
+    import sys
+    import os
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    from src.modules.utils import print_banner
+    return print_banner
+
+
+def get_phone_lookup():
+    """Import phone lookup module"""
+    import sys
+    import os
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    from src.modules.phone_lookup import phone_lookup_interactive
+    return phone_lookup_interactive
+
+
+def get_ewallet():
+    """Import ewallet module"""
+    import sys
+    import os
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    from src.modules.ewallet import ewallet_check_interactive
+    return ewallet_check_interactive
 
 
 def show_menu():
@@ -58,6 +81,10 @@ sebelum melakukan transaksi online.[/white]
 
 def main_loop():
     """Main application loop"""
+    print_banner = get_utils()
+    phone_lookup_interactive = get_phone_lookup()
+    ewallet_check_interactive = get_ewallet()
+    
     while True:
         console.clear()
         print_banner()

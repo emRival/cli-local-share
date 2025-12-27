@@ -39,7 +39,7 @@ pkg install git python python-pip
 git clone https://github.com/emRival/scam-check.git
 cd scam-check
 pip install -r requirements.txt
-python src/main.py
+python run.py
 ```
 
 ### Debian / Ubuntu
@@ -49,7 +49,7 @@ apt install git python3 python3-pip -y
 git clone https://github.com/emRival/scam-check.git
 cd scam-check
 pip3 install --break-system-packages -r requirements.txt
-python3 src/main.py
+python3 run.py
 ```
 
 ---
@@ -58,7 +58,7 @@ python3 src/main.py
 
 ```bash
 # Cara 1: Langsung
-python3 src/main.py
+python3 run.py
 
 # Cara 2: Dengan Make
 make install

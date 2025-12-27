@@ -11,7 +11,7 @@ install:
 
 # Run the application
 run:
-    @python3 src/main.py
+    @python3 run.py
 
 # Clean temporary files
 clean:

@@ -35,7 +35,7 @@ install: detect
 
 # Run the application
 run:
-	@python3 src/main.py 2>/dev/null || python src/main.py
+	@python3 run.py 2>/dev/null || python run.py
 
 # Clean temporary files
 clean:
