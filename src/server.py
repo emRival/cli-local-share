@@ -52,6 +52,13 @@ except ImportError:
     from rich import box
     from rich.align import Align
     import qrcode
+    
+    # Try importing config, handle if missing
+    try:
+        from src.config import load_config, save_config
+    except ImportError:
+        def load_config(): return {}
+        def save_config(c): pass
 
 console = Console()
 
@@ -322,6 +329,101 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
         self.send_header('Content-type', 'text/html')
         self.end_headers()
     
+    def get_upload_path(self, filename: str) -> Optional[str]:
+        """Securely resolve upload path"""
+        import os
+        from werkzeug.utils import secure_filename as werkzeug_secure_filename
+        
+        # Simple secure filename implementation if werkzeug not available
+        def secure_filename(name):
+            return "".join([c for c in name if c.isalpha() or c.isdigit() or c in '._-'])
+            
+        clean_name = secure_filename(os.path.basename(filename))
+        if not clean_name:
+            return None
+            
+        # Target directory is the current view directory
+        # Parse output directory from referer or path
+        # Simple approach: upload to the current directory being viewed
+        # But do_POST path usually matches the form action. 
+        # We will assume POST to current directory.
+        
+        target_dir = self.translate_path(self.path)
+        if not os.path.isdir(target_dir):
+            return None
+            
+        full_path = os.path.join(target_dir, clean_name)
+        
+        # Anti-overwrite: Append number if exists
+        base, ext = os.path.splitext(full_path)
+        counter = 1
+        while os.path.exists(full_path):
+            full_path = f"{base}_{counter}{ext}"
+            counter += 1
+            
+        return full_path
+
+    def do_POST(self):
+        """Handle file uploads"""
+        client_ip = self.client_address[0]
+        
+        # Security checks
+        if is_ip_blocked(client_ip):
+            self.send_blocked_response()
+            return
+            
+        if not is_ip_whitelisted(client_ip):
+            self.send_whitelist_denied()
+            return
+            
+        if not self.check_auth():
+            self.do_AUTHHEAD()
+            return
+            
+        # Check content type
+        content_type = self.headers.get('Content-Type', '')
+        if 'multipart/form-data' not in content_type:
+            self.send_error(400, "Bad Request: Must be multipart/form-data")
+            return
+            
+        try:
+            # Parse multipart data using email library (Python 3 native)
+            import email, email.policy
+            length = int(self.headers.get('content-length'))
+            body = self.rfile.read(length)
+            
+            # Create a message object
+            headers = f"Content-Type: {content_type}\n"
+            msg = email.message_from_bytes(headers.encode() + b"\n" + body, policy=email.policy.default)
+            
+            uploaded_files = []
+            
+            for part in msg.iter_parts():
+                filename = part.get_filename()
+                if filename:
+                    # It's a file
+                    upload_path = self.get_upload_path(filename)
+                    if upload_path:
+                        content = part.get_payload(decode=True)
+                        if content:
+                            with open(upload_path, 'wb') as f:
+                                f.write(content)
+                            uploaded_files.append(os.path.basename(upload_path))
+            
+            # Redirect back to the page
+            self.send_response(303)
+            self.send_header('Location', self.path)
+            self.end_headers()
+            
+            if uploaded_files:
+                log_access(client_ip, f"⬆️ Uploaded: {', '.join(uploaded_files)}", "✅ OK")
+            else:
+                log_access(client_ip, "Upload attempt (no file)", "⚠️ FAIL")
+                
+        except Exception as e:
+            self.send_error(500, f"Upload failed: {str(e)}")
+            log_access(client_ip, "Upload error", "❌ ERR")
+    
     def send_blocked_response(self):
         self.send_response(403)
         self.send_header('Content-type', 'text/html')
@@ -362,7 +464,7 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
             return False
     
     def generate_html_page(self, path: str) -> bytes:
-        """Generate custom HTML page with download buttons"""
+        """Generate custom HTML page with download buttons, upload, and search"""
         import urllib.parse
         
         full_path = self.translate_path(path)
@@ -383,7 +485,8 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
                 'href': urllib.parse.quote(os.path.dirname(path.rstrip('/')) or '/'),
                 'size': '',
                 'is_dir': True,
-                'download': ''
+                'download': '',
+                'preview': False
             })
         
         for name in sorted(entries):
@@ -392,8 +495,11 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
             item_path = os.path.join(full_path, name)
             href = urllib.parse.quote(os.path.join(path, name))
             
+            # Simple preview support
+            ext = os.path.splitext(name)[1].lower()
+            can_preview = ext in ['.png', '.jpg', '.jpeg', '.gif', '.txt', '.md', '.py', '.log', '.json', '.css', '.html', '.js']
+            
             if os.path.isdir(item_path):
-                # Count items in folder
                 try:
                     count = len(os.listdir(item_path))
                     size = f"{count} items"
@@ -404,33 +510,37 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
                     'href': href + '/',
                     'size': size,
                     'is_dir': True,
-                    'download': f'?download_zip={urllib.parse.quote(name)}'
+                    'download': f'?download_zip={urllib.parse.quote(name)}',
+                    'preview': False
                 })
             else:
                 size = format_size(os.path.getsize(item_path))
                 items.append({
                     'name': f'📄 {name}',
                     'href': href,
-                    'size': size,
                     'is_dir': False,
-                    'download': href
+                    'size': size,
+                    'download': href,
+                    'preview': can_preview
                 })
         
-        # Generate HTML
+        # Generate HTML Rows
         rows = ""
         for item in items:
             if item['is_dir'] and item['name'] != '📁 ..':
-                download_btn = f'<a href="{item["download"]}" class="btn btn-zip">📦 ZIP</a>'
+                actions = f'<a href="{item["download"]}" class="btn btn-zip">📦 ZIP</a>'
             elif not item['is_dir']:
-                download_btn = f'<a href="{item["download"]}" download class="btn btn-dl">⬇️ Download</a>'
+                actions = f'<a href="{item["download"]}" download class="btn btn-dl">⬇️ DL</a>'
+                if item['preview']:
+                    actions += f' <button onclick="previewFile(\'{item["href"]}\', \'{item["name"]}\')" class="btn btn-view">👁️ View</button>'
             else:
-                download_btn = ''
+                actions = ''
             
             rows += f'''
             <tr>
                 <td><a href="{item['href']}">{item['name']}</a></td>
                 <td>{item['size']}</td>
-                <td>{download_btn}</td>
+                <td class="actions">{actions}</td>
             </tr>
             '''
         
@@ -441,86 +551,199 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>FileShare - {path}</title>
     <style>
+        :root {{ --primary: #00d9ff; --bg: #1a1a2e; --surface: rgba(255,255,255,0.05); }}
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         body {{
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: system-ui, -apple-system, sans-serif;
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             color: #eee;
             min-height: 100vh;
             padding: 20px;
         }}
-        .container {{ max-width: 900px; margin: 0 auto; }}
-        h1 {{
-            color: #00d9ff;
-            margin-bottom: 10px;
-            font-size: 1.5em;
-        }}
-        .path {{
-            color: #888;
-            margin-bottom: 20px;
-            word-break: break-all;
-        }}
-        table {{
+        .container {{ max-width: 1000px; margin: 0 auto; }}
+        
+        /* Header & Search */
+        .header {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }}
+        h1 {{ color: var(--primary); font-size: 1.5rem; }}
+        .path {{ color: #888; margin-bottom: 20px; word-break: break-all; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 5px; }}
+        
+        .search-box {{
+            padding: 8px 15px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(0,0,0,0.2);
+            color: white;
             width: 100%;
-            border-collapse: collapse;
-            background: rgba(255,255,255,0.05);
+            max-width: 300px;
+        }}
+        
+        /* Upload Zone */
+        .upload-zone {{
+            border: 2px dashed rgba(255,255,255,0.2);
             border-radius: 10px;
-            overflow: hidden;
-        }}
-        th, td {{
-            padding: 12px 15px;
-            text-align: left;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }}
-        th {{
-            background: rgba(0,217,255,0.2);
-            color: #00d9ff;
-        }}
-        tr:hover {{ background: rgba(255,255,255,0.05); }}
-        a {{ color: #00d9ff; text-decoration: none; }}
-        a:hover {{ text-decoration: underline; }}
-        .btn {{
-            display: inline-block;
-            padding: 5px 12px;
-            border-radius: 5px;
-            font-size: 0.85em;
-            text-decoration: none !important;
-        }}
-        .btn-dl {{
-            background: #00d9ff;
-            color: #000 !important;
-        }}
-        .btn-zip {{
-            background: #ff9800;
-            color: #000 !important;
-        }}
-        .btn:hover {{ opacity: 0.8; }}
-        .footer {{
-            margin-top: 30px;
+            padding: 20px;
             text-align: center;
-            color: #666;
-            font-size: 0.9em;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+            cursor: pointer;
         }}
+        .upload-zone:hover, .upload-zone.dragover {{ border-color: var(--primary); background: rgba(0,217,255,0.1); }}
+        .upload-btn {{ display: none; }}
+        .upload-label {{ color: #aaa; cursor: pointer; display: block; }}
+        
+        /* Table */
+        .table-container {{ overflow-x: auto; background: var(--surface); border-radius: 10px; }}
+        table {{ width: 100%; border-collapse: collapse; min-width: 600px; }}
+        th, td {{ padding: 12px 15px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1); }}
+        th {{ background: rgba(0,217,255,0.1); color: var(--primary); position: sticky; top: 0; }}
+        tr:hover {{ background: rgba(255,255,255,0.05); }}
+        a {{ color: var(--primary); text-decoration: none; }}
+        
+        /* Buttons */
+        .btn {{ display: inline-block; padding: 4px 10px; border-radius: 4px; font-size: 0.8rem; border: none; cursor: pointer; margin-right: 5px; text-decoration: none !important; color: #000 !important; font-weight: bold; }}
+        .btn-dl {{ background: var(--primary); }}
+        .btn-zip {{ background: #ff9800; }}
+        .btn-view {{ background: #4caf50; color: white !important; }}
+        .btn:hover {{ opacity: 0.9; transform: translateY(-1px); }}
+        
+        /* Preview Modal */
+        .modal {{ display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; }}
+        .modal-content {{ max-width: 90%; max-height: 90%; background: #222; padding: 20px; border-radius: 10px; position: relative; display: flex; flex-direction: column; }}
+        .modal-close {{ position: absolute; top: 10px; right: 15px; color: white; font-size: 24px; cursor: pointer; }}
+        .preview-frame {{ width: 80vw; height: 80vh; border: none; background: white; }}
+        .preview-img {{ max-width: 100%; max-height: 80vh; object-fit: contain; }}
+        
+        .footer {{ margin-top: 30px; text-align: center; color: #666; font-size: 0.9em; }}
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>📁 FileShare</h1>
-        <p class="path">Path: {path}</p>
-        <table>
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Size</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                {rows}
-            </tbody>
-        </table>
-        <p class="footer">🔒 FileShare v2.0 | {get_system_username()}@{get_local_ip()}</p>
+        <div class="header">
+            <h1>📁 FileShare</h1>
+            <input type="text" id="searchInput" class="search-box" placeholder="🔍 Search files..." onkeyup="filterFiles()">
+        </div>
+        
+        <p class="path">{path}</p>
+        
+        <form action="{path}" method="post" enctype="multipart/form-data" id="uploadForm">
+            <div class="upload-zone" id="dropZone">
+                <label for="fileInput" class="upload-label">
+                    ☁️ <strong>Drag & Drop files here</strong> or click to upload
+                </label>
+                <input type="file" name="files" id="fileInput" class="upload-btn" multiple onchange="document.getElementById('uploadForm').submit()">
+            </div>
+        </form>
+
+        <div class="table-container">
+            <table id="fileTable">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Size</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {rows}
+                </tbody>
+            </table>
+        </div>
+        
+        <p class="footer">🔒 FileShare v2.5 | {get_system_username()}@{get_local_ip()}</p>
     </div>
+
+    <!-- Preview Modal -->
+    <div id="previewModal" class="modal" onclick="closeModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <span class="modal-close" onclick="closeModal()">&times;</span>
+            <h3 id="previewTitle" style="color:white; margin-bottom:10px;"></h3>
+            <div id="previewContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        // Search Filter
+        function filterFiles() {{
+            let input = document.getElementById('searchInput');
+            let filter = input.value.toLowerCase();
+            let table = document.getElementById('fileTable');
+            let tr = table.getElementsByTagName('tr');
+
+            for (let i = 1; i < tr.length; i++) {{
+                let td = tr[i].getElementsByTagName('td')[0];
+                if (td) {{
+                    let txtValue = td.textContent || td.innerText;
+                    if (txtValue.toLowerCase().indexOf(filter) > -1) {{
+                        tr[i].style.display = "";
+                    }} else {{
+                        tr[i].style.display = "none";
+                    }}
+                }}
+            }}
+        }}
+
+        // Drag & Drop
+        let dropZone = document.getElementById('dropZone');
+        
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {{
+            dropZone.addEventListener(eventName, preventDefaults, false);
+        }});
+
+        function preventDefaults(e) {{
+            e.preventDefault();
+            e.stopPropagation();
+        }}
+
+        ['dragenter', 'dragover'].forEach(eventName => {{
+            dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'), false);
+        }});
+
+        ['dragleave', 'drop'].forEach(eventName => {{
+            dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'), false);
+        }});
+
+        dropZone.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {{
+            let dt = e.dataTransfer;
+            let files = dt.files;
+            document.getElementById('fileInput').files = files;
+            document.getElementById('uploadForm').submit();
+        }}
+
+        // Preview Logic
+        function previewFile(url, name) {{
+            let modal = document.getElementById('previewModal');
+            let container = document.getElementById('previewContainer');
+            let title = document.getElementById('previewTitle');
+            
+            title.innerText = name;
+            container.innerHTML = 'Loading...';
+            modal.style.display = 'flex';
+            
+            let ext = name.split('.').pop().toLowerCase();
+            
+            if (['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp'].includes(ext)) {{
+                container.innerHTML = `<img src="${{url}}" class="preview-img">`;
+            }} else {{
+                container.innerHTML = `<iframe src="${{url}}" class="preview-frame"></iframe>`;
+            }}
+        }}
+
+        function closeModal(e) {{
+            if (!e || e.target === document.getElementById('previewModal') || e.target.classList.contains('modal-close')) {{
+                document.getElementById('previewModal').style.display = 'none';
+                document.getElementById('previewContainer').innerHTML = '';
+            }}
+        }}
+        
+        document.onkeydown = function(evt) {{
+            evt = evt || window.event;
+            if (evt.keyCode == 27) {{
+                closeModal();
+            }}
+        }};
+    </script>
 </body>
 </html>'''
         return html.encode('utf-8')
@@ -1024,6 +1247,12 @@ def main():
     console.clear()
     print_banner()
     
+    # Load config
+    config = load_config()
+    default_dir = config.get("last_directory", os.getcwd())
+    if not os.path.isdir(default_dir):
+        default_dir = os.getcwd()
+
     console.print("\n[bold cyan]📁 FILE SHARE SETUP[/bold cyan]\n")
     
     # Directory selection
@@ -1031,9 +1260,14 @@ def main():
     console.print("  [cyan]1[/cyan] - Browse (interactive file browser)")
     console.print("  [cyan]2[/cyan] - Type path manually")
     console.print("  [cyan]3[/cyan] - Use current directory")
+    console.print(f"      [dim](Last used: {default_dir})[/dim]")
     console.print("  [cyan]u[/cyan] - Check for updates\n")
     
-    dir_choice = Prompt.ask("Choice", choices=["1", "2", "3", "u"], default="1")
+    # Intelligent default: use 3 if last used is set, else 1
+    dir_choice_default = "3" if config.get("last_directory") else "1"
+    dir_choice = Prompt.ask("Choice", choices=["1", "2", "3", "u"], default=dir_choice_default)
+    
+    directory = default_dir # Default fallback
     
     if dir_choice == "u":
         update_tool()
@@ -1043,11 +1277,11 @@ def main():
     elif dir_choice == "1":
         directory = browse_directory()
     elif dir_choice == "2":
-        directory = input("Path> ").strip()
+        directory = input(f"Path (default: {default_dir})> ").strip()
         if not directory:
-            directory = os.getcwd()
+            directory = default_dir
     else:
-        directory = os.getcwd()
+        directory = default_dir
     
     if not os.path.isdir(directory):
         console.print("[red]Error: Directory not found![/red]")
@@ -1060,8 +1294,9 @@ def main():
     console.print(f"[green]✓ Selected: {directory}[/green]\n")
     
     # Port
+    default_port = str(config.get("port", 8080))
     while True:
-        port = ask_robust_int("[yellow]Port[/yellow]", default="8080")
+        port = ask_robust_int("[yellow]Port[/yellow]", default=default_port)
         
         if port < 1024 or port > 65535:
             console.print("[red]❌ Port must be between 1024 and 65535[/red]")
@@ -1074,15 +1309,17 @@ def main():
             break
     
     # HTTPS
-    use_https = Confirm.ask("[yellow]Enable HTTPS?[/yellow]", default=True)
+    default_https = config.get("use_https", True)
+    use_https = Confirm.ask("[yellow]Enable HTTPS?[/yellow]", default=default_https)
     
-    # Authentication - choose ONE method
+    # Authentication
     console.print("[yellow]Authentication method:[/yellow]")
     console.print("  [cyan]1[/cyan] - Token (recommended, auto-generated secure token)")
     console.print("  [cyan]2[/cyan] - Password (set your own password)")
     console.print("  [cyan]3[/cyan] - None (no authentication)\n")
     
-    auth_choice = Prompt.ask("Choice", choices=["1", "2", "3"], default="1")
+    default_auth = config.get("auth_choice", "1")
+    auth_choice = Prompt.ask("Choice", choices=["1", "2", "3"], default=default_auth)
     
     sys_user = get_system_username()
     
@@ -1109,7 +1346,18 @@ def main():
         console.print("[yellow]⚠️ No authentication - anyone can access![/yellow]\n")
     
     # Timeout
-    timeout = ask_robust_int("[yellow]Session timeout (minutes, 0=unlimited)[/yellow]", default="30")
+    default_timeout = str(config.get("timeout", 30))
+    timeout = ask_robust_int("[yellow]Session timeout (minutes, 0=unlimited)[/yellow]", default=default_timeout)
+    
+    # Save config
+    new_config = {
+        "last_directory": directory,
+        "port": port,
+        "use_https": use_https,
+        "auth_choice": auth_choice,
+        "timeout": timeout
+    }
+    save_config(new_config)
     
     # Whitelist
     setup_whitelist()
