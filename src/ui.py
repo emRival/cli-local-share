@@ -231,23 +231,16 @@ def run_server_with_ui(port: int, directory: str, password: str, token: str,
                     Layout(name="main"),
                     Layout(name="footer", size=3)
                 )
-                layout = Layout()
-                layout.split_column(
-                    Layout(name="header", size=3),
-                    Layout(name="main"),
-                    Layout(name="footer", size=3)
-                )
+
 
                 # Header with Large URL
+                # Header with URL (Truncated if needed)
+                header_url = url if len(url) < 50 else url[:47] + "..."
                 header_text = Text()
-                header_text.append(f"🔗 {url}", style="bold cyan")
+                header_text.append(f"🔗 {header_url}", style="bold cyan")
                 header_text.append("  |  ", style="dim")
                 header_text.append("📡 Server Running", style="bold green")
                 layout["header"].update(Panel(header_text, box=box.ROUNDED, style="blue"))
-                
-                # Main Content (Full Width)
-                # Combine info and log into one view or simple vertical split if needed
-                # User wants "cleaner", so maybe just Log and minimal status
                 
                 # Main Layout (Split: Info/Files on Left, Log on Right)
                 info_table, files_text, _ = create_status_display(
@@ -257,15 +250,25 @@ def run_server_with_ui(port: int, directory: str, password: str, token: str,
                 # Left Column: Info + Files
                 left_grid = Table.grid(padding=(0, 1), expand=True)
                 left_grid.add_column(ratio=1)
-                left_grid.add_row(Panel(info_table, title="📋 Info", border_style="cyan", box=box.ROUNDED))
-                left_grid.add_row(Panel(files_text, title="📁 Hosted Files", border_style="blue", box=box.ROUNDED))
+                left_grid.add_row(Panel(info_table, title="📋 Info", border_style="cyan", box=box.ROUNDED, expand=True))
+                
+                # Ensure files text doesn't break layout
+                files_panel = Panel(
+                    files_text, 
+                    title="📁 Hosted Files", 
+                    border_style="blue", 
+                    box=box.ROUNDED,
+                    expand=True
+                )
+                left_grid.add_row(files_panel)
                 
                 # Right Column: Live Log
                 log_panel = Panel(
                     create_log_display(), 
                     title=f"📊 Live Access Log ({len(state.ACCESS_LOG)})", 
                     border_style="green", 
-                    box=box.ROUNDED
+                    box=box.ROUNDED,
+                    expand=True
                 )
 
                 # Combine into Main Split
