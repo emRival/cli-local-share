@@ -173,18 +173,24 @@ def generate_self_signed_cert(cert_file: str, key_file: str):
 
 def generate_qr_text(url: str) -> str:
     """Generate QR code as ASCII text"""
-    qr = qrcode.QRCode(
-        version=1,
-        error_correction=qrcode.constants.ERROR_CORRECT_L,
-        box_size=1,
-        border=1,
-    )
-    qr.add_data(url)
-    qr.make(fit=True)
-    
-    output = BytesIO()
-    qr.print_ascii(out=output, invert=True)
-    return output.getvalue().decode('utf-8')
+    try:
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_L,
+            box_size=1,
+            border=1,
+        )
+        qr.add_data(url)
+        qr.make(fit=True)
+        
+        # Use StringIO for text output (Python 3.13 compatibility)
+        from io import StringIO
+        output = StringIO()
+        qr.print_ascii(out=output, invert=True)
+        return output.getvalue()
+    except Exception as e:
+        # Fallback if QR generation fails
+        return f"[QR Code for: {url}]"
 
 
 def log_access(ip: str, path: str, status: str):
