@@ -248,23 +248,33 @@ def generate_self_signed_cert(cert_file: str, key_file: str):
 
 
 def generate_qr_text(url: str) -> str:
-    """Generate QR code as ASCII text"""
+    """Generate QR code as properly aligned text using Unicode blocks"""
     try:
         qr = qrcode.QRCode(
             version=1,
             error_correction=qrcode.constants.ERROR_CORRECT_L,
             box_size=1,
-            border=1,
+            border=2,  # Add white border
         )
         qr.add_data(url)
         qr.make(fit=True)
         
-        # Use StringIO for text output (Python 3.13 compatibility)
-        from io import StringIO
-        output = StringIO()
-        # Use basic ASCII characters for better compatibility and alignment
-        qr.print_ascii(out=output, invert=True)
-        return output.getvalue()
+        # Get the QR matrix
+        matrix = qr.get_matrix()
+        
+        # Use full block characters for consistent width
+        # Each module is represented by 2 characters wide for squareness in terminal
+        lines = []
+        for row in matrix:
+            line = ""
+            for cell in row:
+                if cell:
+                    line += "██"  # Black module (2 full blocks)
+                else:
+                    line += "  "  # White module (2 spaces)
+            lines.append(line)
+        
+        return "\n".join(lines)
     except Exception as e:
         return f"[QR Code for: {url}]"
 
