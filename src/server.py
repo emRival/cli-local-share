@@ -46,9 +46,18 @@ def main():
         console.clear()
         print_banner()
         
+        if not os.path.exists('access.log'):
+            with open('access.log', 'w') as f:
+                f.write('')
+        
         # Load config
         config = load_config()
         default_dir = config.get("last_directory", os.getcwd())
+        default_port = str(config.get("port", "8080"))
+        default_https = config.get("use_https", True)
+        default_auth = config.get("auth_choice", "1")
+        default_timeout = str(config.get("timeout", "30"))
+        
         if not os.path.isdir(default_dir):
             default_dir = os.getcwd()
 
@@ -77,7 +86,7 @@ def main():
                 if not directory:
                     directory = os.getcwd()
             else:
-                directory = os.getcwd()
+                directory = default_dir if dir_choice == "3" and default_dir == os.getcwd() else os.getcwd()
             
             if not os.path.isdir(directory):
                 console.print("[red]Error: Directory not found![/red]")
@@ -85,25 +94,28 @@ def main():
         
         console.print(f"\n[green]✓ Selected: {directory}[/green]\n")
         
-        # Port
-        while True:
-            port = ask_robust_int("[yellow]Port[/yellow]", default="8080")
+        # Port with Loop for conflict
+        port_ok = False
+        port = int(default_port)
+        
+        while not port_ok:
+            port = ask_robust_int("[yellow]Port[/yellow]", default=str(port))
             
             if port < 1024 or port > 65535:
                 console.print("[red]❌ Port must be between 1024 and 65535[/red]")
                 continue
             
-            # Check if port is in use (We need to import this check or re-implement)
-            from src.server import is_port_in_use  # Circular dependency risk if we keep it here
-            # Better: move is_port_in_use to utils
             if is_port_in_use(port):
-                console.print(f"[red]❌ Port {port} is already in use by another application![/red]")
+                console.print(f"[red]❌ Port {port} is already in use![/red]")
                 console.print("[yellow]Please choose a different port.[/yellow]")
+                # Suggest next port
+                port += 1
+                continue
             else:
-                break
+                port_ok = True
         
         # HTTPS
-        use_https = Confirm.ask("[yellow]Enable HTTPS?[/yellow]", default=True)
+        use_https = Confirm.ask("[yellow]Enable HTTPS?[/yellow]", default=default_https)
         
         # Authentication - choose ONE method
         console.print("[yellow]Authentication method:[/yellow]")
@@ -111,7 +123,7 @@ def main():
         console.print("  [cyan]2[/cyan] - Password (set your own password)")
         console.print("  [cyan]3[/cyan] - None (public access, risky!)")
         
-        auth_choice = Prompt.ask("Choice", choices=["1", "2", "3"], default="1")
+        auth_choice = Prompt.ask("Choice", choices=["1", "2", "3"], default=default_auth)
         
         sys_user = get_system_username()
         
@@ -133,17 +145,21 @@ def main():
             console.print("[yellow]⚠️ No authentication - anyone can access![/yellow]\n")
         
         # Timeout
-        timeout = ask_robust_int("[yellow]Session timeout (minutes, 0=unlimited)[/yellow]", default="30")
+        timeout = ask_robust_int("[yellow]Session timeout (minutes, 0=unlimited)[/yellow]", default=default_timeout)
         
-        # Save config
-        new_config = {
-            "last_directory": directory,
-            "port": port,
-            "use_https": use_https,
-            "auth_choice": auth_choice,
-            "timeout": timeout
-        }
-        save_config(new_config)
+        # Save config BEFORE starting server
+        try:
+            new_config = {
+                "last_directory": directory,
+                "port": port,
+                "use_https": use_https,
+                "auth_choice": auth_choice,
+                "timeout": timeout
+            }
+            save_config(new_config)
+            # console.print("[dim]Configuration saved.[/dim]")
+        except Exception as e:
+            pass
         
         # Whitelist
         setup_whitelist()
@@ -163,7 +179,8 @@ def is_port_in_use(port: int) -> bool:
     """Check if port is already in use"""
     import socket
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        return s.connect_ex(('localhost', port)) == 0
+        s.settimeout(0.5)
+        return s.connect_ex(('127.0.0.1', port)) == 0
 
 if __name__ == '__main__':
     main()

@@ -154,11 +154,13 @@ def browse_directory() -> str:
                 current_dir = os.path.join(current_dir, selected)
 
 
+class ReusableTCPServer(socketserver.TCPServer):
+    allow_reuse_address = True
+
 def create_server(port: int, directory: str, password: str = None, token: str = None, use_https: bool = False):
     """Create HTTP/HTTPS server"""
     handler = partial(SecureAuthHandler, password=password, token=token, directory=directory)
-    server = socketserver.TCPServer(("", port), handler)
-    server.allow_reuse_address = True
+    server = ReusableTCPServer(("", port), handler)
     
     if use_https:
         cert_file = "/tmp/fileshare_cert.pem"
