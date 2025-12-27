@@ -657,14 +657,13 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
             progressContainer.style.display = 'none'; // No progress bar for delete
             loadingText.innerText = "Deleting " + name + "...";
             
-            fetch(url, {{ method: 'POST' }})
+            // Fix: Post to current page directory with query params
+            // 'url' passed here is item['href'] which is already URL-encoded
+            const deleteUrl = window.location.pathname + '?action=delete&file=' + url;
+            
+            fetch(deleteUrl, { method: 'POST' })
             .then(response => {{
-                if (response.ok) {{
-                    // Remove row from table for instant SPA feel
-                    // We need to find the row. URL contains href which links to row.
-                    // Actually, simpler to just reload to be safe, or remove if we have ID.
-                    // Let's assume re-render for consistency, but user wanted "Animation".
-                    // The "Deleting..." overlay IS the animation.
+                if (response.ok || response.status === 303) {{
                     loadingText.innerText = "🗑️ Deleted!";
                     setTimeout(() => window.location.reload(), 500);
                 }} else {{
