@@ -5,13 +5,13 @@
 ########################################
 # Daftar package per OS
 PACKAGEBASH_TERMUX := curl python bc ncurses-utils file ossp-uuid uuid-utils less zsh boxes figlet ruby clang tree jq ripgrep coreutils xz-utils just fzf gum silversearcher-ag grep brotli toilet binutils python-pip bzip2 neofetch
-PACKAGEBASH_DEBIAN := curl python3 bc ncurses-bin file uuid-runtime less zsh boxes figlet ruby clang tree jq ripgrep coreutils xz-utils fzf silversearcher-ag grep brotli toilet binutils python3-pip bzip2 neofetch openssl
+PACKAGEBASH_DEBIAN := curl python3 bc ncurses-bin file uuid-runtime less zsh boxes figlet ruby clang tree jq ripgrep coreutils xz-utils fzf silversearcher-ag grep brotli toilet binutils python3-pip python3-venv bzip2 openssl
 PACKAGEBASH_UBUNTU := $(PACKAGEBASH_DEBIAN)
 
 PACKAGEPY := dnspython requests beautifulsoup4 rich pycryptodome rich-cli certifi npyscreen prompt_toolkit lzstring faker phonenumbers blessed geopy cloudscraper emoji
 
 TERMUX_PATH := /data/data/com.termux/files/usr/bin/bash
-PYTHON_VERSION := $(shell python -V | sed 's/[[:space:]]//g' | cut -c 1-10 | tr '[:upper:]' '[:lower:]')
+PYTHON_VERSION := $(shell python3 -V 2>/dev/null | sed 's/[[:space:]]//g' | cut -c 1-10 | tr '[:upper:]' '[:lower:]')
 
 # cek os type
 detectCLI:
@@ -37,7 +37,7 @@ install-system: detectCLI
 		INSTALL_CMD="pkg install -y"; \
 	elif [ "$$OS_TYPE" = "debian" ] || [ "$$OS_TYPE" = "ubuntu" ]; then \
 		PACKAGES="$(PACKAGEBASH_DEBIAN)"; \
-		INSTALL_CMD="sudo apt-get install -y"; \
+		INSTALL_CMD="apt-get install -y"; \
 	fi; \
 	for pkg in $$PACKAGES; do \
 		echo "[>] Menginstall $$pkg..."; \
@@ -56,7 +56,7 @@ install-py: detectCLI
 	if command -v python3 >/dev/null 2>&1; then \
 		echo "[✓] Python3 ditemukan"; \
 		echo "[>] Menginstall Python package: $(PACKAGEPY)..."; \
-		pip3 install $(PACKAGEPY); \
+		pip3 install --break-system-packages $(PACKAGEPY) 2>/dev/null || pip3 install $(PACKAGEPY); \
 		echo "[>] Python Berhasil DI setup"; \
 	else \
 		echo "[✗] Python3 tidak ditemukan! Silakan install terlebih dahulu."; \
@@ -75,10 +75,10 @@ install: install-system install-py
 
 fix:
 	rm -rf $$PREFIX/lib/$(PYTHON_VERSION)/site-packages/requests
-	pip uninstall requests -y
-	pip uninstall psutil -y
-	pip install requests
-	pip install "urllib3<2"
+	pip3 uninstall requests -y --break-system-packages 2>/dev/null || pip3 uninstall requests -y
+	pip3 uninstall psutil -y --break-system-packages 2>/dev/null || pip3 uninstall psutil -y
+	pip3 install requests --break-system-packages 2>/dev/null || pip3 install requests
+	pip3 install "urllib3<2" --break-system-packages 2>/dev/null || pip3 install "urllib3<2"
 
 all: install
 
