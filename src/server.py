@@ -53,12 +53,14 @@ except ImportError:
     from rich.align import Align
     import qrcode
     
-    # Try importing config, handle if missing
-    try:
-        from src.config import load_config, save_config
-    except ImportError:
-        def load_config(): return {}
-        def save_config(c): pass
+    import qrcode
+
+# Try importing config, handle if missing
+try:
+    from src.config import load_config, save_config
+except ImportError:
+    def load_config(): return {}
+    def save_config(c): pass
 
 console = Console()
 
