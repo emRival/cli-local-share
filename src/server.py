@@ -960,7 +960,17 @@ def browse_directory() -> str:
         console.print("  [cyan]h[/cyan]       - Go to home directory")
         console.print("  [cyan]q[/cyan]       - Cancel\n")
         
-        choice = input("> ").strip().lower()
+        console.print("  [cyan]h[/cyan]       - Go to home directory")
+        console.print("  [cyan]q[/cyan]       - Cancel\n")
+        
+        try:
+            choice_input = Prompt.ask("> ")
+            # Strip ANSI codes if any
+            import re
+            ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+            choice = ansi_escape.sub('', choice_input).strip().lower()
+        except:
+            choice = ""
         
         if choice == 'q':
             return os.getcwd()
