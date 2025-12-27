@@ -49,30 +49,31 @@ def format_size(size_bytes):
 
 
 def generate_qr_text(url: str) -> str:
-    """Generate QR code as properly aligned text using Unicode blocks"""
+    """Generate QR code using Rich style tags for perfect terminal compatibility"""
     try:
         qr = qrcode.QRCode(
             version=1,
             error_correction=qrcode.constants.ERROR_CORRECT_L,
             box_size=1,
-            border=2,  # Add white border
+            border=2,
         )
         qr.add_data(url)
         qr.make(fit=True)
         
-        # Get the QR matrix
         matrix = qr.get_matrix()
         
-        # Use full block characters for consistent width
-        # Each module is represented by 2 characters wide for squareness in terminal
+        # Use Rich style tags for background colors
+        # This is more reliable than unicode block characters
         lines = []
         for row in matrix:
             line = ""
             for cell in row:
                 if cell:
-                    line += "██"  # Black module (2 full blocks)
+                    # Black module: black background with 2 spaces
+                    line += "[on black]  [/]"
                 else:
-                    line += "  "  # White module (2 spaces)
+                    # White module: white background with 2 spaces
+                    line += "[on white]  [/]"
             lines.append(line)
         
         return "\n".join(lines)

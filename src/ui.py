@@ -95,10 +95,15 @@ def create_log_display():
     log_table = Table(show_header=True, box=box.SIMPLE, padding=(0, 1), expand=True)
     log_table.add_column("Time", style="dim", width=10)
     log_table.add_column("IP", style="cyan", width=15)
-    log_table.add_column("Status", width=20)
+    log_table.add_column("Status", width=15)
+    log_table.add_column("Path", style="dim", width=25)
     
     for log in ACCESS_LOG[-8:]:
-        log_table.add_row(log["time"], log["ip"], log["status"])
+        path = log.get("path", "-")
+        # Truncate path if too long
+        if len(path) > 23:
+            path = path[:20] + "..."
+        log_table.add_row(log["time"], log["ip"], log["status"], path)
     
     return log_table
 

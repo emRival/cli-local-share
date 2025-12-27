@@ -16,16 +16,25 @@ console = Console()
 
 def log_access(ip: str, path: str, status: str):
     """Log access to the server"""
-    timestamp = datetime.now().strftime("%H:%M:%S")
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    
+    # Memory log
     ACCESS_LOG.append({
-        "time": timestamp,
+        "time": timestamp.split(" ")[1], # Just time for UI
         "ip": ip,
         "path": path,
         "status": status
     })
     if len(ACCESS_LOG) > 30:
-        # Keep last 30 logs
+        # Keep last 30 logs in UI
         del ACCESS_LOG[:-30]
+        
+    # File log (Persistence)
+    try:
+        with open("access.log", "a") as f:
+            f.write(f"[{timestamp}] IP: {ip} | Status: {status} | Path: {path}\n")
+    except:
+        pass
 
 
 def is_ip_blocked(ip: str) -> bool:
