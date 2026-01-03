@@ -1183,6 +1183,7 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
             <!DOCTYPE html>
             <html>
             <head>
+                <meta charset="UTF-8">
                 <title>Logged Out - ShareCLI</title>
                 <meta name="viewport" content="width=device-width, initial-scale=1">
                 <style>
