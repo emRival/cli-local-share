@@ -928,7 +928,7 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
                 .catch(e => window.location.reload());
             }}
         // Logic to clear Basic Auth credentials
-        function logout() {
+        function logout() {{
             // 1. Notify server for logging (optional, fire & forget)
             fetch(window.location.pathname + '?action=logout');
             
@@ -943,12 +943,12 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
             
             // Redirect
             window.location.replace(url);
-        }
+        }}
 
-        function closeModal(e) {
+        function closeModal(e) {{
             if (e) e.stopPropagation();
             document.getElementById('previewModal').style.display = 'none';
-        }
+        }}
     </script>
 </body>
 </html>'''
