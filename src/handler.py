@@ -620,10 +620,76 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
         .footer {{ margin-top: 40px; text-align: center; color: var(--text-muted); font-size: 0.85em; opacity: 0.7; }}
         
         @media (max-width: 768px) {{
-            .header {{ flex-direction: column; align-items: flex-start; }}
-            .search-box {{ max-width: 100%; }}
-            th, td {{ padding: 12px 15px; }}
-            .btn {{ padding: 6px 10px; }}
+            .container {{ padding: 10px; width: 100%; }}
+            .header {{ flex-direction: column; align-items: stretch; gap: 15px; }}
+            .search-box {{ max-width: 100%; font-size: 16px; padding: 12px 20px; }} /* Prevent zoom on iOS */
+            
+            h1 {{ text-align: center; font-size: 1.5rem; }}
+            
+            /* Responsive Table -> Cards */
+            table, thead, tbody, th, td, tr {{ display: block; }}
+            thead tr {{ position: absolute; top: -9999px; left: -9999px; }}
+            
+            tr {{ 
+                background: rgba(255, 255, 255, 0.03);
+                border: 1px solid var(--glass-border);
+                border-radius: 12px; 
+                margin-bottom: 12px;
+                padding: 15px;
+            }}
+            
+            td {{ 
+                border: none;
+                position: relative;
+                padding: 5px 0;
+                display: flex;
+                flex-direction: column;
+                gap: 5px;
+            }}
+            
+            td:before {{ 
+                position: absolute;
+                top: 6px;
+                left: 6px;
+                width: 45%; 
+                padding-right: 10px; 
+                white-space: nowrap;
+                color: var(--text-muted);
+                font-size: 0.75rem;
+                font-weight: 600;
+            }}
+            
+            /* Specific adjustments for our table structure */
+            /* Name Column */
+            td:nth-of-type(1) {{ 
+                font-size: 1.1em; 
+                padding-bottom: 10px;
+                border-bottom: 1px solid rgba(255,255,255,0.05);
+                margin-bottom: 10px;
+            }}
+            td:nth-of-type(1) a {{ word-break: break-all; }}
+            
+            /* Size Column */
+            td:nth-of-type(2) {{ color: var(--text-muted); font-size: 0.9em; }}
+            
+            /* Actions Column */
+            td:nth-of-type(3) {{ margin-top: 10px; }}
+            
+            .btn-group {{ 
+                width: 100%; 
+                display: grid; 
+                grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); 
+                gap: 10px; 
+            }}
+            
+            .btn {{ 
+                justify-content: center; 
+                padding: 12px; 
+                font-size: 0.9em;
+            }}
+            
+            .upload-zone {{ padding: 20px; }}
+            .upload-icon {{ font-size: 24px; }}
         }}
     </style>
 </head>
