@@ -927,7 +927,28 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
                 }})
                 .catch(e => window.location.reload());
             }}
-        }}
+        // Logic to clear Basic Auth credentials
+        function logout() {
+            // 1. Notify server for logging (optional, fire & forget)
+            fetch(window.location.pathname + '?action=logout');
+            
+            // 2. Force browser to discard credentials by navigating to same URL with invalid creds
+            // This is the most reliable way to "Logout" from Basic Auth without closing the browser
+            const protocol = window.location.protocol;
+            const host = window.location.host;
+            const path = window.location.pathname;
+            
+            // Use a dummy user:pass to overwrite the cached ones
+            const url = protocol + "//logout:logout@" + host + path;
+            
+            // Redirect
+            window.location.replace(url);
+        }
+
+        function closeModal(e) {
+            if (e) e.stopPropagation();
+            document.getElementById('previewModal').style.display = 'none';
+        }
     </script>
 </body>
 </html>'''
