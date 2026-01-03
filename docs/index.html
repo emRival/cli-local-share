@@ -52,129 +52,138 @@
                 <p>Configurable session lifecycles automatically terminate server access after a set duration, ensuring
                     no open ports are left forgotten.</p>
             </div>
-            <div class="card">
-                <div class="icon-box">🔄</div>
-                <h3>Seamless OTA Updates</h3>
-                <p>Integrated update engine allows for one-click version upgrades directly from the CLI, ensuring you
-                    always have the latest security patches.</p>
-            </div>
-            <div class="card">
-                <div class="icon-box">⚡</div>
-                <h3>High-Performance Core</h3>
-                <p>Built on top of Python's robust socket libraries with a zero-dependency (except Rich) architecture
-                    for maximum stability and speed.</p>
-            </div>
-            <div class="card">
-                <div class="icon-box">💻</div>
-                <h3>Immersive Experience</h3>
-                <p>A sophisticated TUI (Terminal User Interface) for operators and a fluid, dark-mode responsive web
-                    client for end-users.</p>
-            </div>
-            <div class="card">
-                <div class="icon-box">📂</div>
-                <h3>Granular Control</h3>
-                <p>Precise permission management allows you to toggle client-side upload and deletion capabilities on a
-                    per-session basis.</p>
-            </div>
-        </section>
+            <p>Integrated update engine allows for one-click version upgrades directly from the CLI, ensuring you
+                always have the latest security patches.</p>
+    </div>
+    <div class="card">
+        <div class="icon-box">🎬</div>
+        <h3>Rich Media Previews</h3>
+        <p>Stream videos, listen to audio, and view code/text files directly in the browser without downloading.
+            Supports MP4, MP3, Python, JS, and more.</p>
+    </div>
+    <div class="card">
+        <div class="icon-box">🚀</div>
+        <h3>RAM-Safe Uploads</h3>
+        <p>New Streaming Upload engine handles files of any size (even 10GB+) with minimal memory footprint. Zero
+            crashes, maximum speed.</p>
+    </div>
+    <div class="card">
+        <div class="icon-box">⚡</div>
+        <h3>High-Performance Core</h3>
+        <p>Built on top of Python's robust socket libraries with a zero-dependency (except Rich) architecture
+            for maximum stability and speed.</p>
+    </div>
+    <div class="card">
+        <div class="icon-box">💻</div>
+        <h3>Immersive Experience</h3>
+        <p>A sophisticated TUI (Terminal User Interface) for operators and a fluid, dark-mode responsive web
+            client for end-users.</p>
+    </div>
+    <div class="card">
+        <div class="icon-box">📂</div>
+        <h3>Granular Control</h3>
+        <p>Precise permission management allows you to toggle client-side upload and deletion capabilities on a
+            per-session basis.</p>
+    </div>
+    </section>
 
-        <section id="docs" class="docs-section">
-            <h2>Documentation</h2>
-            <div class="docs-grid">
-                <aside class="docs-nav">
-                    <ul>
-                        <li><a href="#install" class="active">Installation</a></li>
-                        <li><a href="#quickstart">Quick Start</a></li>
-                        <li><a href="#wizard">Setup Wizard</a></li>
-                        <li><a href="#auth">Authentication Modes</a></li>
-                        <li><a href="#troubleshooting">Troubleshooting</a></li>
-                    </ul>
-                </aside>
-                <article class="docs-content">
-                    <div id="install">
-                        <h3>⚡ Installation</h3>
-                        <p><strong>System Requirements</strong>: Python 3.8+ (Mac, Linux, Windows/WSL, Android via
-                            Termux).</p>
-                        <p>The easiest method is using our automated installer script which handles dependencies and
-                            path configuration:</p>
-                        <div class="cmd-box" style="width:100%; margin-bottom: 1rem;">
-                            <span class="cmd-text">curl -sL
-                                https://raw.githubusercontent.com/emRival/cli-local-share/main/install.sh | bash</span>
-                        </div>
-                        <p>Alternatively, manual installation is supported for advanced users:</p>
-                        <pre
-                            style="background:rgba(255,255,255,0.05); padding:1.5rem; border-radius:12px; border:1px solid var(--border);"><code>git clone https://github.com/emRival/cli-local-share.git
+    <section id="docs" class="docs-section">
+        <h2>Documentation</h2>
+        <div class="docs-grid">
+            <aside class="docs-nav">
+                <ul>
+                    <li><a href="#install" class="active">Installation</a></li>
+                    <li><a href="#quickstart">Quick Start</a></li>
+                    <li><a href="#wizard">Setup Wizard</a></li>
+                    <li><a href="#auth">Authentication Modes</a></li>
+                    <li><a href="#troubleshooting">Troubleshooting</a></li>
+                </ul>
+            </aside>
+            <article class="docs-content">
+                <div id="install">
+                    <h3>⚡ Installation</h3>
+                    <p><strong>System Requirements</strong>: Python 3.8+ (Mac, Linux, Windows/WSL, Android via
+                        Termux).</p>
+                    <p>The easiest method is using our automated installer script which handles dependencies and
+                        path configuration:</p>
+                    <div class="cmd-box" style="width:100%; margin-bottom: 1rem;">
+                        <span class="cmd-text">curl -sL
+                            https://raw.githubusercontent.com/emRival/cli-local-share/main/install.sh | bash</span>
+                    </div>
+                    <p>Alternatively, manual installation is supported for advanced users:</p>
+                    <pre
+                        style="background:rgba(255,255,255,0.05); padding:1.5rem; border-radius:12px; border:1px solid var(--border);"><code>git clone https://github.com/emRival/cli-local-share.git
 cd cli-local-share
 pip3 install .</code></pre>
-                    </div>
+                </div>
 
-                    <div id="quickstart">
-                        <h3>🚀 Quick Start</h3>
-                        <p>Once installed, the global command <code>sharecli</code> becomes available.</p>
-                        <div class="cmd-box" style="width:100%; margin-bottom: 1rem;">
-                            <span class="cmd-text">sharecli</span>
+                <div id="quickstart">
+                    <h3>🚀 Quick Start</h3>
+                    <p>Once installed, the global command <code>sharecli</code> becomes available.</p>
+                    <div class="cmd-box" style="width:100%; margin-bottom: 1rem;">
+                        <span class="cmd-text">sharecli</span>
+                    </div>
+                    <p>This command launches the interactive configuration wizard. No command-line arguments are
+                        needed—everything is configured via the TUI.</p>
+                </div>
+
+                <div id="wizard">
+                    <h3>⚙️ Setup Wizard</h3>
+                    <p>The application guides you through a secure setup process every time you run it:</p>
+                    <ul style="margin-left: 1.5rem; color: var(--text-secondary); margin-bottom: 1.5rem;">
+                        <li style="margin-bottom:0.8rem"><strong>Directory Selection</strong>: Choose "Browse" to
+                            navigate your filesystem interactively, or type a path manually.</li>
+                        <li style="margin-bottom:0.8rem"><strong>Port Configuration</strong>: Defaults to
+                            <code>8080</code>. The system automatically detects conflicts and suggests alternatives.
+                        </li>
+                        <li style="margin-bottom:0.8rem"><strong>HTTPS</strong>: Generates a self-signed certificate
+                            on the fly for encrypted transport.</li>
+                        <li style="margin-bottom:0.8rem"><strong>Session Timeout</strong>: Define how long the
+                            server remains active (e.g., "10" for 10 minutes). Input <code>0</code> for unlimited.
+                        </li>
+                        <li><strong>Permissions</strong>: Explicitly allow or deny <code>Upload</code> and
+                            <code>Delete</code> actions for connected clients.
+                        </li>
+                    </ul>
+                </div>
+
+                <div id="auth">
+                    <h3>🔐 Authentication Modes</h3>
+                    <p>We provide three tiers of access control:</p>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem; margin-top:1.5rem;">
+                        <div style="background:rgba(255,255,255,0.03); padding:1rem; border-radius:8px;">
+                            <strong style="color:#fff">Token (Recommended)</strong>
+                            <p style="font-size:0.9rem; margin-top:0.5rem">Generates a cryptographically secure,
+                                random URL token. Users with the link are logged in automatically.</p>
                         </div>
-                        <p>This command launches the interactive configuration wizard. No command-line arguments are
-                            needed—everything is configured via the TUI.</p>
-                    </div>
-
-                    <div id="wizard">
-                        <h3>⚙️ Setup Wizard</h3>
-                        <p>The application guides you through a secure setup process every time you run it:</p>
-                        <ul style="margin-left: 1.5rem; color: var(--text-secondary); margin-bottom: 1.5rem;">
-                            <li style="margin-bottom:0.8rem"><strong>Directory Selection</strong>: Choose "Browse" to
-                                navigate your filesystem interactively, or type a path manually.</li>
-                            <li style="margin-bottom:0.8rem"><strong>Port Configuration</strong>: Defaults to
-                                <code>8080</code>. The system automatically detects conflicts and suggests alternatives.
-                            </li>
-                            <li style="margin-bottom:0.8rem"><strong>HTTPS</strong>: Generates a self-signed certificate
-                                on the fly for encrypted transport.</li>
-                            <li style="margin-bottom:0.8rem"><strong>Session Timeout</strong>: Define how long the
-                                server remains active (e.g., "10" for 10 minutes). Input <code>0</code> for unlimited.
-                            </li>
-                            <li><strong>Permissions</strong>: Explicitly allow or deny <code>Upload</code> and
-                                <code>Delete</code> actions for connected clients.
-                            </li>
-                        </ul>
-                    </div>
-
-                    <div id="auth">
-                        <h3>🔐 Authentication Modes</h3>
-                        <p>We provide three tiers of access control:</p>
-                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem; margin-top:1.5rem;">
-                            <div style="background:rgba(255,255,255,0.03); padding:1rem; border-radius:8px;">
-                                <strong style="color:#fff">Token (Recommended)</strong>
-                                <p style="font-size:0.9rem; margin-top:0.5rem">Generates a cryptographically secure,
-                                    random URL token. Users with the link are logged in automatically.</p>
-                            </div>
-                            <div style="background:rgba(255,255,255,0.03); padding:1rem; border-radius:8px;">
-                                <strong style="color:#fff">Password</strong>
-                                <p style="font-size:0.9rem; margin-top:0.5rem">Traditional username/password flow. You
-                                    define the custom password during setup.</p>
-                            </div>
+                        <div style="background:rgba(255,255,255,0.03); padding:1rem; border-radius:8px;">
+                            <strong style="color:#fff">Password</strong>
+                            <p style="font-size:0.9rem; margin-top:0.5rem">Traditional username/password flow. You
+                                define the custom password during setup.</p>
                         </div>
-                        <p style="margin-top:1rem; font-size: 0.9em; opacity: 0.7;"><em>Note: "None" mode is also
-                                available but effectively disables security. Use only in trusted testing
-                                environments.</em></p>
                     </div>
+                    <p style="margin-top:1rem; font-size: 0.9em; opacity: 0.7;"><em>Note: "None" mode is also
+                            available but effectively disables security. Use only in trusted testing
+                            environments.</em></p>
+                </div>
 
-                    <div id="troubleshooting">
-                        <h3>🔧 Troubleshooting</h3>
-                        <p><strong>Port Already in Use?</strong></p>
-                        <p>If port 8080 is busy, the wizard will prevent you from crashing and suggest 8081, 8082, etc.
-                        </p>
+                <div id="troubleshooting">
+                    <h3>🔧 Troubleshooting</h3>
+                    <p><strong>Port Already in Use?</strong></p>
+                    <p>If port 8080 is busy, the wizard will prevent you from crashing and suggest 8081, 8082, etc.
+                    </p>
 
-                        <p><strong>"Not Secure" Warning?</strong></p>
-                        <p>When using HTTPS with a self-signed certificate, modern browsers will warn you. This is
-                            expected. Click "Advanced" -> "Proceed to site" to continue.</p>
-                    </div>
-                </article>
-            </div>
-        </section>
+                    <p><strong>"Not Secure" Warning?</strong></p>
+                    <p>When using HTTPS with a self-signed certificate, modern browsers will warn you. This is
+                        expected. Click "Advanced" -> "Proceed to site" to continue.</p>
+                </div>
+            </article>
+        </div>
+    </section>
 
-        <footer>
-            <p>© 2026 FileShare. MIT License.</p>
-        </footer>
+    <footer>
+        <p>© 2026 FileShare. MIT License.</p>
+    </footer>
     </div>
 
     <script src="script.js"></script>

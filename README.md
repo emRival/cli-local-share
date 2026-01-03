@@ -46,7 +46,12 @@ Kelebihan utama aplikasi ini adalah **Kendali Penuh di Tangan Anda**:
 > *   **Strict Whitelist**: Mode eksklusif di mana HANYA IP teman Anda yang bisa akses.
 > *   **Secure Token**: Login instan tanpa password panjang, cukup pakai link token.
 
-**4. 💻 UI yang Memanjakan Mata**
+**4. 🎬 Rich Media & Streaming**
+> *   **Media Preview**: Nonton video, dengar musik, atau baca kodingan langsung di browser tanpa download.
+> *   **RAM-Safe Upload**: Upload file raksasa (5GB+) aman sentosa tanpa bikin laptop hang.
+> *   **Mobile Friendly**: Scan QR Code di terminal untuk connect instan dari HP.
+
+**5. 💻 UI yang Memanjakan Mata**
 > *   **Terminal Dashboard**: Tui (Text UI) ala hacker yang menampilkan log *access* & *security* secara live.
 > *   **Web Interface**: File browser di browser HP/Laptop lawan bicara tampil modern, responsif (Dark Mode ready), dan user-friendly.
 
