@@ -9,6 +9,20 @@ from src.state import BLOCK_DURATION_SECONDS
 from src.utils import format_size, get_system_username, get_local_ip
 from src.security import is_ip_blocked, is_ip_whitelisted, log_access, record_failed_attempt, FAILED_ATTEMPTS
 
+def safe_handler(func):
+    """Decorator to handle exceptions gracefully"""
+    def wrapper(self, *args, **kwargs):
+        try:
+            return func(self, *args, **kwargs)
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            try:
+                self.send_error(500, f"Internal Server Error: {e}")
+            except:
+                pass
+    return wrapper
+
 class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
     """HTTP handler with enhanced security and download UI"""
     
@@ -57,14 +71,52 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
             
         return full_path
 
+    def check_csrf(self) -> bool:
+        """Verify request origin to prevent CSRF"""
+        # Only check POST/PUT/DELETE
+        if self.command not in ['POST', 'PUT', 'DELETE']:
+            return True
+            
+        # Get Origin and Referer
+        origin = self.headers.get('Origin')
+        referer = self.headers.get('Referer')
+        
+        # If neither exists, might be a script/curl (allow, mostly safe for local tools)
+        # But if they exist, they MUST match our host
+        if not origin and not referer:
+            return True
+            
+        host = self.headers.get('Host')
+        if not host:
+            return False # Host header is mandatory in HTTP/1.1
+            
+        # Check Origin if present
+        if origin:
+            # Origin usually includes protocol (http://localhost:8080)
+            # Host usually does not (localhost:8080)
+            if host not in origin:
+                return False
+                
+        # Check Referer if present
+        if referer:
+            if host not in referer:
+                return False
+                
+        return True
+
+    @safe_handler
     def do_POST(self):
         """Handle file uploads and deletions"""
-        try:
-            client_ip = self.client_address[0]
+        client_ip = self.client_address[0]
         
         # Security checks
         if is_ip_blocked(client_ip):
             self.send_blocked_response()
+            return
+
+        if not self.check_csrf():
+            self.send_error(403, "Forbidden: CSRF check failed")
+            log_access(client_ip, "CSRF Reject", "🚫 BLOCKED")
             return
             
         if not is_ip_whitelisted(client_ip):
@@ -154,10 +206,6 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
         except Exception as e:
             log_access(client_ip, "Upload error", "❌ ERR")
             self.send_error(500, f"Upload error: {e}")
-        except Exception as e:
-            import traceback
-            traceback.print_exc()
-            self.send_error(500, f"Internal Server Error: {e}")
     
     def send_blocked_response(self):
         self.send_response(403)
@@ -790,9 +838,9 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
         
         return buffer.getvalue()
     
+    @safe_handler
     def do_GET(self):
-        try:
-            client_ip = self.client_address[0]
+        client_ip = self.client_address[0]
         
         # Security checks
         if is_ip_blocked(client_ip):
@@ -848,14 +896,6 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
         # Serve file normally
         log_access(client_ip, self.path, "✅ OK")
         super().do_GET()
-        
-        except Exception as e:
-            import traceback
-            traceback.print_exc()
-            try:
-                self.send_error(500, f"Internal Server Error: {e}")
-            except:
-                pass
     
     def do_HEAD(self):
         client_ip = self.client_address[0]

@@ -16,7 +16,7 @@ from rich import box
 from rich.align import Align
 from rich.prompt import Prompt
 
-from src.state import SERVER_RUNNING, ACCESS_LOG, BLOCKED_IPS, FAILED_ATTEMPTS, WHITELIST_IPS, BLOCK_DURATION_SECONDS
+from src.state import SERVER_RUNNING, ACCESS_LOG, BLOCKED_IPS, FAILED_ATTEMPTS, WHITELIST_IPS, BLOCK_DURATION_SECONDS, STATE_LOCK
 from src.utils import get_system_username, get_local_ip, format_size, ask_robust_int
 from src.handler import SecureAuthHandler
 from src.security import generate_self_signed_cert
@@ -43,69 +43,9 @@ def print_banner():
     console.print(banner)
 
 
-def create_status_display(url: str, directory: str, password: str, token: str, 
-                          timeout: int, use_https: bool, qr_text: str):
-    """Create status display"""
-    # Use explicit width for stability
-    info_table = Table(show_header=False, box=box.ROUNDED, padding=(0, 2), expand=True, border_style="blue")
-    info_table.add_column("Key", style="cyan", width=12)
-    info_table.add_column("Value", style="white")
-    
-    protocol = "[bold green]🔒 HTTPS[/bold green]" if use_https else "[yellow]⚠️ HTTP[/yellow]"
-    info_table.add_row("👤 User", f"[bold]{get_system_username()}[/bold]")
-    info_table.add_row("🌐 URL", f"[bold]{url}[/bold]")
-    info_table.add_row("🔐 Protocol", protocol)
-    info_table.add_row("📁 Directory", directory[:30])
-    info_table.add_row("⏱️  Timeout", f"{timeout}m" if timeout > 0 else "∞")
-    info_table.add_row("🛡️ Rate Limit", f"Max 5 attempts / {BLOCK_DURATION_SECONDS}s ban")
-    
-    auth_status = []
-    if password: auth_status.append("Password")
-    if token: auth_status.append("Token")
-    if not password and not token: auth_status.append("None")
-    info_table.add_row("🔑 Auth", ", ".join(auth_status))
-    
-    # Show full token if present, wrapping if needed
-    if token:
-        info_table.add_row("🎫 Token", f"[bold]{token}[/bold]")
-
-    # Files
-    files = []
-    try:
-        for f in os.listdir(directory)[:8]:
-            path = os.path.join(directory, f)
-            if os.path.isfile(path):
-                size = format_size(os.path.getsize(path))
-                files.append(f"📄 {f[:25]} ({size})")
-            else:
-                files.append(f"📁 {f[:25]}/")
-    except:
-        files = ["[dim]Cannot read[/dim]"]
-    
-    files_text = "\n".join(files)
-    
-    return info_table, files_text, None
 
 
-def create_log_display():
-    """Create access log display"""
-    if not ACCESS_LOG:
-        return "[dim]No access yet...[/dim]"
-    
-    log_table = Table(show_header=True, box=box.SIMPLE, padding=(0, 1), expand=True)
-    log_table.add_column("Time", style="dim", width=10)
-    log_table.add_column("IP", style="cyan", width=15)
-    log_table.add_column("Status", width=15)
-    log_table.add_column("Path", style="dim", width=25)
-    
-    for log in ACCESS_LOG[-8:]:
-        path = log.get("path", "-")
-        # Truncate path if too long
-        if len(path) > 23:
-            path = path[:20] + "..."
-        log_table.add_row(log["time"], log["ip"], log["status"], path)
-    
-    return log_table
+
 
 
 def browse_directory() -> str:
@@ -212,6 +152,9 @@ def run_server_with_ui(port: int, directory: str, password: str, token: str,
     
     try:
         # Hide cursor for cleaner display
+        last_file_update = 0
+        files_text = ""
+        
         console.show_cursor(False)
         with Live(console=console, refresh_per_second=4, screen=True) as live:
             while state.SERVER_RUNNING:
@@ -281,42 +224,49 @@ def run_server_with_ui(port: int, directory: str, password: str, token: str,
                 ))
                 
                 # Log Panel Content
-                if state.ACCESS_LOG:
-                    log_table = Table.grid(padding=(0, 1))
-                    log_table.add_column(style="dim", width=8)  # time
-                    log_table.add_column(style="cyan", width=14)  # ip
-                    log_table.add_column(width=10)  # status
-                    for entry in list(state.ACCESS_LOG)[-6:]:
-                        log_table.add_row(
-                            entry.get("time", "")[:8],
-                            entry.get("ip", ""),
-                            entry.get("status", "")
-                        )
-                    log_content = log_table
-                else:
-                    log_content = Text("No access yet...", style="dim italic")
+                log_content = Text("No access yet...", style="dim italic")
+                with STATE_LOCK:
+                    if state.ACCESS_LOG:
+                        log_table = Table.grid(padding=(0, 1))
+                        log_table.add_column(style="dim", width=8)  # time
+                        log_table.add_column(style="cyan", width=14)  # ip
+                        log_table.add_column(width=10)  # status
+                        
+                        # Copy list inside lock to avoid iteration issues
+                        logs_to_show = list(state.ACCESS_LOG)[-6:]
+                        
+                        for entry in logs_to_show:
+                            log_table.add_row(
+                                entry.get("time", "")[:8],
+                                entry.get("ip", ""),
+                                entry.get("status", "")
+                            )
+                        log_content = log_table
                 
                 body_layout["top_row"]["log"].update(Panel(
                     log_content,
-                    title=f"[bold green]📊 Access Log ({len(state.ACCESS_LOG)})[/bold green]",
+                    title="[bold green]📊 Access Log[/bold green]",
                     border_style="green",
                     box=box.ROUNDED
                 ))
                 
-                # Files
-                files = []
-                try:
-                    for f in os.listdir(directory)[:8]:
-                        path = os.path.join(directory, f)
-                        if os.path.isfile(path):
-                            size = format_size(os.path.getsize(path))
-                            files.append(f"📄 {f[:25]} ({size})")
-                        else:
-                            files.append(f"📁 {f[:25]}/")
-                except:
-                    files = ["[dim]Cannot read directory[/dim]"]
-                
-                files_text = "\n".join(files)
+                # Files - Update every 2 seconds
+                if time.time() - last_file_update > 2:
+                    files = []
+                    try:
+                        for f in os.listdir(directory)[:8]:
+                            path = os.path.join(directory, f)
+                            if os.path.isfile(path):
+                                size = format_size(os.path.getsize(path))
+                                files.append(f"📄 {f[:25]} ({size})")
+                            else:
+                                files.append(f"📁 {f[:25]}/")
+                    except:
+                        files = ["[dim]Cannot read directory[/dim]"]
+                    
+                    files_text = "\n".join(files)
+                    last_file_update = time.time()
+
 
                 # Files Panel (Bottom - Full Width)
                 body_layout["bottom_row"].update(Panel(

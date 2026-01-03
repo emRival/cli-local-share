@@ -9,7 +9,7 @@ from typing import Dict, List, Optional
 from rich.console import Console
 from rich.prompt import Prompt, Confirm
 
-from src.state import ACCESS_LOG, BLOCKED_IPS, FAILED_ATTEMPTS, WHITELIST_IPS, MAX_FAILED_ATTEMPTS, BLOCK_DURATION_SECONDS
+from src.state import ACCESS_LOG, BLOCKED_IPS, FAILED_ATTEMPTS, WHITELIST_IPS, MAX_FAILED_ATTEMPTS, BLOCK_DURATION_SECONDS, STATE_LOCK
 from src.utils import get_local_ip, get_network_range
 
 console = Console()
@@ -19,15 +19,16 @@ def log_access(ip: str, path: str, status: str):
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     
     # Memory log
-    ACCESS_LOG.append({
-        "time": timestamp.split(" ")[1], # Just time for UI
-        "ip": ip,
-        "path": path,
-        "status": status
-    })
-    if len(ACCESS_LOG) > 30:
-        # Keep last 30 logs in UI
-        del ACCESS_LOG[:-30]
+    with STATE_LOCK:
+        ACCESS_LOG.append({
+            "time": timestamp.split(" ")[1], # Just time for UI
+            "ip": ip,
+            "path": path,
+            "status": status
+        })
+        if len(ACCESS_LOG) > 30:
+            # Keep last 30 logs in UI
+            del ACCESS_LOG[:-30]
         
     # File log (Persistence)
     try:
@@ -39,30 +40,46 @@ def log_access(ip: str, path: str, status: str):
 
 def is_ip_blocked(ip: str) -> bool:
     """Check if IP is blocked"""
-    if ip in BLOCKED_IPS:
-        if datetime.now() < BLOCKED_IPS[ip]:
-            return True
-        else:
-            # Unblock after duration
-            del BLOCKED_IPS[ip]
-            FAILED_ATTEMPTS[ip] = 0
+    with STATE_LOCK:
+        if ip in BLOCKED_IPS:
+            if datetime.now() < BLOCKED_IPS[ip]:
+                return True
+            else:
+                # Unblock after duration
+                del BLOCKED_IPS[ip]
+                FAILED_ATTEMPTS[ip] = 0
     return False
 
 
 def record_failed_attempt(ip: str):
     """Record failed login attempt"""
-    FAILED_ATTEMPTS[ip] += 1
-    
-    if FAILED_ATTEMPTS[ip] >= MAX_FAILED_ATTEMPTS:
-        BLOCKED_IPS[ip] = datetime.now() + timedelta(seconds=BLOCK_DURATION_SECONDS)
+    with STATE_LOCK:
+        FAILED_ATTEMPTS[ip] += 1
+        
+        if FAILED_ATTEMPTS[ip] >= MAX_FAILED_ATTEMPTS:
+            BLOCKED_IPS[ip] = datetime.now() + timedelta(seconds=BLOCK_DURATION_SECONDS)
+            # Release lock before calling log_access to avoid potential deadlock if log_access also locks (it does!)
+            # But wait, log_access locks independently. It's safe if re-entrant or fine-grained. 
+            # Re-entrant lock would be better, but default Lock isn't.
+            # Best to just log after releasing, or accept that log_access uses lock too.
+            # Since log_access is short and simple, we can call it outside or inside if we are careful.
+            # Actually, log_access is self-contained. better call it outside this lock if possible, 
+            # OR make log_access robust. 
+            # Given log_access acquires lock, calling it inside another lock will DEADLOCK.
+            should_log_block = True
+        else:
+            should_log_block = False
+
+    if should_log_block:
         log_access(ip, "-", f"🚫 BLOCKED ({BLOCK_DURATION_SECONDS}s)")
 
 
 def is_ip_whitelisted(ip: str) -> bool:
     """Check if IP is in whitelist (empty whitelist = allow all)"""
-    if not WHITELIST_IPS:
-        return True
-    return ip in WHITELIST_IPS or ip == "127.0.0.1"
+    with STATE_LOCK:
+        if not WHITELIST_IPS:
+            return True
+        return ip in WHITELIST_IPS or ip == "127.0.0.1"
 
 
 def generate_self_signed_cert(cert_file: str, key_file: str):
