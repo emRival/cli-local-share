@@ -1,4 +1,4 @@
-# FileShare v2.0
+<h1 align="center">ShareCLI v2.0</h1>
 
 <p align="center">
   <img src="https://img.shields.io/badge/Platform-Debian%20%7C%20Ubuntu%20%7C%20Linux-green?style=for-the-badge">
@@ -17,20 +17,22 @@
 <div align="center">
   <img src="assets/demo.gif" alt="Demo Preview" width="100%">
   <br>
-  <i>(Demo Aplikasi FileShare v2.0)</i>
+  <i>(Demo Aplikasi ShareCLI v2.0)</i>
 </div>
 
 ---
 
 ## ✨ Tentang Aplikasi
 
-**FileShare v2.0** adalah aplikasi CLI (Command Line Interface) yang memudahkan Anda berbagi file di jaringan lokal (WiFi/LAN) secara aman dan fleksibel.
+**ShareCLI v2.0** adalah aplikasi CLI (Command Line Interface) yang memudahkan Anda berbagi file di jaringan lokal (WiFi/LAN) secara aman dan fleksibel.
 
 Kelebihan utama aplikasi ini adalah **Kendali Penuh di Tangan Anda**:
 *   📂 **Pilih Folder Bebas**: Tentukan folder mana saja yang ingin di-share, tidak terpaku pada direktori saat ini.
 *   ⚙️ **Konfigurasi Mudah**: Atur Port, IP Whitelist, dan Timeout sesi sesuai kebutuhan.
 *   🔒 **Keamanan Terjamin**: Opsi enkripsi HTTPS dan berbagai metode login (Password/Token) yang bisa diatur saat *start-up*.
 *   ✅ **Tanpa Ribet**: Semua pengaturan dilakukan lewat panduan interaktif (Wizard) yang mudah dipahami.
+<br>
+*   (c) 2026 ShareCLI. MIT License.
 
 ### 🌟 Fitur Unggulan
 

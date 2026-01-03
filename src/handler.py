@@ -120,7 +120,7 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
     
     def do_AUTHHEAD(self):
         self.send_response(401)
-        realm = f'FileShare - User: {get_system_username()}'
+        realm = f'ShareCLI - User: {get_system_username()}'
         self.send_header('WWW-Authenticate', f'Basic realm="{realm}"')
         self.send_header('Content-type', 'text/html')
         self.end_headers()
