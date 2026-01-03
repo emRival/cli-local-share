@@ -5,7 +5,7 @@ import urllib.parse
 from functools import partial
 from typing import Optional
 
-from src.state import BLOCK_DURATION_SECONDS
+from src.state import BLOCK_DURATION_SECONDS, BLOCKED_IPS, STATE_LOCK
 from src.utils import format_size, get_system_username, get_local_ip
 from src.security import is_ip_blocked, is_ip_whitelisted, log_access, record_failed_attempt, FAILED_ATTEMPTS
 
@@ -110,10 +110,35 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
         client_ip = self.client_address[0]
         
         # Security checks
-        if is_ip_blocked(client_ip):
-            self.send_blocked_response()
-            return
+        # 1. Check Auth First (Smart Rate Limit)
+        auth_status = self.check_auth()
+        
+        if auth_status == 1:
+            # Success: Unblock if needed
+            with STATE_LOCK:
+                if client_ip in BLOCKED_IPS:
+                    del BLOCKED_IPS[client_ip]
+                if client_ip in FAILED_ATTEMPTS:
+                    FAILED_ATTEMPTS[client_ip] = 0
+        else:
+            # Not authenticated: Check Block
+            if is_ip_blocked(client_ip):
+                self.send_blocked_response()
+                return
 
+            if auth_status == 0:
+                # Wrong Password
+                self.do_AUTHHEAD()
+                record_failed_attempt(client_ip)
+                log_access(client_ip, "POST", "🔒 AUTH FAILED")
+                return
+            
+            elif auth_status == 2:
+                # No Header (First visit)
+                self.do_AUTHHEAD()
+                return
+
+        # 2. Other Security Checks
         if not self.check_csrf():
             self.send_error(403, "Forbidden: CSRF check failed")
             log_access(client_ip, "CSRF Reject", "🚫 BLOCKED")
@@ -121,10 +146,6 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
             
         if not is_ip_whitelisted(client_ip):
             self.send_whitelist_denied()
-            return
-            
-        if not self.check_auth():
-            self.do_AUTHHEAD()
             return
 
         # Check for query params (e.g. ?action=delete)
@@ -219,32 +240,38 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(b'<h1>403 Forbidden</h1><p>Your IP is not whitelisted.</p>')
     
-    def check_auth(self) -> bool:
-        """Check authentication"""
+    def check_auth(self) -> int:
+        """
+        Check authentication
+        Returns:
+            0: Authentication Failed (Wrong Password)
+            1: Authentication Successful
+            2: No Authentication Provided (First visit / Cancel)
+        """
         if not self.auth_password and not self.auth_token:
-            return True
+            return 1 # No auth required
         
         auth_header = self.headers.get('Authorization')
         if auth_header is None:
-            return False
+            return 2 # No credentials provided
         
         try:
             auth_type, auth_data = auth_header.split(' ', 1)
             if auth_type.lower() != 'basic':
-                return False
+                return 0
             
             decoded = base64.b64decode(auth_data).decode('utf-8')
             username, password = decoded.split(':', 1)
             
             # Check password or token
             if self.auth_password and password == self.auth_password:
-                return True
+                return 1
             if self.auth_token and password == self.auth_token:
-                return True
+                return 1
             
-            return False
+            return 0 # Wrong password
         except:
-            return False
+            return 0
     
     def generate_html_page(self, path: str) -> bytes:
         """Generate custom HTML page with download buttons"""
@@ -843,24 +870,43 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
         client_ip = self.client_address[0]
         
         # Security checks
-        if is_ip_blocked(client_ip):
-            self.send_blocked_response()
-            log_access(client_ip, self.path, "🚫 BLOCKED")
-            return
+        # 1. Check Auth First (Smart Rate Limit)
+        auth_status = self.check_auth()
         
+        if auth_status == 1:
+            # Success: Unblock if needed
+            with STATE_LOCK:
+                if client_ip in BLOCKED_IPS:
+                    del BLOCKED_IPS[client_ip]
+                if client_ip in FAILED_ATTEMPTS:
+                    FAILED_ATTEMPTS[client_ip] = 0
+        else:
+            # Not authenticated: Check Block
+            if is_ip_blocked(client_ip):
+                self.send_blocked_response()
+                log_access(client_ip, self.path, "🚫 BLOCKED")
+                return
+
+            if auth_status == 0:
+                # Wrong Password
+                self.do_AUTHHEAD()
+                self.wfile.write(f'Login - Username: {get_system_username()}'.encode())
+                record_failed_attempt(client_ip)
+                log_access(client_ip, self.path, "🔒 AUTH FAILED")
+                return
+            
+            elif auth_status == 2:
+                # No Header (First visit)
+                self.do_AUTHHEAD()
+                self.wfile.write(f'Login - Username: {get_system_username()}'.encode())
+                # No penalty for missing credentials
+                return
+        
+        # 2. Whitelist Check
         if not is_ip_whitelisted(client_ip):
             self.send_whitelist_denied()
             log_access(client_ip, self.path, "⛔ NOT WHITELISTED")
             return
-        
-        if not self.check_auth():
-            self.do_AUTHHEAD()
-            self.wfile.write(f'Login - Username: {get_system_username()}'.encode())
-            record_failed_attempt(client_ip)
-            log_access(client_ip, self.path, "🔒 AUTH FAILED")
-            return
-        
-        FAILED_ATTEMPTS[client_ip] = 0
         
         # Handle zip download
         if '?download_zip=' in self.path:
