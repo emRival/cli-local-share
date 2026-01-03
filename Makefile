@@ -3,7 +3,7 @@
 .PHONY: install run clean help
 
 help:
-	@echo "FileShare - Simple File Sharing Server"
+	@echo "ShareCLI - Simple File Sharing Server"
 	@echo ""
 	@echo "Commands:"
 	@echo "  make install  - Install dependencies"

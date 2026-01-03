@@ -104,8 +104,8 @@ def create_server(port: int, directory: str, password: str = None, token: str = 
     server = ReusableTCPServer(("", port), handler)
     
     if use_https:
-        cert_file = "/tmp/fileshare_cert.pem"
-        key_file = "/tmp/fileshare_key.pem"
+        cert_file = "/tmp/sharecli_cert.pem"
+        key_file = "/tmp/sharecli_key.pem"
         
         if generate_self_signed_cert(cert_file, key_file):
             context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)

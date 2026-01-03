@@ -200,3 +200,47 @@
 [2026-01-04 01:50:26] IP: 192.168.0.103 | Status: 🔒 AUTH FAILED | Path: /ilai%20kelas%2010%20dkv/
 [2026-01-04 02:22:42] IP: 172.20.10.4 | Status: 📂 BROWSE | Path: /
 [2026-01-04 02:22:42] IP: 172.20.10.4 | Status: ⬇️ DOWNLOAD | Path: /favicon.ico
+[2026-01-04 02:25:20] IP: 172.20.10.4 | Status: 📂 BROWSE | Path: /
+[2026-01-04 02:25:24] IP: 172.20.10.4 | Status: 🚪 LOGOUT | Path: Action
+[2026-01-04 02:25:25] IP: 172.20.10.4 | Status: 📂 BROWSE | Path: /
+[2026-01-04 02:25:27] IP: 172.20.10.4 | Status: 📂 BROWSE | Path: /
+[2026-01-04 02:25:30] IP: 172.20.10.4 | Status: 🚪 LOGOUT | Path: Action
+[2026-01-04 02:25:30] IP: 172.20.10.4 | Status: 📂 BROWSE | Path: /
+[2026-01-04 02:25:34] IP: 172.20.10.4 | Status: 📂 BROWSE | Path: /
+[2026-01-04 02:25:35] IP: 172.20.10.4 | Status: ⬇️ DOWNLOAD | Path: /favicon.ico
+[2026-01-04 02:27:22] IP: 172.20.10.4 | Status: 📂 BROWSE | Path: /
+[2026-01-04 02:27:23] IP: 172.20.10.4 | Status: ⬇️ DOWNLOAD | Path: /favicon.ico
+[2026-01-04 02:27:26] IP: 172.20.10.4 | Status: 🚪 LOGOUT | Path: Action
+[2026-01-04 02:27:26] IP: 172.20.10.4 | Status: 📂 BROWSE | Path: /
+[2026-01-04 02:27:34] IP: 172.20.10.4 | Status: 🚪 LOGOUT | Path: Action
+[2026-01-04 02:27:35] IP: 172.20.10.4 | Status: 📂 BROWSE | Path: /
+[2026-01-04 02:27:46] IP: 172.20.10.4 | Status: ⬇️ DOWNLOAD | Path: /access.log
+[2026-01-04 02:29:08] IP: 172.20.10.4 | Status: 🔒 AUTH FAILED | Path: /
+[2026-01-04 02:29:12] IP: 172.20.10.4 | Status: 📂 BROWSE | Path: /
+[2026-01-04 02:29:26] IP: 172.20.10.4 | Status: 📂 BROWSE | Path: /docs/
+[2026-01-04 02:29:28] IP: 172.20.10.4 | Status: 🚪 LOGOUT | Path: Action
+[2026-01-04 02:29:35] IP: 172.20.10.4 | Status: 🚪 LOGOUT | Path: Action
+[2026-01-04 02:30:02] IP: 172.20.10.4 | Status: 📂 BROWSE | Path: /
+[2026-01-04 02:30:03] IP: 172.20.10.4 | Status: 📂 BROWSE | Path: /
+[2026-01-04 02:30:05] IP: 172.20.10.4 | Status: 📂 BROWSE | Path: /
+[2026-01-04 02:30:06] IP: 172.20.10.4 | Status: 🚪 LOGOUT | Path: Action
+[2026-01-04 02:30:08] IP: 172.20.10.4 | Status: 🚪 LOGOUT | Path: Action
+[2026-01-04 02:31:58] IP: 172.20.10.4 | Status: 🚪 LOGOUT | Path: Action
+[2026-01-04 02:32:03] IP: 172.20.10.4 | Status: 🚪 LOGOUT | Path: Action
+[2026-01-04 02:32:04] IP: 172.20.10.4 | Status: 🔒 AUTH FAILED | Path: /
+[2026-01-04 02:32:08] IP: 172.20.10.4 | Status: 📂 BROWSE | Path: /
+[2026-01-04 02:32:10] IP: 172.20.10.4 | Status: 📂 BROWSE | Path: /
+[2026-01-04 02:32:13] IP: 172.20.10.4 | Status: 🚪 LOGOUT | Path: Action
+[2026-01-04 02:32:15] IP: 172.20.10.4 | Status: 🚪 LOGOUT | Path: Action
+[2026-01-04 02:32:17] IP: 172.20.10.4 | Status: 🚪 LOGOUT | Path: Action
+[2026-01-04 02:32:20] IP: 172.20.10.4 | Status: 🚪 LOGOUT | Path: Action
+[2026-01-04 02:32:20] IP: 172.20.10.4 | Status: 🔒 AUTH FAILED | Path: /
+[2026-01-04 02:34:15] IP: 172.20.10.4 | Status: 📂 BROWSE | Path: /
+[2026-01-04 02:35:38] IP: 172.20.10.4 | Status: 🔒 AUTH FAILED | Path: /
+[2026-01-04 02:36:05] IP: 172.20.10.4 | Status: 📂 BROWSE | Path: /
+[2026-01-04 02:36:07] IP: 172.20.10.4 | Status: 🚪 LOGOUT | Path: Action
+[2026-01-04 02:36:08] IP: 172.20.10.4 | Status: 🚪 LOGOUT | Path: Action
+[2026-01-04 02:37:06] IP: 172.20.10.4 | Status: 🚪 LOGOUT | Path: Action
+[2026-01-04 02:37:09] IP: 172.20.10.4 | Status: 🚪 LOGOUT | Path: Action
+[2026-01-04 02:37:52] IP: 172.20.10.4 | Status: 🔒 AUTH FAILED | Path: /
+[2026-01-04 02:38:08] IP: 172.20.10.4 | Status: 📂 BROWSE | Path: /
