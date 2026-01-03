@@ -27,11 +27,23 @@
 
 ## ⚡ Instalasi
 
+### 1. Instalasi Otomatis (Recommended)
+Cara termudah jika Anda ingin aplikasi terinstall di system path:
+
 ```bash
 git clone https://github.com/emRival/cli-local-share.git
 cd cli-local-share
 pip3 install -e .
-sharecli
+```
+
+### 2. Instalasi Manual
+Jika Anda hanya ingin menjalankan tanpa install ke system:
+
+```bash
+git clone https://github.com/emRival/cli-local-share.git
+cd cli-local-share
+pip3 install -r requirements.txt
+python3 run.py
 ```
 
 ---
