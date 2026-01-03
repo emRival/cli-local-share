@@ -501,20 +501,28 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
             overflow: hidden;
             box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
             backdrop-filter: blur(10px);
+            /* Scrollable Container */
+            max-height: 65vh;
+            overflow-y: auto;
+            position: relative;
         }}
         
-        table {{ width: 100%; border-collapse: collapse; min-width: 600px; }}
+        table {{ width: 100%; border-collapse: collapse; }}
         
         th {{
+            position: sticky;
+            top: 0;
+            z-index: 10;
             text-align: left;
             padding: 16px 20px;
             color: var(--text-muted);
             font-weight: 600;
             border-bottom: 1px solid var(--glass-border);
-            background: rgba(0,0,0,0.2);
+            background: rgba(31, 41, 55, 0.95); /* Match theme opaque for sticky */
             text-transform: uppercase;
             font-size: 0.75rem;
             letter-spacing: 0.1em;
+            backdrop-filter: blur(5px);
         }}
         
         td {{
@@ -625,6 +633,8 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
             .search-box {{ max-width: 100%; font-size: 16px; padding: 12px 20px; }}
             
             h1 {{ text-align: center; font-size: 1.5rem; }}
+            
+            .table-wrapper {{ max-height: 75vh; }}
             
             /* Responsive Cards */
             table {{ display: block; }}
