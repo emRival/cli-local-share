@@ -101,6 +101,17 @@ Saat menjalankan `sharecli`, Anda akan disambut oleh Setup Wizard yang interakti
 
 ---
 
+
+---
+
+## 🗑️ Uninstall (Hapus Aplikasi)
+
+Jika ingin menghapus aplikasi dari sistem:
+
+```bash
+pip3 uninstall cli-local-share --break-system-packages
+```
+
 ## 📄 Lisensi
 
 MIT License - Gratis, Open Source, dan Bebas Modifikasi.
