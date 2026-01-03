@@ -235,6 +235,23 @@ def run_server_with_ui(port: int, directory: str, password: str, token: str,
                     Panel(log_content, title="[bold green] Live Log [/bold green]", border_style="green", box=box.ROUNDED)
                 )
 
+                # QR Code Generation (Testing Branch)
+                qr_panel = Panel("Generating QR...", title="[bold yellow]Mobile Scan[/bold yellow]")
+                try:
+                    import qrcode
+                    import io
+                    # Visualize with smaller border for terminal
+                    qr = qrcode.QRCode(border=1)
+                    qr.add_data(url)
+                    qr.make(fit=True)
+                    f = io.StringIO()
+                    qr.print_ascii(out=f)
+                    f.seek(0)
+                    qr_str = f.read()
+                    qr_panel = Panel(Text(qr_str, style="white on black", justify="center"), title="[bold yellow]Scan to Connect[/bold yellow]", border_style="yellow", box=box.ROUNDED)
+                except ImportError:
+                    qr_panel = Panel("[red]Install 'qrcode' lib[/red]", title="QR Error")
+
                 # 3. Hosted Files
                 if files_text == "" or time.time() - last_file_update > 2:
                     try:
@@ -276,6 +293,8 @@ def run_server_with_ui(port: int, directory: str, password: str, token: str,
                     header_panel,
                     Text(""), # Spacer
                     info_grid,
+                    Text(""), # Spacer
+                    qr_panel, # Added QR
                     Text(""), # Spacer
                     files_panel,
                     Text(""), # Spacer
