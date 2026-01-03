@@ -1186,13 +1186,6 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
                 <meta charset="UTF-8">
                 <title>Logged Out - ShareCLI</title>
                 <meta name="viewport" content="width=device-width, initial-scale=1">
-...
-    def do_AUTHHEAD(self):
-        self.send_response(401)
-        realm = f'ShareCLI - User: {get_system_username()}'
-        self.send_header('WWW-Authenticate', f'Basic realm="{realm}"')
-        self.send_header('Content-type', 'text/html; charset=utf-8')
-        self.end_headers()
                 <style>
                     body { background: #121212; color: #e0e0e0; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; }
                     .card { background: rgba(255,255,255,0.05); padding: 2rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); max-width: 90%; width: 400px; }
