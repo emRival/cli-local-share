@@ -714,7 +714,7 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
             // 'url' passed here is item['href'] which is already URL-encoded
             const deleteUrl = window.location.pathname + '?action=delete&file=' + url;
             
-            fetch(deleteUrl, { method: 'POST' })
+            fetch(deleteUrl, {{ method: 'POST' }})
             .then(response => {{
                 if (response.ok || response.status === 303) {{
                     loadingText.innerText = "🗑️ Deleted!";
