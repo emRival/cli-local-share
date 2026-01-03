@@ -918,15 +918,6 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
             }}
         }};
 
-        function logout() {{
-            if(confirm("Are you sure you want to logout?")) {{
-                fetch(window.location.pathname + "?action=logout")
-                .then(r => {{
-                    // Reload to force browser to ask for credentials again (because 401 is sent)
-                    window.location.reload(); 
-                }})
-                .catch(e => window.location.reload());
-            }}
         // Logic to clear Basic Auth credentials
         function logout() {{
             if (!confirm('Are you sure you want to logout?')) return;
