@@ -205,6 +205,11 @@ def run_server_with_ui(port: int, directory: str, password: str, token: str,
                 info.add_row("📁 Path", directory if len(directory) < 20 else "..."+directory[-17:])
                 info.add_row("🛡️ Rate Limit", f"5 tries / {BLOCK_DURATION_SECONDS}s ban")
                 
+                if password:
+                    info.add_row("🔑 Password", password)
+                if token:
+                    info.add_row("🎟️ Token", token)
+                
                 # Log Content
                 log_content = Text("Waiting for traffic...", style="dim italic")
                 with STATE_LOCK:
