@@ -225,65 +225,99 @@ def run_server_with_ui(port: int, directory: str, password: str, token: str,
                 else:
                     remaining_str = "∞"
                 
+                # Build Clean Dashboard Layout
                 layout = Layout()
                 layout.split_column(
                     Layout(name="header", size=3),
-                    Layout(name="main"),
+                    Layout(name="body"),
                     Layout(name="footer", size=3)
                 )
-
-
-                # Header with Large URL
-                # Header with URL (Truncated if needed)
-                header_url = url if len(url) < 50 else url[:47] + "..."
+                
+                # === HEADER: URL + Status + Countdown ===
                 header_text = Text()
-                header_text.append(f"🔗 {header_url}", style="bold cyan")
-                header_text.append("  |  ", style="dim")
-                header_text.append("📡 Server Running", style="bold green")
-                layout["header"].update(Panel(header_text, box=box.ROUNDED, style="blue"))
+                header_text.append("🔗 ", style="bold")
+                header_text.append(url, style="bold cyan underline")
+                header_text.append("  │  ", style="dim")
+                header_text.append("📡 Running", style="bold green")
+                header_text.append("  │  ", style="dim")
+                header_text.append(f"⏱️ {remaining_str}", style="bold yellow")
                 
-                # Main Layout (Split: Info/Files on Left, Log on Right)
-                info_table, files_text, _ = create_status_display(
-                    url, directory, password, token, timeout, https_enabled, ""
-                )
-                
-                # Left Column: Info + Files
-                left_grid = Table.grid(padding=(0, 1), expand=True)
-                left_grid.add_column(ratio=1)
-                left_grid.add_row(Panel(info_table, title="📋 Info", border_style="cyan", box=box.ROUNDED, expand=True))
-                
-                # Ensure files text doesn't break layout
-                files_panel = Panel(
-                    files_text, 
-                    title="📁 Hosted Files", 
-                    border_style="blue", 
+                layout["header"].update(Panel(
+                    Align.center(header_text),
                     box=box.ROUNDED,
-                    expand=True
-                )
-                left_grid.add_row(files_panel)
+                    border_style="blue"
+                ))
                 
-                # Right Column: Live Log
-                log_panel = Panel(
-                    create_log_display(), 
-                    title=f"📊 Live Access Log ({len(state.ACCESS_LOG)})", 
-                    border_style="green", 
-                    box=box.ROUNDED,
-                    expand=True
+                # === BODY: Info | Log (top row), Files (bottom row) ===
+                body_layout = Layout()
+                body_layout.split_column(
+                    Layout(name="top_row", size=12),
+                    Layout(name="bottom_row")
                 )
-
-                # Combine into Main Split
-                main_split = Layout()
-                main_split.split_row(
-                    Layout(name="left", ratio=1, renderable=left_grid),
-                    Layout(name="right", ratio=1, renderable=log_panel)
-                )
-
-                layout["main"].update(main_split)
                 
+                # Top Row: Info | Log (side by side)
+                body_layout["top_row"].split_row(
+                    Layout(name="info"),
+                    Layout(name="log")
+                )
+                
+                # Info Panel Content
+                info_content = Table.grid(padding=(0, 1))
+                info_content.add_column(style="cyan", width=12)
+                info_content.add_column(style="white")
+                info_content.add_row("👤 User", get_system_username())
+                info_content.add_row("🌐 URL", url[:40] + "..." if len(url) > 40 else url)
+                info_content.add_row("🔐 Protocol", "[green]HTTPS[/green]" if https_enabled else "[yellow]HTTP[/yellow]")
+                info_content.add_row("📁 Directory", directory[:25])
+                info_content.add_row("🛡️ Rate Limit", f"5 tries / {BLOCK_DURATION_SECONDS}s ban")
+                if token:
+                    info_content.add_row("🎫 Token", token)
+                
+                body_layout["top_row"]["info"].update(Panel(
+                    info_content,
+                    title="[bold cyan]📋 Server Info[/bold cyan]",
+                    border_style="cyan",
+                    box=box.ROUNDED
+                ))
+                
+                # Log Panel Content
+                if state.ACCESS_LOG:
+                    log_table = Table.grid(padding=(0, 1))
+                    log_table.add_column(style="dim", width=8)  # time
+                    log_table.add_column(style="cyan", width=14)  # ip
+                    log_table.add_column(width=10)  # status
+                    for entry in list(state.ACCESS_LOG)[-6:]:
+                        log_table.add_row(
+                            entry.get("time", "")[:8],
+                            entry.get("ip", ""),
+                            entry.get("status", "")
+                        )
+                    log_content = log_table
+                else:
+                    log_content = Text("No access yet...", style="dim italic")
+                
+                body_layout["top_row"]["log"].update(Panel(
+                    log_content,
+                    title=f"[bold green]📊 Access Log ({len(state.ACCESS_LOG)})[/bold green]",
+                    border_style="green",
+                    box=box.ROUNDED
+                ))
+                
+                # Files Panel (Bottom - Full Width)
+                body_layout["bottom_row"].update(Panel(
+                    files_text,
+                    title="[bold blue]📁 Hosted Files[/bold blue]",
+                    border_style="blue",
+                    box=box.ROUNDED
+                ))
+                
+                layout["body"].update(body_layout)
+                
+                # === FOOTER ===
                 layout["footer"].update(Panel(
-                    "[bold red]Press Ctrl+C to stop server[/bold red]",
+                    Align.center(Text("Press Ctrl+C to stop server", style="bold red")),
                     box=box.ROUNDED,
-                    style="on black"
+                    border_style="red"
                 ))
                 
                 live.update(layout)
