@@ -196,7 +196,7 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
             
         boundary = None
         if 'boundary=' in content_type_header:
-            boundary = content_type_header.split('boundary=')[1].strip()
+            boundary = content_type_header.split('boundary=')[1].strip().strip('"').strip("'")
             if not boundary:
                 self.send_error(400, "Bad Request: Invalid boundary")
                 return
