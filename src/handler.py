@@ -576,7 +576,7 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>FileShare - {path}</title>
+    <title>ShareCLI - {path}</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         :root {{ 
@@ -906,7 +906,7 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
             <h1>📁 FileShare</h1>
             <div style="display:flex;gap:10px;align-items:center">
                 <input type="text" id="searchInput" class="search-box" placeholder="🔍 Search files..." onkeyup="filterFiles()">
-                <button onclick="logout()" class="btn btn-del" style="background:rgba(255,51,51,0.2);color:#ff6666!important;border:1px solid rgba(255,51,51,0.3)">🚪 Logout</button>
+                <a href="/logout" class="btn btn-del" style="background:rgba(255,51,51,0.2);color:#ff6666!important;border:1px solid rgba(255,51,51,0.3)">🚪 Logout</a>
             </div>
         </div>
         
@@ -1171,13 +1171,37 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
         client_ip = self.client_address[0]
 
         # Handle Logout Action
-        if '?action=logout' in self.path:
+        if self.path == '/logout':
             self.send_response(401)
-            # IMPORTANT: Realm must match the login realm to clear browser cache
-            realm = f'ShareCLI - User: {get_system_username()}'
-            self.send_header('WWW-Authenticate', f'Basic realm="{realm}"')
+            # TRICK: Change realm to force browser to drop credentials for the main realm
+            self.send_header('WWW-Authenticate', 'Basic realm="ShareCLI - Logged Out"')
+            self.send_header('Content-Type', 'text/html')
             self.end_headers()
-            self.wfile.write(b'Logged out')
+            
+            # Serve Logged Out Page
+            html = """
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Logged Out - ShareCLI</title>
+                <style>
+                    body { background: #121212; color: #e0e0e0; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; }
+                    .card { background: rgba(255,255,255,0.05); padding: 2rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); }
+                    h1 { margin-bottom: 1rem; color: #00d9ff; }
+                    a { color: #fff; text-decoration: none; padding: 10px 20px; background: #007bff; border-radius: 6px; display: inline-block; margin-top: 1rem; }
+                    a:hover { background: #0056b3; }
+                </style>
+            </head>
+            <body>
+                <div class="card">
+                    <h1>🚪 Logged Out</h1>
+                    <p>You have been safely logged out.</p>
+                    <a href="/">Login Again</a>
+                </div>
+            </body>
+            </html>
+            """
+            self.wfile.write(html.encode('utf-8'))
             log_access(client_ip, "Action", "🚪 LOGOUT")
             return
         
