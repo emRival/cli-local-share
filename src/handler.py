@@ -669,23 +669,24 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
             
             /* Actions */
             td:nth-child(3) {{
-                margin-top: 5px;
+                margin-top: 10px;
                 width: 100%;
             }}
             
             .btn-group {{ 
-                display: grid; 
-                grid-template-columns: 1fr 1fr;
+                display: flex;
+                flex-wrap: wrap;
                 gap: 10px; 
                 width: 100%;
             }}
+            
+            /* Buttons expand to fill space */
             .btn-group .btn {{
-                width: 100%;
+                flex: 1;
+                min-width: 100px; /* Ensure buttons don't get too small */
                 justify-content: center;
-                padding: 10px;
+                padding: 12px;
             }}
-            /* Make Delete button full width if it's alone or last */
-            .btn-del {{ grid-column: span 2; }}
             
             .upload-zone {{ padding: 20px; }}
             .footer {{ margin-bottom: 30px; }}
