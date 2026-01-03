@@ -1,4 +1,4 @@
-<h1 align="center">FileShare v2.0</h1>
+<h1 align="center">FileShare v2.5</h1>
 
 <p align="center">
   <img src="https://img.shields.io/badge/Platform-Debian%20%7C%20Ubuntu%20%7C%20Linux-green?style=for-the-badge">
@@ -30,8 +30,8 @@
 ```bash
 git clone https://github.com/emRival/cli-local-share.git
 cd cli-local-share
-pip3 install --break-system-packages -r requirements.txt
-python3 run.py
+pip3 install -e .
+sharecli
 ```
 
 ---
@@ -39,6 +39,8 @@ python3 run.py
 ## 🎮 Penggunaan
 
 ```bash
+sharecli
+# atau
 python3 run.py
 ```
 
