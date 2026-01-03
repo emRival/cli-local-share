@@ -355,7 +355,7 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
                     # Escape name for JS
                     safe_name = item['name'].replace("'", "\\'")
                     actions += f'''
-                    <button onclick="deleteFile('{item['href']}', '{safe_name}')" class="btn btn-del">🗑️</button>
+                    <button onclick="deleteFile('{item['href']}', '{safe_name}')" class="btn btn-del">🗑️ Delete</button>
                     '''
             
             actions += '</div>'
@@ -652,40 +652,38 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
             td:nth-child(1) {{
                 font-size: 1.1rem;
                 font-weight: 600;
-                margin-bottom: 5px;
-                word-break: break-all;
+                margin-bottom: 8px;
+                word-wrap: break-word;      /* Legacy support */
+                overflow-wrap: break-word;  /* Standard property */
+                word-break: break-word;     /* Ensure long words break */
+                line-height: 1.5;
             }}
             
             /* Size */
             td:nth-child(2) {{
                 color: var(--text-muted);
                 font-size: 0.85rem;
-                margin-bottom: 10px;
-            }}
-            td:nth-child(2):before {{
-                content: "Size: ";
-                opacity: 0.7;
+                margin-bottom: 15px;
             }}
             
             /* Actions */
             td:nth-child(3) {{
-                margin-top: 10px;
+                margin-top: 5px;
                 width: 100%;
             }}
             
             .btn-group {{ 
                 display: flex;
-                flex-wrap: wrap;
-                gap: 10px; 
+                flex-direction: column; /* Stack buttons vertically */
+                gap: 12px; 
                 width: 100%;
             }}
             
-            /* Buttons expand to fill space */
             .btn-group .btn {{
-                flex: 1;
-                min-width: 100px; /* Ensure buttons don't get too small */
+                width: 100%;
                 justify-content: center;
-                padding: 12px;
+                padding: 14px; /* Larger touch target */
+                font-size: 1rem;
             }}
             
             .upload-zone {{ padding: 20px; }}
