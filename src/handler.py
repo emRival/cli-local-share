@@ -374,16 +374,6 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
                 <td>{actions}</div></td>
             </tr>
             """
-            
-            actions += '</div>'
-            
-            rows += f'''
-            <tr>
-                <td><a href="{item['href']}">{item['name']}</a></td>
-                <td>{item['size']}</td>
-                <td>{actions}</td>
-            </tr>
-            '''
         
         # Conditional Upload Form
         upload_section = ""
