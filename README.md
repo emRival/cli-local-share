@@ -7,43 +7,59 @@
 </p>
 
 <p align="center">
-  <b>📁 Secure File Sharing Server with Enhanced Security</b>
+<p align="center">
+  <b>📁 Share File Lokal Lebih Aman, Cepat, & Stylish Langsung dari Terminal.</b>
 </p>
 
 ---
 
-## ✨ Features
-
-### 🛡️ Keamanan (Security)
-*   **HTTPS Enkripsi**: Mengamankan transfer data dengan Self-signed SSL.
-*   **Smart Rate Limiting**: Memblokir IP yang gagal login 5x berturut-turut.
-*   **IP Whitelist**: Batasi akses hanya untuk device tertentu (bisa scan jaringan).
-*   **Token Authentication**: Login cepat menggunakan secure token random.
-
-### 💻 Interface
-*   **CLI Dashboard**: Monitoring traffic real-time langsung dari terminal.
-*   **Live Logs**: Lihat siapa yang download/upload/delete file secara detik itu juga.
-*   **Responsive Web UI**: Tampilan web yang modern, support Dark Mode, dan nyaman di HP.
-
-### 🚀 Performa & Tools
-*   **No Dependencies Hell**: Hanya butuh 1 library (`rich`) untuk jalan.
-*   **Upload & Delete**: Izinkan user upload atau hapus file (bisa diatur).
-*   **Zip Download**: Download satu folder sekaligus dalam bentuk ZIP.
+<!-- Placeholder untuk GIF (Wajib ditaruh sini biar user langsung lihat) -->
+<div align="center">
+  <img src="YOUR_GIF_URL_HERE.gif" alt="Demo Preview" width="100%">
+  <br>
+  <i>(Ganti link gambar di atas dengan GIF demo asli Anda)</i>
+</div>
 
 ---
 
-## ⚡ Instalasi
+## ✨ Kenapa Pakai Ini?
 
-### Metode 1: Otomatis (Recommended)
-Cukup copas mantera ini di terminal Anda:
+Bosan dengan `python -m http.server` yang polosan dan tidak aman? **FileShare v2.5** hadir sebagai solusi "Sultan" untuk sharing file di jaringan lokal (WiFi/LAN).
+
+### 🌟 Fitur Unggulan
+
+**1. ⏱️ Atur Waktu Akses (Session Timeout)**
+> Tidak mau server nyala terus? Anda bisa set timer (misal: 10 menit). Setelah waktu habis, server **otomatis mati**. Aman, hemat resource, dan anti lupa!
+
+**2. 🔄 Auto-Update via Terminal**
+> Ada fitur baru? Cukup pilih menu **`Check for Updates`** di dalam aplikasi, dan *Boom!* aplikasi langsung ter-update ke versi terbaru tanpa ribet git pull manual.
+
+**3. 🛡️ Keamanan Level "Paranoia"**
+> *   **HTTPS Enkripsi**: Data aman dari intip-intip tetangga.
+> *   **Smart Blocking**: Salah password 5x? IP langsung diblokir otomatis.
+> *   **Strict Whitelist**: Mode eksklusif di mana HANYA IP teman Anda yang bisa akses.
+> *   **Secure Token**: Login instan tanpa password panjang, cukup pakai link token.
+
+**4. 💻 UI yang Memanjakan Mata**
+> *   **Terminal Dashboard**: Tui (Text UI) ala hacker yang menampilkan log *access* & *security* secara live.
+> *   **Web Interface**: File browser di browser HP/Laptop lawan bicara tampil modern, responsif (Dark Mode ready), dan user-friendly.
+
+---
+
+## ⚡ Cara Install (Paling Gampang)
+
+Cukup **Copy & Paste** mantra ini di terminal (Linux/Mac/Termux):
 
 ```bash
 curl -sL https://raw.githubusercontent.com/emRival/cli-local-share/main/install.sh | bash
 ```
 
-### Metode 2: Manual (Git Clone)
-Jika Anda ingin install manual:
+Selesai! Langsung jalankan aplikasinya dengan mengetik:
+```bash
+sharecli
+```
 
+*(Opsional)* **Cara Manual (Git Clone)**:
 ```bash
 git clone https://github.com/emRival/cli-local-share.git
 cd cli-local-share
@@ -55,28 +71,24 @@ sharecli
 
 ## 📸 Gallery
 
-<!-- Placeholder untuk GIF -->
-### 🎥 Demo Preview
-> *[Pasang GIF Demo Aplikasi di sini]*
-
-<!-- Placeholder untuk Screenshots -->
-### 🖼️ Screenshots
-| **Terminal Dashboard** | **Web Interface** |
+### 🖼️ Tampilan Aplikasi
+| **Terminal Dashboard** | **Web Interface (Mobile)** |
 |:---:|:---:|
-| > *[Screenshot Terminal]* | > *[Screenshot Web]* |
+| > *[Screenshot Terminal]* | > *[Screenshot HP]* |
 
 ---
 
-## 🎮 Cara Pakai
+## 🎮 Panduan Singkat
 
-Saat pertama kali dijalankan (`sharecli`), setup wizard akan memandu Anda:
-1.  Pilih folder yang mau di-share.
-2.  Tentukan Port (default 8080).
-3.  Aktifkan HTTPS/HTTP.
-4.  Pilih metode login (Password / Token).
+Saat menjalankan `sharecli`, Anda akan disambut oleh Setup Wizard yang interaktif:
+
+1.  **Pilih Folder**: Bisa browse folder langsung di terminal.
+2.  **Set Port**: Default 8080 (bisa diganti sesuka hati).
+3.  **Mode Keamanan**: Pilih password sendiri, token acak, atau tanpa password.
+4.  **Fitur Tambahan**: Izinkan orang lain **Upload** atau **Hapus** file (Opsional).
 
 ---
 
 ## 📄 Lisensi
 
-MIT License - Bebas digunakan dan dimodifikasi.
+MIT License - Gratis, Open Source, dan Bebas Modifikasi.
