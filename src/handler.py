@@ -59,7 +59,8 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
 
     def do_POST(self):
         """Handle file uploads and deletions"""
-        client_ip = self.client_address[0]
+        try:
+            client_ip = self.client_address[0]
         
         # Security checks
         if is_ip_blocked(client_ip):
@@ -153,6 +154,10 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
         except Exception as e:
             log_access(client_ip, "Upload error", "❌ ERR")
             self.send_error(500, f"Upload error: {e}")
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            self.send_error(500, f"Internal Server Error: {e}")
     
     def send_blocked_response(self):
         self.send_response(403)
@@ -786,7 +791,8 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
         return buffer.getvalue()
     
     def do_GET(self):
-        client_ip = self.client_address[0]
+        try:
+            client_ip = self.client_address[0]
         
         # Security checks
         if is_ip_blocked(client_ip):
@@ -842,6 +848,14 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
         # Serve file normally
         log_access(client_ip, self.path, "✅ OK")
         super().do_GET()
+        
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            try:
+                self.send_error(500, f"Internal Server Error: {e}")
+            except:
+                pass
     
     def do_HEAD(self):
         client_ip = self.client_address[0]
