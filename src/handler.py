@@ -639,7 +639,10 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
     <div class="container">
         <div class="header">
             <h1>📁 FileShare</h1>
-            <input type="text" id="searchInput" class="search-box" placeholder="🔍 Search files..." onkeyup="filterFiles()">
+            <div style="display:flex;gap:10px;align-items:center">
+                <input type="text" id="searchInput" class="search-box" placeholder="🔍 Search files..." onkeyup="filterFiles()">
+                <button onclick="logout()" class="btn btn-del" style="background:rgba(255,51,51,0.2);color:#ff6666!important;border:1px solid rgba(255,51,51,0.3)">🚪 Logout</button>
+            </div>
         </div>
         
         <div class="path">
@@ -838,6 +841,17 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
                 closeModal();
             }}
         }};
+
+        function logout() {{
+            if(confirm("Are you sure you want to logout?")) {{
+                fetch(window.location.pathname + "?action=logout")
+                .then(r => {{
+                    // Reload to force browser to ask for credentials again (because 401 is sent)
+                    window.location.reload(); 
+                }})
+                .catch(e => window.location.reload());
+            }}
+        }}
     </script>
 </body>
 </html>'''
@@ -868,6 +882,12 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
     @safe_handler
     def do_GET(self):
         client_ip = self.client_address[0]
+
+        # Handle Logout Action
+        if '?action=logout' in self.path:
+            self.do_AUTHHEAD()
+            self.wfile.write(b'Logged out')
+            return
         
         # Security checks
         # 1. Check Auth First (Smart Rate Limit)

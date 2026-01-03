@@ -186,27 +186,20 @@ def run_server_with_ui(port: int, directory: str, password: str, token: str,
                 header_text.append("  │  ", style="dim")
                 header_text.append(f"⏱️ {remaining_str}", style="bold yellow")
                 
-                layout["header"].update(Panel(
-                    Align.center(header_text),
-                    box=box.DOUBLE, # Stronger border
-                    border_style="blue",
-                    padding=(0, 2)
-                ))
+                # Single Main Panel for everything to keep borders consistent
+                main_grid = Table.grid(expand=True)
+                main_grid.add_column()
                 
-                # === BODY: Info | Log (top row), Files (bottom row) ===
-                body_layout = Layout()
-                body_layout.split_column(
-                    Layout(name="top_row", size=12),
-                    Layout(name="bottom_row")
-                )
+                # Rows for header, info, log, files
+                main_grid.add_row(Align.center(header_text))
+                main_grid.add_row("") # Spacer
                 
-                # Top Row: Info | Log (side by side)
-                body_layout["top_row"].split_row(
-                    Layout(name="info"),
-                    Layout(name="log")
-                )
+                # Info + Log Table
+                top_table = Table.grid(expand=True, padding=(0, 2))
+                top_table.add_column(ratio=1)
+                top_table.add_column(ratio=1)
                 
-                # Info Panel Content
+                # Info Content
                 info_content = Table.grid(padding=(0, 1))
                 info_content.add_column(style="cyan", width=12)
                 info_content.add_column(style="white")
@@ -218,77 +211,30 @@ def run_server_with_ui(port: int, directory: str, password: str, token: str,
                 if token:
                     info_content.add_row("🎫 Token", token)
                 
-                body_layout["top_row"]["info"].update(Panel(
-                    info_content,
-                    title="[bold cyan]📋 Server Info[/bold cyan]",
-                    border_style="cyan",
-                    box=box.ROUNDED,
-                    padding=(0, 1)
+                top_table.add_row(
+                    Panel(info_content, title="[bold cyan]📋 Server Info[/bold cyan]", border_style="cyan", box=box.ROUNDED),
+                    Panel(log_content if 'log_content' in locals() else "", title="[bold green]📊 Access Log[/bold green]", border_style="green", box=box.ROUNDED)
+                )
+                
+                main_grid.add_row(top_table)
+                main_grid.add_row("") # Spacer
+                
+                # Files Content
+                main_grid.add_row(Panel(
+                     Align.left(files_text, vertical="top"),
+                     title="[bold blue]📁 Hosted Files[/bold blue]",
+                     border_style="blue",
+                     box=box.ROUNDED,
+                     padding=(0, 1),
+                     height=12 # Fixed height for stability
                 ))
-                
-                # Log Panel Content
-                log_content = Text("No access yet...", style="dim italic")
-                with STATE_LOCK:
-                    if state.ACCESS_LOG:
-                        log_table = Table.grid(padding=(0, 1))
-                        log_table.add_column(style="dim", width=8)  # time
-                        log_table.add_column(style="cyan", width=14)  # ip
-                        log_table.add_column(width=10)  # status
-                        
-                        # Copy list inside lock to avoid iteration issues
-                        logs_to_show = list(state.ACCESS_LOG)[-6:]
-                        
-                        for entry in logs_to_show:
-                            log_table.add_row(
-                                entry.get("time", "")[:8],
-                                entry.get("ip", ""),
-                                entry.get("status", "")
-                            )
-                        log_content = log_table
-                
-                body_layout["top_row"]["log"].update(Panel(
-                    log_content,
-                    title="[bold green]📊 Access Log[/bold green]",
-                    border_style="green",
-                    box=box.ROUNDED,
-                    padding=(0, 1)
-                ))
-                
-                # Files - Update every 2 seconds
-                if time.time() - last_file_update > 2:
-                    files = []
-                    try:
-                        for f in os.listdir(directory)[:8]:
-                            path = os.path.join(directory, f)
-                            if os.path.isfile(path):
-                                size = format_size(os.path.getsize(path))
-                                files.append(f"📄 {f[:25]} ({size})")
-                            else:
-                                files.append(f"📁 {f[:25]}/")
-                    except:
-                        files = ["[dim]Cannot read directory[/dim]"]
-                    
-                    files_text = "\n".join(files)
-                    last_file_update = time.time()
 
-
-                # Files Panel (Bottom - Full Width)
-                body_layout["bottom_row"].update(Panel(
-                    Align.left(files_text, vertical="top"),
-                    title="[bold blue]📁 Hosted Files[/bold blue]",
-                    border_style="blue",
-                    box=box.ROUNDED,
-                    padding=(0, 1)
-                ))
+                # Update main layout
+                layout["body"].update(main_grid)
                 
-                layout["body"].update(body_layout)
-                
-                # === FOOTER ===
-                layout["footer"].update(Panel(
-                    Align.center(Text("Press Ctrl+C to stop server", style="bold red")),
-                    box=box.ROUNDED,
-                    border_style="red"
-                ))
+                # Disable header/footer panels to avoid double borders
+                layout["header"].visible = False 
+                layout["footer"].update(Align.center(Text("Press Ctrl+C to stop server", style="bold red")))
                 
                 live.update(layout)
                 time.sleep(0.25)
