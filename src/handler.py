@@ -308,7 +308,12 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
             
             # Simple preview support
             ext = os.path.splitext(name)[1].lower()
-            can_preview = ext in ['.png', '.jpg', '.jpeg', '.gif', '.txt', '.md', '.py', '.log', '.json', '.css', '.html', '.js']
+            can_preview = ext in [
+                '.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp',
+                '.mp4', '.webm', '.ogg', '.mov', 
+                '.mp3', '.wav', '.m4a',
+                '.txt', '.md', '.py', '.log', '.json', '.css', '.html', '.js', '.sh', '.xml', '.yml', '.yaml'
+            ]
             
             if os.path.isdir(item_path):
                 try:
