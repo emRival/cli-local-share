@@ -169,15 +169,12 @@ def run_server_with_ui(port: int, directory: str, password: str, token: str,
                 else:
                     remaining_str = "∞"
                 
-                # === LAYOUT DEFINITION ===
-                layout = Layout()
-                layout.split_column(
-                    Layout(name="header", size=3),
-                    Layout(name="body"),
-                    Layout(name="footer", size=3)
-                )
+                # === ROBUST LAYOUT (STACKED) ===
+                # Using a single column table ensures components stack naturally
+                # without complex ratio calculations that fail on some terminals.
+                from rich.console import Group
                 
-                # === HEADER ===
+                # 1. Header Component
                 header_text = Text()
                 header_text.append(" SHARE v2.5 ", style="bold black on green")
                 header_text.append(" ⚡ ", style="bold")
@@ -185,25 +182,20 @@ def run_server_with_ui(port: int, directory: str, password: str, token: str,
                 header_text.append(" ", style="dim")
                 header_text.append(f"⏱️ {remaining_str}", style="bold yellow")
                 
-                layout["header"].update(Panel(
+                header_panel = Panel(
                     Align.center(header_text),
                     box=box.ROUNDED,
                     border_style="green",
                     padding=(0, 1)
-                ))
-                
-                # === BODY: Info | Log (top), Files (bottom) ===
-                layout["body"].split_column(
-                    Layout(name="upper", ratio=1),
-                    Layout(name="lower", ratio=1)
                 )
-                
-                layout["body"]["upper"].split_row(
-                    Layout(name="info", ratio=1),
-                    Layout(name="log", ratio=1)
-                )
-                
-                # 1. Server Info Content
+
+                # 2. Info & Log (Side by Side)
+                # We use a grid for the top section
+                info_grid = Table.grid(padding=(0, 2), expand=True)
+                info_grid.add_column(ratio=1)
+                info_grid.add_column(ratio=1)
+
+                # Info Content
                 info = Table.grid(padding=(0, 1))
                 info.add_column(style="cyan", width=12)
                 info.add_column(style="white")
@@ -211,42 +203,32 @@ def run_server_with_ui(port: int, directory: str, password: str, token: str,
                 info.add_row("🌐 URL", url)
                 info.add_row("🔐 Protocol", "HTTPS" if https_enabled else "HTTP")
                 info.add_row("📁 Path", directory if len(directory) < 20 else "..."+directory[-17:])
-                info.add_row("🛡️ Security", f"Rate Limit ({BLOCK_DURATION_SECONDS}s)")
+                info.add_row("🛡️ Rate Limit", f"5 tries / {BLOCK_DURATION_SECONDS}s ban")
                 
-                layout["body"]["upper"]["info"].update(Panel(
-                    info,
-                    title="[bold cyan] Server Info [/bold cyan]",
-                    border_style="cyan",
-                    box=box.ROUNDED
-                ))
-
-                # 2. Access Log
+                # Log Content
                 log_content = Text("Waiting for traffic...", style="dim italic")
                 with STATE_LOCK:
                     if state.ACCESS_LOG:
-                        log_grid = Table.grid(padding=(0,1), expand=True)
-                        log_grid.add_column(width=8, style="dim") # Time
-                        log_grid.add_column(ratio=1, style="cyan") # IP
-                        log_grid.add_column(width=8) # Status
+                        log_internal = Table.grid(padding=(0,1), expand=True)
+                        log_internal.add_column(width=8, style="dim")
+                        log_internal.add_column(ratio=1, style="cyan")
+                        log_internal.add_column(width=8)
                         
                         recent = list(state.ACCESS_LOG)[-5:]
                         for entry in recent:
-                            log_grid.add_row(
-                                entry.get("time", "")[-8:], # Just time
+                            log_internal.add_row(
+                                entry.get("time", "")[-8:],
                                 entry.get("ip", ""),
                                 entry.get("status", "")
                             )
-                        log_content = log_grid
+                        log_content = log_internal
 
-                layout["body"]["upper"]["log"].update(Panel(
-                    log_content,
-                    title="[bold green] Live Log [/bold green]",
-                    border_style="green",
-                    box=box.ROUNDED
-                ))
+                info_grid.add_row(
+                    Panel(info, title="[bold cyan] Server Info [/bold cyan]", border_style="cyan", box=box.ROUNDED),
+                    Panel(log_content, title="[bold green] Live Log [/bold green]", border_style="green", box=box.ROUNDED)
+                )
 
                 # 3. Hosted Files
-                # Update logic: Immediate first run + every 2s
                 if files_text == "" or time.time() - last_file_update > 2:
                     try:
                         f_list = sorted([f for f in os.listdir(directory) if not f.startswith('.')])
@@ -254,7 +236,7 @@ def run_server_with_ui(port: int, directory: str, password: str, token: str,
                             files_text = "[dim italic]Empty directory[/dim italic]"
                         else:
                             display_lines = []
-                            for f in f_list[:10]: # Limit to 10
+                            for f in f_list[:12]: # Limit to 12 lines
                                 fpath = os.path.join(directory, f)
                                 if os.path.isdir(fpath):
                                     display_lines.append(f"📁 {f}/")
@@ -262,8 +244,8 @@ def run_server_with_ui(port: int, directory: str, password: str, token: str,
                                     sz = format_size(os.path.getsize(fpath))
                                     display_lines.append(f"📄 {f} [dim]({sz})[/dim]")
                             
-                            if len(f_list) > 10:
-                                display_lines.append(f"[dim]... and {len(f_list)-10} more[/dim]")
+                            if len(f_list) > 12:
+                                display_lines.append(f"[dim]... and {len(f_list)-12} more[/dim]")
                             
                             files_text = "\n".join(display_lines)
                     except Exception as e:
@@ -271,19 +253,29 @@ def run_server_with_ui(port: int, directory: str, password: str, token: str,
                     
                     last_file_update = time.time()
 
-                layout["body"]["lower"].update(Panel(
+                files_panel = Panel(
                     Align.left(files_text, vertical="top"),
                     title=f"[bold blue] Hosted Files ({directory}) [/bold blue]",
                     border_style="blue",
-                    box=box.ROUNDED
-                ))
+                    box=box.ROUNDED,
+                    padding=(0, 1)
+                )
 
-                # === FOOTER ===
-                layout["footer"].update(Align.center(
-                    Text(" PRESS CTRL+C TO STOP SERVER ", style="bold white on red")
-                ))
+                # 4. Footer
+                footer_text = Align.center(Text(" PRESS CTRL+C TO STOP SERVER ", style="bold white on red"))
+
+                # Compose the final stacked view
+                final_view = Group(
+                    header_panel,
+                    Text(""), # Spacer
+                    info_grid,
+                    Text(""), # Spacer
+                    files_panel,
+                    Text(""), # Spacer
+                    footer_text
+                )
                 
-                live.update(layout)
+                live.update(final_view)
                 time.sleep(0.25)
                 
     except KeyboardInterrupt:
