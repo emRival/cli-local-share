@@ -24,23 +24,24 @@ from src.security import generate_self_signed_cert
 console = Console()
 
 def print_banner():
-    """Print application banner"""
-    banner = """
-[bold cyan]╔═══════════════════════════════════════════════════════════╗
-║                                                           ║
-║   [bold white]███████╗██╗██╗     ███████╗[/bold white]                            ║
-║   [bold white]██╔════╝██║██║     ██╔════╝[/bold white]                            ║
-║   [bold white]█████╗  ██║██║     █████╗  [/bold white]                            ║
-║   [bold white]██╔══╝  ██║██║     ██╔══╝  [/bold white]                            ║
-║   [bold white]██║     ██║███████╗███████╗[/bold white]                            ║
-║   [bold white]╚═╝     ╚═╝╚══════╝╚══════╝[/bold white]                            ║
-║                                                           ║
-║   [bold green]SHARE[/bold green] v2.0 - Secure File Sharing                       ║
-║   [dim]🔒 HTTPS • 🛡️ Rate Limit • 📋 IP Whitelist[/dim]             ║
-║                                                           ║
-╚═══════════════════════════════════════════════════════════╝[/bold cyan]
-"""
-    console.print(banner)
+    """Print application banner using Rich Panel"""
+    title = Text("SHARE v2.5", style="bold green")
+    subtitle = Text("Secure File Sharing", style="bold white")
+    
+    content = Align.center(
+        Text.assemble(
+            title, " - ", subtitle, "\n",
+            Text("🔒 HTTPS • 🛡️ Rate Limit • 📋 IP Whitelist", style="dim cyan"),
+        )
+    )
+    
+    console.print(Panel(
+        content,
+        box=box.DOUBLE,
+        border_style="cyan",
+        expand=False,
+        padding=(1, 2)
+    ))
 
 
 
@@ -187,8 +188,9 @@ def run_server_with_ui(port: int, directory: str, password: str, token: str,
                 
                 layout["header"].update(Panel(
                     Align.center(header_text),
-                    box=box.ROUNDED,
-                    border_style="blue"
+                    box=box.DOUBLE, # Stronger border
+                    border_style="blue",
+                    padding=(0, 2)
                 ))
                 
                 # === BODY: Info | Log (top row), Files (bottom row) ===
@@ -220,7 +222,8 @@ def run_server_with_ui(port: int, directory: str, password: str, token: str,
                     info_content,
                     title="[bold cyan]📋 Server Info[/bold cyan]",
                     border_style="cyan",
-                    box=box.ROUNDED
+                    box=box.ROUNDED,
+                    padding=(0, 1)
                 ))
                 
                 # Log Panel Content
@@ -247,7 +250,8 @@ def run_server_with_ui(port: int, directory: str, password: str, token: str,
                     log_content,
                     title="[bold green]📊 Access Log[/bold green]",
                     border_style="green",
-                    box=box.ROUNDED
+                    box=box.ROUNDED,
+                    padding=(0, 1)
                 ))
                 
                 # Files - Update every 2 seconds
@@ -270,10 +274,11 @@ def run_server_with_ui(port: int, directory: str, password: str, token: str,
 
                 # Files Panel (Bottom - Full Width)
                 body_layout["bottom_row"].update(Panel(
-                    files_text,
+                    Align.left(files_text, vertical="top"),
                     title="[bold blue]📁 Hosted Files[/bold blue]",
                     border_style="blue",
-                    box=box.ROUNDED
+                    box=box.ROUNDED,
+                    padding=(0, 1)
                 ))
                 
                 layout["body"].update(body_layout)
