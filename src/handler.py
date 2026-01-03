@@ -622,74 +622,73 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
         @media (max-width: 768px) {{
             .container {{ padding: 10px; width: 100%; }}
             .header {{ flex-direction: column; align-items: stretch; gap: 15px; }}
-            .search-box {{ max-width: 100%; font-size: 16px; padding: 12px 20px; }} /* Prevent zoom on iOS */
+            .search-box {{ max-width: 100%; font-size: 16px; padding: 12px 20px; }}
             
             h1 {{ text-align: center; font-size: 1.5rem; }}
             
-            /* Responsive Table -> Cards */
-            table, thead, tbody, th, td, tr {{ display: block; }}
-            thead tr {{ position: absolute; top: -9999px; left: -9999px; }}
+            /* Responsive Cards */
+            table {{ display: block; }}
+            thead {{ display: none; }} /* Hide Header */
+            tbody {{ display: block; }}
             
             tr {{ 
+                display: flex;
+                flex-direction: column;
                 background: rgba(255, 255, 255, 0.03);
                 border: 1px solid var(--glass-border);
                 border-radius: 12px; 
                 margin-bottom: 12px;
                 padding: 15px;
-            }}
-            
-            td {{ 
-                border: none;
-                position: relative;
-                padding: 5px 0;
-                display: flex;
-                flex-direction: column;
                 gap: 5px;
             }}
             
-            td:before {{ 
-                position: absolute;
-                top: 6px;
-                left: 6px;
-                width: 45%; 
-                padding-right: 10px; 
-                white-space: nowrap;
-                color: var(--text-muted);
-                font-size: 0.75rem;
-                font-weight: 600;
+            td {{ 
+                display: block; 
+                border: none !important;
+                padding: 0 !important;
             }}
             
-            /* Specific adjustments for our table structure */
-            /* Name Column */
-            td:nth-of-type(1) {{ 
-                font-size: 1.1em; 
-                padding-bottom: 10px;
-                border-bottom: 1px solid rgba(255,255,255,0.05);
+            /* Name */
+            td:nth-child(1) {{
+                font-size: 1.1rem;
+                font-weight: 600;
+                margin-bottom: 5px;
+                word-break: break-all;
+            }}
+            
+            /* Size */
+            td:nth-child(2) {{
+                color: var(--text-muted);
+                font-size: 0.85rem;
                 margin-bottom: 10px;
             }}
-            td:nth-of-type(1) a {{ word-break: break-all; }}
+            td:nth-child(2):before {{
+                content: "Size: ";
+                opacity: 0.7;
+            }}
             
-            /* Size Column */
-            td:nth-of-type(2) {{ color: var(--text-muted); font-size: 0.9em; }}
-            
-            /* Actions Column */
-            td:nth-of-type(3) {{ margin-top: 10px; }}
+            /* Actions */
+            td:nth-child(3) {{
+                margin-top: 5px;
+                width: 100%;
+            }}
             
             .btn-group {{ 
-                width: 100%; 
                 display: grid; 
-                grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); 
+                grid-template-columns: 1fr 1fr;
                 gap: 10px; 
+                width: 100%;
             }}
-            
-            .btn {{ 
-                justify-content: center; 
-                padding: 12px; 
-                font-size: 0.9em;
+            .btn-group .btn {{
+                width: 100%;
+                justify-content: center;
+                padding: 10px;
             }}
+            /* Make Delete button full width if it's alone or last */
+            .btn-del {{ grid-column: span 2; }}
             
             .upload-zone {{ padding: 20px; }}
-            .upload-icon {{ font-size: 24px; }}
+            .footer {{ margin-bottom: 30px; }}
         }}
     </style>
 </head>
