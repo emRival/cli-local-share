@@ -1252,7 +1252,43 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
             if auth_status == 0:
                 # Wrong Password
                 self.do_AUTHHEAD()
-                self.wfile.write(f'Login - Username: {get_system_username()}'.encode())
+                
+                AUTH_PAGE_HTML = """
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Authentication Required - ShareCLI</title>
+                    <meta name="viewport" content="width=device-width, initial-scale=1">
+                    <style>
+                        body { background: #121212; color: #e0e0e0; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; }
+                        .card { background: rgba(255,255,255,0.05); padding: 2rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); max-width: 90%; width: 400px; }
+                        h1 { margin-bottom: 1rem; color: #ffeb3b; }
+                        p { margin-bottom: 2rem; opacity: 0.8; }
+                        button { 
+                            color: #000; 
+                            font-weight: bold;
+                            text-decoration: none; 
+                            padding: 12px 24px; 
+                            background: #ffeb3b; 
+                            border: none;
+                            border-radius: 6px; 
+                            font-size: 16px;
+                            cursor: pointer;
+                            transition: transform 0.2s;
+                        }
+                        button:hover { transform: scale(1.05); }
+                    </style>
+                </head>
+                <body>
+                    <div class="card">
+                        <h1>🔒 Locked</h1>
+                        <p>This resource is protected.<br>Please log in to continue.</p>
+                        <button onclick="location.reload()">Login</button>
+                    </div>
+                </body>
+                </html>
+                """
+                self.wfile.write(AUTH_PAGE_HTML.encode('utf-8'))
                 record_failed_attempt(client_ip)
                 log_access(client_ip, self.path, "🔒 AUTH FAILED")
                 return
@@ -1260,7 +1296,43 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
             elif auth_status == 2:
                 # No Header (First visit)
                 self.do_AUTHHEAD()
-                self.wfile.write(f'Login - Username: {get_system_username()}'.encode())
+                
+                AUTH_PAGE_HTML = """
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Authentication Required - ShareCLI</title>
+                    <meta name="viewport" content="width=device-width, initial-scale=1">
+                    <style>
+                        body { background: #121212; color: #e0e0e0; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; }
+                        .card { background: rgba(255,255,255,0.05); padding: 2rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); max-width: 90%; width: 400px; }
+                        h1 { margin-bottom: 1rem; color: #00d9ff; }
+                        p { margin-bottom: 2rem; opacity: 0.8; }
+                        button { 
+                            color: #fff; 
+                            font-weight: bold;
+                            text-decoration: none; 
+                            padding: 12px 24px; 
+                            background: #007bff; 
+                            border: none;
+                            border-radius: 6px; 
+                            font-size: 16px;
+                            cursor: pointer;
+                            transition: transform 0.2s;
+                        }
+                        button:hover { background: #0056b3; }
+                    </style>
+                </head>
+                <body>
+                    <div class="card">
+                        <h1>🔐 Authenticate</h1>
+                        <p>Access to this server is restricted.</p>
+                        <button onclick="location.reload()">Login</button>
+                    </div>
+                </body>
+                </html>
+                """
+                self.wfile.write(AUTH_PAGE_HTML.encode('utf-8'))
                 # No penalty for missing credentials
                 return
         
