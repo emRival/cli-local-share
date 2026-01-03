@@ -15,7 +15,7 @@
 
 <!-- Placeholder untuk GIF (Wajib ditaruh sini biar user langsung lihat) -->
 <div align="center">
-  <video src="assets/demo.mp4" width="100%" controls autoplay muted></video>
+  <video src="https://raw.githubusercontent.com/emRival/cli-local-share/main/assets/demo.mp4" width="100%" controls autoplay muted></video>
   <br>
   <i>(Demo Aplikasi FileShare v2.5)</i>
 </div>
