@@ -176,7 +176,7 @@ def run_server_with_ui(port: int, directory: str, password: str, token: str,
                 
                 # 1. Header Component
                 header_text = Text()
-                header_text.append(" SHARE v2.5 ", style="bold black on green")
+                header_text.append(" SHARECLI v2.0 ", style="bold black on green")
                 header_text.append(" ⚡ ", style="bold")
                 header_text.append(url, style="bold cyan underline")
                 header_text.append(" ", style="dim")
