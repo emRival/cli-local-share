@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FileShare v2.5 - Secure Local Sharing</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="bg-mesh"></div>
+
+    <div class="container">
+        <header>
+            <div class="logo">FileShare v2.5</div>
+            <nav>
+                <a href="#features">Features</a>
+                <a href="#docs">Documentation</a>
+                <a href="https://github.com/emRival/cli-local-share" target="_blank">GitHub</a>
+            </nav>
+        </header>
+
+        <section class="hero">
+            <h1>Local File Sharing<br>Reimagined.</h1>
+            <p>Secure, fast, and stylish file sharing directly from your terminal.<br>No cloud needed. Just you and your local network.</p>
+            
+            <div class="cmd-box" onclick="copyInstall()">
+                <span class="cmd-text">curl -sL https://raw.githubusercontent.com/emRival/cli-local-share/main/install.sh | bash</span>
+                <span class="copy-icon">📋</span>
+            </div>
+
+            <div class="demo-section">
+                <!-- Using the repository's absolute path for the GIF so it works everywhere -->
+                <img src="https://raw.githubusercontent.com/emRival/cli-local-share/main/assets/demo.gif" alt="App Demo">
+            </div>
+        </section>
+
+        <section id="features" class="features">
+            <div class="card">
+                <div class="icon-box">🛡️</div>
+                <h3>Paranoid Security</h3>
+                <p>HTTPS encryption, smart rate limiting, and IP whitelisting keep your files safe from prying eyes.</p>
+            </div>
+            <div class="card">
+                <div class="icon-box">⏱️</div>
+                <h3>Session Timeout</h3>
+                <p>Set a timer for your server. It auto-shutdowns when the time is up. Perfect for temporary shares.</p>
+            </div>
+            <div class="card">
+                <div class="icon-box">🔄</div>
+                <h3>Auto Updates</h3>
+                <p>Update to the latest version directly from the CLI menu. No more manual git pulls.</p>
+            </div>
+            <div class="card">
+                <div class="icon-box">💅</div>
+                <h3>Modern UI</h3>
+                <p>Enjoy a beautiful Rich-based terminal UI and a responsive, dark-mode web interface for clients.</p>
+            </div>
+        </section>
+
+        <section id="docs" class="docs-section">
+            <h2>Documentation</h2>
+            <div class="docs-grid">
+                <aside class="docs-nav">
+                    <ul>
+                        <li><a href="#install" class="active">Installation</a></li>
+                        <li><a href="#usage">Usage</a></li>
+                        <li><a href="#config">Configuration</a></li>
+                    </ul>
+                </aside>
+                <article class="docs-content">
+                    <div id="install">
+                        <h3>⚡ Installation</h3>
+                        <p>The easiest way to install is using our one-line installer:</p>
+                        <div class="cmd-box" style="width:100%; margin-bottom: 1rem;">
+                            <span class="cmd-text">curl -sL https://raw.githubusercontent.com/emRival/cli-local-share/main/install.sh | bash</span>
+                        </div>
+                        <p>Or manually via Git:</p>
+                        <pre style="background:rgba(255,255,255,0.1); padding:1rem; border-radius:8px;"><code>git clone https://github.com/emRival/cli-local-share.git
+cd cli-local-share
+pip3 install .</code></pre>
+                    </div>
+
+                    <div id="usage">
+                        <h3>🎮 Usage</h3>
+                        <p>Simply run the command to start the interactive wizard:</p>
+                        <code>sharecli</code>
+                        <p>Follow the prompts to select your folder, port, and security settings.</p>
+                    </div>
+
+                    <div id="config">
+                        <h3>⚙️ Configuration</h3>
+                        <p><strong>Port</strong>: Default is 8080.</p>
+                        <p><strong>Auth</strong>: Choose between Password, Token, or None.</p>
+                        <p><strong>Permissions</strong>: Toggle Upload/Delete capabilities for users.</p>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <footer>
+            <p>© 2026 FileShare. MIT License.</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
