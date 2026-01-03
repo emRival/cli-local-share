@@ -19,7 +19,7 @@ try:
     from rich.prompt import Prompt, Confirm
 except ImportError:
     print("Installing dependencies...")
-    os.system("pip3 install --break-system-packages rich qrcode Pillow 2>/dev/null || pip3 install rich qrcode Pillow")
+    os.system("pip3 install --break-system-packages rich 2>/dev/null || pip3 install rich")
     from rich.console import Console
     from rich.prompt import Prompt, Confirm
 

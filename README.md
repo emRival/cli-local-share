@@ -27,24 +27,33 @@
 
 ## ⚡ Instalasi
 
-### 1. Instalasi Otomatis (Recommended)
-Cara termudah jika Anda ingin aplikasi terinstall di system path:
+### 1. Instalasi Cepat (Script)
+Jalankan script auto-install:
 
 ```bash
-git clone https://github.com/emRival/cli-local-share.git
-cd cli-local-share
-pip3 install -e .
+sh install.sh
 ```
 
 ### 2. Instalasi Manual
-Jika Anda hanya ingin menjalankan tanpa install ke system:
+Jika Anda ingin install manual:
 
 ```bash
-git clone https://github.com/emRival/cli-local-share.git
-cd cli-local-share
 pip3 install -r requirements.txt
 python3 run.py
 ```
+
+---
+
+## ❓ FAQ
+
+**Q: Apa fungsi Makefile?**
+A: Makefile hanya shortcut untuk developer.
+- `make run` sama dengan `python3 run.py`
+- `make install` sama dengan install requirements.
+Anda tidak wajib menggunakannya.
+
+**Q: Kenapa tidak ada QR Code?**
+A: Fitur ini sudah dihapus untuk membuat aplikasi lebih ringan dan tidak butuh banyak dependency. Sekarang cukup butuh `rich` saja.
 
 ---
 
