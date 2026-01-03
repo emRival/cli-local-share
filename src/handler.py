@@ -205,44 +205,54 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
             return
 
         try:
-            # Streaming Parser logic
+            # Streaming Parser logic with Content-Length tracking (Fix for Keep-Alive Hang)
+            content_length = int(self.headers.get('content-length', 0))
+            if content_length == 0:
+                self.send_error(400, "Bad Request: Missing Content-Length")
+                return
+
             boundary_bytes = ('--' + boundary).encode()
             uploaded_files = []
             
-            # Helper to read lines from generic stream
-            # We use readline() from rfile, but care about buffering
+            # Wrapper to read exactly content_length bytes
+            bytes_read = 0
             
-            # Basic state machine
-            # 1. Read until first boundary
-            # 2. Loop headers
-            # 3. If file, stream to disk until next boundary
-            
-            line = self.rfile.readline()
-            while line and boundary_bytes not in line:
+            # Helper to read line with accounting
+            def safe_readline():
+                nonlocal bytes_read
+                if bytes_read >= content_length:
+                    return b""
                 line = self.rfile.readline()
+                bytes_read += len(line)
+                return line
+
+            # Helper to read chunk with accounting
+            def safe_read(size):
+                nonlocal bytes_read
+                if bytes_read >= content_length:
+                    return b""
+                to_read = min(size, content_length - bytes_read)
+                chunk = self.rfile.read(to_read)
+                bytes_read += len(chunk)
+                return chunk
+            
+            # 1. Read preamble (until first boundary)
+            line = safe_readline()
+            while line and boundary_bytes not in line:
+                line = safe_readline()
             
             # Now we are at a boundary
-            while True:
+            while bytes_read < content_length:
                 # Read Headers
                 headers = {}
-                header_line = self.rfile.readline()
+                header_line = safe_readline()
                 if not header_line:
-                    break # EOF
+                    break 
                 
-                # Check if it was just a newline after boundary (common?)
-                # Or if it's the end boundary (--boundary--)
-                # We need to handle the fact that we might be at the end.
-                
-                # Actually, the previous body loop consumes the boundary.
-                # So we are now at the line *after* the boundary?
-                # No, buffer splitting in body loop might leave us in a weird state.
-                # This manual parser is tricky. 
-                
-                # Let's revert to a simpler "read_until_boundary" function if possible? 
-                # Or patch this loop.
-                
-                # If we rely on the previous loop to have consumed boundary+CRLF...
-                
+                # Check for end boundary (--boundary--)
+                if header_line.strip() == boundary_bytes + b'--':
+                    break
+
                 while True:
                     if not header_line or header_line == b'\r\n':
                         break
@@ -250,12 +260,9 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
                     if ':' in line_str:
                         key, val = line_str.split(':', 1)
                         headers[key.lower().strip()] = val.strip()
-                    header_line = self.rfile.readline()
+                    header_line = safe_readline()
                 
                 if not headers:
-                     # If we got no headers, we might be at EOF or end of parts
-                     # Attempt to read one more byte to check?
-                     # Or just break.
                      break
                 
                 # Check for filename
@@ -271,8 +278,8 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
                         # Stream Data
                         with open(upload_path, 'wb') as f:
                             prev_chunk = b''
-                            while True:
-                                chunk = self.rfile.read(65536) # 64KB
+                            while bytes_read < content_length:
+                                chunk = safe_read(65536) # 64KB
                                 if not chunk:
                                     break
                                 
@@ -291,24 +298,15 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
                                     
                                     f.write(to_write)
                                     
-                                    # IMPORTANT: The 'rest' is the start of the next part.
-                                    # It might start with \r\n if we split strictly on boundary.
-                                    # We need to feed this 'rest' back into the header reader?
-                                    # But header reader uses readline().
+                                    # Since we are implementing a simplified one-file-at-a-time fix
+                                    # and we consumed the boundary in 'buffer', 
+                                    # we are technically overlapping into the next part/epilogue.
+                                    # But since we track content-length, we will eventually stop.
                                     
-                                    # Since we can't unread, we must simply BREAK and assume 
-                                    # for this implementation we only support ONE file reliably 
-                                    # OR we handle the 'rest' manually.
-                                    
-                                    # Given the complexity and the "hang" issue:
-                                    # 1. User likely uploads one file at a time or drag-drops a few.
-                                    # 2. This parser is getting complicated for a quick fix.
-                                    
-                                    # SAFE FIX: Stop after first file, but ensure we drain/finish gracefully.
+                                    # For robustness in this fix, we assume single file or we stop here.
                                     break 
                                 else:
-                                    # Boundary not in here.
-                                    # Keep overlap for next check
+                                    # Margin check for boundary
                                     margin = len(boundary_bytes) + 2
                                     if len(buffer) > margin:
                                         write_len = len(buffer) - margin
@@ -318,17 +316,9 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
                                         prev_chunk = buffer
                             
                         uploaded_files.append(os.path.basename(upload_path))
-                        
-                        # Fix hang: If we found boundary, we broke loop.
-                        # For now, to prevent infinite loops / sync issues, lets just stop processing 
-                        # after the first successful file stream and return success.
-                        # This means multiple files might be truncated, but it fixes the Hang.
-                        # Robust multi-file streaming without 'cgi' needs a full state machine class.
-                        break
+                        break # Stop after first file for stability
                 
-                # If we get here (no filename), consume until next boundary?
-                # Just break to avoid infinite loop
-                break
+                break # Break outer loop if no filename or done
             
             if uploaded_files:
                 log_access(client_ip, f"⬆️ Uploaded: {', '.join(uploaded_files)}", "✅ UPLOAD")
