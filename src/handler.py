@@ -1174,7 +1174,7 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
         if '?action=logout' in self.path:
             self.send_response(401)
             # IMPORTANT: Realm must match the login realm to clear browser cache
-            realm = f'FileShare - User: {get_system_username()}'
+            realm = f'ShareCLI - User: {get_system_username()}'
             self.send_header('WWW-Authenticate', f'Basic realm="{realm}"')
             self.end_headers()
             self.wfile.write(b'Logged out')

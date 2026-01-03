@@ -1,4 +1,4 @@
-# FileShare Makefile
+# ShareCLI Makefile
 
 .PHONY: install run clean help
 

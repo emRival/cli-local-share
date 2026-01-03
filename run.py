@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-FileShare - Run this file to start the server
+ShareCLI - Easy Local File Sharing
+Usage: python3 run.py [options]
 """
 import os
 import sys

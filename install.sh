@@ -11,7 +11,7 @@ BLUE='\033[0;34m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
-echo -e "${BLUE}🚀 FileShare Installer${NC}"
+echo "🚀 Installing ShareCLI..."
 
 # 1. Check Python
 if ! command -v python3 &> /dev/null; then

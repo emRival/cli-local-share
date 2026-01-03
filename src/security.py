@@ -98,7 +98,7 @@ def generate_self_signed_cert(cert_file: str, key_file: str):
             "openssl", "req", "-x509", "-newkey", "rsa:2048",
             "-keyout", key_file, "-out", cert_file,
             "-days", "365", "-nodes",
-            "-subj", "/CN=FileShare/O=FileShare/C=ID"
+            "-subj", "/CN=# ShareCLI Security ModuleShare/C=ID"
         ], capture_output=True)
         
         return os.path.exists(cert_file) and os.path.exists(key_file)
