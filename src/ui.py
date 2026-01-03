@@ -240,8 +240,13 @@ def run_server_with_ui(port: int, directory: str, password: str, token: str,
                 try:
                     import qrcode
                     import io
-                    # Visualize with smaller border for terminal
-                    qr = qrcode.QRCode(border=1)
+                    # Optimize for size: Low error correction (L) covers ~7% damage, allows smaller matrix
+                    qr = qrcode.QRCode(
+                        version=None, 
+                        error_correction=qrcode.constants.ERROR_CORRECT_L,
+                        box_size=10, 
+                        border=1
+                    )
                     qr.add_data(url)
                     qr.make(fit=True)
                     f = io.StringIO()
