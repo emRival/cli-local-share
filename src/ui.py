@@ -169,7 +169,7 @@ def run_server_with_ui(port: int, directory: str, password: str, token: str,
                 else:
                     remaining_str = "∞"
                 
-                # Build Clean Dashboard Layout
+                # === LAYOUT DEFINITION ===
                 layout = Layout()
                 layout.split_column(
                     Layout(name="header", size=3),
@@ -177,64 +177,111 @@ def run_server_with_ui(port: int, directory: str, password: str, token: str,
                     Layout(name="footer", size=3)
                 )
                 
-                # === HEADER: URL + Status + Countdown ===
+                # === HEADER ===
                 header_text = Text()
-                header_text.append("🔗 ", style="bold")
+                header_text.append(" SHARE v2.5 ", style="bold black on green")
+                header_text.append(" ⚡ ", style="bold")
                 header_text.append(url, style="bold cyan underline")
-                header_text.append("  │  ", style="dim")
-                header_text.append("📡 Running", style="bold green")
-                header_text.append("  │  ", style="dim")
+                header_text.append(" ", style="dim")
                 header_text.append(f"⏱️ {remaining_str}", style="bold yellow")
                 
-                # Single Main Panel for everything to keep borders consistent
-                main_grid = Table.grid(expand=True)
-                main_grid.add_column()
+                layout["header"].update(Panel(
+                    Align.center(header_text),
+                    box=box.ROUNDED,
+                    border_style="green",
+                    padding=(0, 1)
+                ))
                 
-                # Rows for header, info, log, files
-                main_grid.add_row(Align.center(header_text))
-                main_grid.add_row("") # Spacer
-                
-                # Info + Log Table
-                top_table = Table.grid(expand=True, padding=(0, 2))
-                top_table.add_column(ratio=1)
-                top_table.add_column(ratio=1)
-                
-                # Info Content
-                info_content = Table.grid(padding=(0, 1))
-                info_content.add_column(style="cyan", width=12)
-                info_content.add_column(style="white")
-                info_content.add_row("👤 User", get_system_username())
-                info_content.add_row("🌐 URL", url[:40] + "..." if len(url) > 40 else url)
-                info_content.add_row("🔐 Protocol", "[green]HTTPS[/green]" if https_enabled else "[yellow]HTTP[/yellow]")
-                info_content.add_row("📁 Directory", directory[:25])
-                info_content.add_row("🛡️ Rate Limit", f"5 tries / {BLOCK_DURATION_SECONDS}s ban")
-                if token:
-                    info_content.add_row("🎫 Token", token)
-                
-                top_table.add_row(
-                    Panel(info_content, title="[bold cyan]📋 Server Info[/bold cyan]", border_style="cyan", box=box.ROUNDED),
-                    Panel(log_content if 'log_content' in locals() else "", title="[bold green]📊 Access Log[/bold green]", border_style="green", box=box.ROUNDED)
+                # === BODY: Info | Log (top), Files (bottom) ===
+                layout["body"].split_column(
+                    Layout(name="upper", ratio=1),
+                    Layout(name="lower", ratio=1)
                 )
                 
-                main_grid.add_row(top_table)
-                main_grid.add_row("") # Spacer
+                layout["body"]["upper"].split_row(
+                    Layout(name="info", ratio=1),
+                    Layout(name="log", ratio=1)
+                )
                 
-                # Files Content
-                main_grid.add_row(Panel(
-                     Align.left(files_text, vertical="top"),
-                     title="[bold blue]📁 Hosted Files[/bold blue]",
-                     border_style="blue",
-                     box=box.ROUNDED,
-                     padding=(0, 1),
-                     height=12 # Fixed height for stability
+                # 1. Server Info Content
+                info = Table.grid(padding=(0, 1))
+                info.add_column(style="cyan", width=12)
+                info.add_column(style="white")
+                info.add_row("👤 User", get_system_username())
+                info.add_row("🌐 URL", url)
+                info.add_row("🔐 Protocol", "HTTPS" if https_enabled else "HTTP")
+                info.add_row("📁 Path", directory if len(directory) < 20 else "..."+directory[-17:])
+                info.add_row("🛡️ Security", f"Rate Limit ({BLOCK_DURATION_SECONDS}s)")
+                
+                layout["body"]["upper"]["info"].update(Panel(
+                    info,
+                    title="[bold cyan] Server Info [/bold cyan]",
+                    border_style="cyan",
+                    box=box.ROUNDED
                 ))
 
-                # Update main layout
-                layout["body"].update(main_grid)
-                
-                # Disable header/footer panels to avoid double borders
-                layout["header"].visible = False 
-                layout["footer"].update(Align.center(Text("Press Ctrl+C to stop server", style="bold red")))
+                # 2. Access Log
+                log_content = Text("Waiting for traffic...", style="dim italic")
+                with STATE_LOCK:
+                    if state.ACCESS_LOG:
+                        log_grid = Table.grid(padding=(0,1), expand=True)
+                        log_grid.add_column(width=8, style="dim") # Time
+                        log_grid.add_column(ratio=1, style="cyan") # IP
+                        log_grid.add_column(width=8) # Status
+                        
+                        recent = list(state.ACCESS_LOG)[-5:]
+                        for entry in recent:
+                            log_grid.add_row(
+                                entry.get("time", "")[-8:], # Just time
+                                entry.get("ip", ""),
+                                entry.get("status", "")
+                            )
+                        log_content = log_grid
+
+                layout["body"]["upper"]["log"].update(Panel(
+                    log_content,
+                    title="[bold green] Live Log [/bold green]",
+                    border_style="green",
+                    box=box.ROUNDED
+                ))
+
+                # 3. Hosted Files
+                # Update logic: Immediate first run + every 2s
+                if files_text == "" or time.time() - last_file_update > 2:
+                    try:
+                        f_list = sorted([f for f in os.listdir(directory) if not f.startswith('.')])
+                        if not f_list:
+                            files_text = "[dim italic]Empty directory[/dim italic]"
+                        else:
+                            display_lines = []
+                            for f in f_list[:10]: # Limit to 10
+                                fpath = os.path.join(directory, f)
+                                if os.path.isdir(fpath):
+                                    display_lines.append(f"📁 {f}/")
+                                else:
+                                    sz = format_size(os.path.getsize(fpath))
+                                    display_lines.append(f"📄 {f} [dim]({sz})[/dim]")
+                            
+                            if len(f_list) > 10:
+                                display_lines.append(f"[dim]... and {len(f_list)-10} more[/dim]")
+                            
+                            files_text = "\n".join(display_lines)
+                    except Exception as e:
+                        files_text = f"[red]Error reading directory: {e}[/red]"
+                    
+                    last_file_update = time.time()
+
+                layout["body"]["lower"].update(Panel(
+                    Align.left(files_text, vertical="top"),
+                    title=f"[bold blue] Hosted Files ({directory}) [/bold blue]",
+                    border_style="blue",
+                    box=box.ROUNDED
+                ))
+
+                # === FOOTER ===
+                layout["footer"].update(Align.center(
+                    Text(" PRESS CTRL+C TO STOP SERVER ", style="bold white on red")
+                ))
                 
                 live.update(layout)
                 time.sleep(0.25)
@@ -246,7 +293,7 @@ def run_server_with_ui(port: int, directory: str, password: str, token: str,
         state.SERVER_RUNNING = False
         try:
             server.shutdown()
-            server.server_close()  # Release port immediately
+            server.server_close()
         except:
             pass
         console.print("\n[cyan]👋 Server stopped.[/cyan]\n")
