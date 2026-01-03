@@ -341,9 +341,13 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
                 })
         
         # Generate HTML Rows
+        import html
         rows = ""
         for item in items:
             actions = '<div class="btn-group">'
+            safe_display_name = html.escape(item['name'])
+            # Escape for JS string context (basic)
+            js_safe_name = item['name'].replace("'", "\\'").replace('"', '&quot;')
             
             if item['is_dir'] and item['name'] != '📁 ..':
                 # Zip feature placeholder
@@ -353,7 +357,7 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
                 actions += f'<a href="{item["download"]}" download class="btn btn-dl">⬇ DL</a>'
                 # Preview
                 if item['preview']:
-                    actions += f'<button onclick="previewFile(\'{item["href"]}\', \'{item["name"]}\')" class="btn btn-view">👁️ View</button>'
+                    actions += f'<button onclick="previewFile(\'{item["href"]}\', \'{js_safe_name}\')" class="btn btn-view">👁️ View</button>'
                 
                 # Delete (Only if enabled)
                 if self.allow_remove:
@@ -362,6 +366,14 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
                     actions += f'''
                     <button onclick="deleteFile('{item['href']}', '{safe_name}')" class="btn btn-del">🗑️ Delete</button>
                     '''
+            
+            rows += f"""
+            <tr>
+                <td><a href="{item['href']}" class="{'' if item['is_dir'] else 'file-link'}">{safe_display_name}</a></td>
+                <td>{item['size']}</td>
+                <td>{actions}</div></td>
+            </tr>
+            """
             
             actions += '</div>'
             
