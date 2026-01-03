@@ -22,9 +22,15 @@
 
 ---
 
-## ✨ Kenapa Pakai Ini?
+## ✨ Tentang Aplikasi
 
-Bosan dengan `python -m http.server` yang polosan dan tidak aman? **FileShare v2.5** hadir sebagai solusi "Sultan" untuk sharing file di jaringan lokal (WiFi/LAN).
+**FileShare v2.5** adalah aplikasi CLI (Command Line Interface) yang memudahkan Anda berbagi file di jaringan lokal (WiFi/LAN) secara aman dan fleksibel.
+
+Kelebihan utama aplikasi ini adalah **Kendali Penuh di Tangan Anda**:
+*   📂 **Pilih Folder Bebas**: Tentukan folder mana saja yang ingin di-share, tidak terpaku pada direktori saat ini.
+*   ⚙️ **Konfigurasi Mudah**: Atur Port, IP Whitelist, dan Timeout sesi sesuai kebutuhan.
+*   🔒 **Keamanan Terjamin**: Opsi enkripsi HTTPS dan berbagai metode login (Password/Token) yang bisa diatur saat *start-up*.
+*   ✅ **Tanpa Ribet**: Semua pengaturan dilakukan lewat panduan interaktif (Wizard) yang mudah dipahami.
 
 ### 🌟 Fitur Unggulan
 
