@@ -1184,19 +1184,45 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
             <html>
             <head>
                 <title>Logged Out - ShareCLI</title>
+                <meta name="viewport" content="width=device-width, initial-scale=1">
                 <style>
                     body { background: #121212; color: #e0e0e0; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; }
-                    .card { background: rgba(255,255,255,0.05); padding: 2rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); }
+                    .card { background: rgba(255,255,255,0.05); padding: 2rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); max-width: 90%; width: 400px; }
                     h1 { margin-bottom: 1rem; color: #00d9ff; }
-                    a { color: #fff; text-decoration: none; padding: 10px 20px; background: #007bff; border-radius: 6px; display: inline-block; margin-top: 1rem; }
-                    a:hover { background: #0056b3; }
+                    p { margin-bottom: 2rem; opacity: 0.8; }
+                    button { 
+                        color: #fff; 
+                        text-decoration: none; 
+                        padding: 12px 24px; 
+                        background: #007bff; 
+                        border: none;
+                        border-radius: 6px; 
+                        font-size: 16px;
+                        cursor: pointer;
+                        transition: background 0.2s;
+                    }
+                    button:hover { background: #0056b3; }
                 </style>
+                <script>
+                    function loginAgain() {
+                        // 1. Send request with BAD credentials to force browser to drop old ones
+                        var xhr = new XMLHttpRequest();
+                        xhr.open("GET", "/", true, "logout", "logout");
+                        xhr.onreadystatechange = function () {
+                            // 2. Once done (likely 401), redirect to login
+                            if (xhr.readyState == 4) {
+                                window.location.href = '/';
+                            }
+                        };
+                        xhr.send();
+                    }
+                </script>
             </head>
             <body>
                 <div class="card">
-                    <h1>🚪 Logged Out</h1>
+                    <h1>Logged Out</h1>
                     <p>You have been safely logged out.</p>
-                    <a href="/">Login Again</a>
+                    <button onclick="loginAgain()">Login Again</button>
                 </div>
             </body>
             </html>
