@@ -15,7 +15,9 @@
 
 <!-- Placeholder untuk GIF (Wajib ditaruh sini biar user langsung lihat) -->
 <div align="center">
-  <video src="assets/demo.mp4" width="100%" controls autoplay muted></video>
+  <img src="assets/demo.gif" alt="Demo Preview" width="100%">
+  <br>
+  <i>(Demo Aplikasi FileShare v2.5)</i>
 </div>
 
 ---
@@ -76,9 +78,9 @@ sharecli
 ## 📸 Gallery
 
 ### 🖼️ Tampilan Aplikasi
-| **Terminal Dashboard** | **Web Interface (Mobile)** |
+| **Terminal Dashboard** | **Web Interface** |
 |:---:|:---:|
-| ![Terminal Dashboard](assets/terminal.png) | ![Web Interface (Mobile)](assets/web.png) |
+| ![Terminal Dashboard](assets/terminal.png) | ![Web Interface](assets/web.png) |
 
 ---
 
