@@ -104,6 +104,8 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
                 
         return True
 
+
+
     @safe_handler
     def do_POST(self):
         """Handle file uploads and deletions"""
@@ -170,7 +172,7 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
             if os.path.isfile(target_file):
                 try:
                     os.remove(target_file)
-                    log_access(client_ip, f"🗑️ DELETE: {file_to_delete}", "✅ OK")
+                    log_access(client_ip, f"🗑️ DELETE: {file_to_delete}", "🗑️ DELETED")
                 except Exception as e:
                     log_access(client_ip, f"DELETE FAIL: {file_to_delete}", "❌ ERR")
                     self.send_error(500, f"Error deleting file: {e}")
@@ -218,7 +220,7 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
                             uploaded_files.append(os.path.basename(upload_path))
             
             if uploaded_files:
-                log_access(client_ip, f"⬆️ Uploaded: {', '.join(uploaded_files)}", "✅ OK")
+                log_access(client_ip, f"⬆️ Uploaded: {', '.join(uploaded_files)}", "✅ UPLOAD")
                 
             self.send_response(303)
             self.send_header('Location', self.path)
@@ -885,8 +887,11 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
 
         # Handle Logout Action
         if '?action=logout' in self.path:
-            self.do_AUTHHEAD()
+            self.send_response(401)
+            self.send_header('WWW-Authenticate', 'Basic realm="Logout"')
+            self.end_headers()
             self.wfile.write(b'Logged out')
+            log_access(client_ip, "Action", "🚪 LOGOUT")
             return
         
         # Security checks
@@ -941,7 +946,7 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
                 self.send_header('Content-Length', len(zip_data))
                 self.end_headers()
                 self.wfile.write(zip_data)
-                log_access(client_ip, f"📦 {folder_name}.zip", "✅ ZIP")
+                log_access(client_ip, f"📦 {folder_name}.zip", "✅ ZIP DOWNLOAD")
                 return
         
         # Check if directory - serve custom HTML
@@ -956,11 +961,11 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
                 self.send_header('Content-Length', len(html))
                 self.end_headers()
                 self.wfile.write(html)
-                log_access(client_ip, path, "✅ OK")
+                log_access(client_ip, path, "📂 BROWSE")
                 return
         
         # Serve file normally
-        log_access(client_ip, self.path, "✅ OK")
+        log_access(client_ip, self.path, "⬇️ DOWNLOAD")
         super().do_GET()
     
     def do_HEAD(self):

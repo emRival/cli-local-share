@@ -212,7 +212,7 @@ def run_server_with_ui(port: int, directory: str, password: str, token: str,
                         log_internal = Table.grid(padding=(0,1), expand=True)
                         log_internal.add_column(width=8, style="dim")
                         log_internal.add_column(ratio=1, style="cyan")
-                        log_internal.add_column(width=8)
+                        log_internal.add_column(width=14)
                         
                         recent = list(state.ACCESS_LOG)[-5:]
                         for entry in recent:
