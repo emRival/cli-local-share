@@ -28,8 +28,8 @@
 ## ⚡ Instalasi
 
 ```bash
-git clone https://github.com/emRival/scam-check.git
-cd scam-check
+git clone https://github.com/emRival/cli-local-share.git
+cd cli-local-share
 pip3 install --break-system-packages -r requirements.txt
 python3 run.py
 ```
