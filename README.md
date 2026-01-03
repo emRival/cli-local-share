@@ -15,9 +15,7 @@
 
 <!-- Placeholder untuk GIF (Wajib ditaruh sini biar user langsung lihat) -->
 <div align="center">
-  <img src="YOUR_GIF_URL_HERE.gif" alt="Demo Preview" width="100%">
-  <br>
-  <i>(Ganti link gambar di atas dengan GIF demo asli Anda)</i>
+  <video src="assets/demo.mp4" width="100%" controls autoplay muted></video>
 </div>
 
 ---
@@ -80,7 +78,7 @@ sharecli
 ### 🖼️ Tampilan Aplikasi
 | **Terminal Dashboard** | **Web Interface (Mobile)** |
 |:---:|:---:|
-| > *[Screenshot Terminal]* | > *[Screenshot HP]* |
+| ![Terminal Dashboard](assets/terminal.png) | ![Web Interface (Mobile)](assets/web.png) |
 
 ---
 
