@@ -36,23 +36,19 @@ else
     fi
 fi
 
-# 3. Install Dependencies
-echo -e "${BLUE}📦 Installing dependencies...${NC}"
+# 3. Install Package (enables 'sharecli' command)
+echo -e "${BLUE}📦 Installing application...${NC}"
 PIP_CMD="pip3"
 if ! command -v pip3 &> /dev/null; then
     PIP_CMD="pip"
 fi
 
-$PIP_CMD install -r requirements.txt --break-system-packages > /dev/null 2>&1 || $PIP_CMD install -r requirements.txt > /dev/null 2>&1
-
-# 4. Finalize
-chmod +x run.py
+# Install the current directory as a package
+$PIP_CMD install . --break-system-packages > /dev/null 2>&1 || $PIP_CMD install . > /dev/null 2>&1
 
 echo ""
 echo -e "${GREEN}✅ Installation Complete!${NC}"
 echo "------------------------------------------------"
-echo -e "📂 Directory: ${BLUE}$INSTALL_DIR${NC}"
-echo ""
-echo "To start the server, run:"
-echo -e "${GREEN}python3 $INSTALL_DIR/run.py${NC}"
+echo -e "You can now run the server anywhere using:"
+echo -e "${GREEN}sharecli${NC}"
 echo "------------------------------------------------"
