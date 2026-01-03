@@ -922,20 +922,28 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
         function logout() {{
             if (!confirm('Are you sure you want to logout?')) return;
             
-            // 1. Notify server for logging
+            // 1. Notify server for logging (optional, best effort)
             fetch(window.location.pathname + '?action=logout');
 
-            // 2. Direct browser redirection with invalid credentials
-            // This forces the browser to re-negotiate auth
+            // 2. Use Iframe to overwrite credentials in background
+            // This prevents the "logout:logout@" appearing in the main URL bar
+            var iframe = document.createElement('iframe');
+            iframe.style.display = "none";
+            
             const protocol = window.location.protocol;
             const host = window.location.host;
             const path = window.location.pathname;
             
-            // Construct URL with explicit 'logout' user
-            const url = protocol + "//logout:logout@" + host + path;
+            // URL with invalid credentials
+            iframe.src = protocol + "//logout:logout@" + host + path;
             
-            // Redirect
-            window.location.replace(url);
+            document.body.appendChild(iframe);
+            
+            // 3. Reload main page after a short delay
+            // The iframe request invalidates the cache, so reload triggers new login
+            setTimeout(function() {{
+                window.location.reload(true);
+            }}, 500); 
         }}
 
         function closeModal(e) {{
