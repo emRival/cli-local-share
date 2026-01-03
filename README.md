@@ -12,107 +12,60 @@
 
 ---
 
-## 🔒 Security Features
+## ✨ Features
 
-| Feature | Description |
-|---------|-------------|
-| **🔐 HTTPS** | Self-signed SSL certificate |
-| **🎫 Access Token** | Random token untuk autentikasi |
-| **🛡️ Rate Limiting** | Block IP setelah 5x gagal login (15 menit) |
-| **📋 IP Whitelist** | Hanya IP tertentu yang bisa akses |
-| **🔍 Network Scanner** | Scan jaringan untuk pilih IP whitelist |
-| **⏱️ Session Timeout** | Auto-stop setelah waktu tertentu |
+### 🛡️ Keamanan (Security)
+*   **HTTPS Enkripsi**: Mengamankan transfer data dengan Self-signed SSL.
+*   **Smart Rate Limiting**: Memblokir IP yang gagal login 5x berturut-turut.
+*   **IP Whitelist**: Batasi akses hanya untuk device tertentu (bisa scan jaringan).
+*   **Token Authentication**: Login cepat menggunakan secure token random.
+
+### 💻 Interface
+*   **CLI Dashboard**: Monitoring traffic real-time langsung dari terminal.
+*   **Live Logs**: Lihat siapa yang download/upload/delete file secara detik itu juga.
+*   **Responsive Web UI**: Tampilan web yang modern, support Dark Mode, dan nyaman di HP.
+
+### 🚀 Performa & Tools
+*   **No Dependencies Hell**: Hanya butuh 1 library (`rich`) untuk jalan.
+*   **Upload & Delete**: Izinkan user upload atau hapus file (bisa diatur).
+*   **Zip Download**: Download satu folder sekaligus dalam bentuk ZIP.
 
 ---
 
 ## ⚡ Instalasi
 
-### 1. Instalasi Cepat (Recommended)
-Copy & Paste perintah ini di terminal:
+Cukup copas mantera ini di terminal Anda:
 
 ```bash
 curl -sL https://raw.githubusercontent.com/emRival/cli-local-share/main/install.sh | bash
 ```
 
-### 2. Instalasi Manual
-Jika Anda ingin install manual:
-
-```bash
-pip3 install -r requirements.txt
-python3 run.py
-```
-
----
-
-## ❓ FAQ
-
-**Q: Apa fungsi Makefile?**
-A: Makefile hanya shortcut untuk developer.
-- `make run` sama dengan `python3 run.py`
-- `make install` sama dengan install requirements.
-Anda tidak wajib menggunakannya.
-
-**Q: Kenapa tidak ada QR Code?**
-A: Fitur ini sudah dihapus untuk membuat aplikasi lebih ringan dan tidak butuh banyak dependency. Sekarang cukup butuh `rich` saja.
-
----
-
-## 🎮 Penggunaan
-
+Setelah selesai, jalankan aplikasi dengan:
 ```bash
 sharecli
-# atau
-python3 run.py
 ```
-
-**Setup wizard akan memandu Anda:**
-
-1. **Directory** - Folder yang akan di-share
-2. **Port** - Port server (default: 8080)
-3. **HTTPS** - Aktifkan enkripsi SSL
-4. **Password** - Password untuk akses
-5. **Token** - Generate random access token
-6. **Timeout** - Durasi session
-7. **IP Whitelist** - Pilih metode:
-   - Manual: Input IP satu per satu
-   - Scan: Scan jaringan dan pilih dari list
-   - Both: Kombinasi keduanya
 
 ---
 
-## 🔑 Autentikasi
+## 📸 Gallery
 
-Ada 3 cara login:
+<!-- Tempatkan screenshot di sini -->
+> *Tambahkan screenshot CLI Dashboard di sini*
 
-1. **Password only**: Masukkan password saja
-2. **Token only**: Masukkan token sebagai password
-3. **Combined**: Masukkan `password:token`
+> *Tambahkan screenshot Web UI di HP di sini*
 
 ---
 
-## 📸 Preview
+## 🎮 Cara Pakai
 
-```
-╔═══════════════════════════════════════════════════════════╗
-║   ███████╗██╗██╗     ███████╗                             ║
-║   SHARE v2.0 - Secure File Sharing                        ║
-║   🔒 HTTPS • 🛡️ Rate Limit • 📋 IP Whitelist             ║
-╚═══════════════════════════════════════════════════════════╝
-
-📡 FileShare Server Running  |  ⏱️ 29m 45s  |  🛡️ 3 whitelisted
-
-┌─ 📋 Info ────────────────────────────────────────────────┐
-│  🌐 URL        https://192.168.1.100:8080                │
-│  🔐 Protocol   🔒 HTTPS                                   │
-│  🔑 Password   ********                                   │
-│  🎫 Token      abc123def456...                            │
-│  📋 Whitelist  3 IPs                                      │
-│  🚫 Blocked    0 IPs                                      │
-└──────────────────────────────────────────────────────────┘
-```
+Saat pertama kali dijalankan (`sharecli`), setup wizard akan memandu Anda:
+1.  Pilih folder yang mau di-share.
+2.  Tentukan Port (default 8080).
+3.  Aktifkan HTTPS/HTTP.
+4.  Pilih metode login (Password / Token).
 
 ---
 
 ## 📄 Lisensi
 
-MIT License
+MIT License - Bebas digunakan dan dimodifikasi.
