@@ -34,14 +34,20 @@
 
 ## ⚡ Instalasi
 
+### Metode 1: Otomatis (Recommended)
 Cukup copas mantera ini di terminal Anda:
 
 ```bash
 curl -sL https://raw.githubusercontent.com/emRival/cli-local-share/main/install.sh | bash
 ```
 
-Setelah selesai, jalankan aplikasi dengan:
+### Metode 2: Manual (Git Clone)
+Jika Anda ingin install manual:
+
 ```bash
+git clone https://github.com/emRival/cli-local-share.git
+cd cli-local-share
+pip3 install .
 sharecli
 ```
 
@@ -49,10 +55,15 @@ sharecli
 
 ## 📸 Gallery
 
-<!-- Tempatkan screenshot di sini -->
-> *Tambahkan screenshot CLI Dashboard di sini*
+<!-- Placeholder untuk GIF -->
+### 🎥 Demo Preview
+> *[Pasang GIF Demo Aplikasi di sini]*
 
-> *Tambahkan screenshot Web UI di HP di sini*
+<!-- Placeholder untuk Screenshots -->
+### 🖼️ Screenshots
+| **Terminal Dashboard** | **Web Interface** |
+|:---:|:---:|
+| > *[Screenshot Terminal]* | > *[Screenshot Web]* |
 
 ---
 
