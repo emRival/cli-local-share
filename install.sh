@@ -1,32 +1,58 @@
 #!/bin/bash
 
-echo "🚀 Installing FileShare..."
+# Configuration
+REPO_URL="https://github.com/emRival/cli-local-share.git"
+INSTALL_DIR="$HOME/cli-local-share"
+BRANCH="main"
 
-# Check Python
+# Colors
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+RED='\033[0;31m'
+NC='\033[0m' # No Color
+
+echo -e "${BLUE}🚀 FileShare Installer${NC}"
+
+# 1. Check Python
 if ! command -v python3 &> /dev/null; then
-    echo "❌ Python 3 is required but not found."
+    echo -e "${RED}❌ Python 3 is required but not found.${NC}"
     exit 1
 fi
 
-# Determine pip command
-PIP_CMD="pip3"
-if ! command -v pip3 &> /dev/null; then
-    if command -v pip &> /dev/null; then
-        PIP_CMD="pip"
+# 2. Clone or Update Repository
+if [ -d "$INSTALL_DIR/.git" ]; then
+    echo -e "${BLUE}🔄 Updating existing installation in $INSTALL_DIR...${NC}"
+    cd "$INSTALL_DIR"
+    git pull origin $BRANCH >/dev/null 2>&1
+else
+    # Check if we are already IN the repo directory (ran locally)
+    if [ -f "src/server.py" ]; then
+        INSTALL_DIR=$(pwd)
+        echo -e "${GREEN}✓ Running from local directory: $INSTALL_DIR${NC}"
     else
-        echo "❌ pip3 not found."
-        exit 1
+        echo -e "${BLUE}⬇️ Cloning repository to $INSTALL_DIR...${NC}"
+        git clone -b $BRANCH $REPO_URL "$INSTALL_DIR" >/dev/null 2>&1
+        cd "$INSTALL_DIR"
     fi
 fi
 
-# Install dependencies (rich only)
-echo "📦 Installing dependencies..."
+# 3. Install Dependencies
+echo -e "${BLUE}📦 Installing dependencies...${NC}"
+PIP_CMD="pip3"
+if ! command -v pip3 &> /dev/null; then
+    PIP_CMD="pip"
+fi
+
 $PIP_CMD install -r requirements.txt --break-system-packages > /dev/null 2>&1 || $PIP_CMD install -r requirements.txt > /dev/null 2>&1
 
-# Make run script executable
+# 4. Finalize
 chmod +x run.py
 
-echo "✅ Installation Complete!"
 echo ""
-echo "Type 'python3 run.py' to start the server."
-echo "Or use 'make run' if you have make installed."
+echo -e "${GREEN}✅ Installation Complete!${NC}"
+echo "------------------------------------------------"
+echo -e "📂 Directory: ${BLUE}$INSTALL_DIR${NC}"
+echo ""
+echo "To start the server, run:"
+echo -e "${GREEN}python3 $INSTALL_DIR/run.py${NC}"
+echo "------------------------------------------------"

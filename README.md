@@ -27,11 +27,11 @@
 
 ## ⚡ Instalasi
 
-### 1. Instalasi Cepat (Script)
-Jalankan script auto-install:
+### 1. Instalasi Cepat (Recommended)
+Copy & Paste perintah ini di terminal:
 
 ```bash
-sh install.sh
+curl -sL https://raw.githubusercontent.com/emRival/cli-local-share/main/install.sh | bash
 ```
 
 ### 2. Instalasi Manual
