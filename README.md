@@ -31,8 +31,7 @@ Kelebihan utama aplikasi ini adalah **Kendali Penuh di Tangan Anda**:
 *   ⚙️ **Konfigurasi Mudah**: Atur Port, IP Whitelist, dan Timeout sesi sesuai kebutuhan.
 *   🔒 **Keamanan Terjamin**: Opsi enkripsi HTTPS dan berbagai metode login (Password/Token) yang bisa diatur saat *start-up*.
 *   ✅ **Tanpa Ribet**: Semua pengaturan dilakukan lewat panduan interaktif (Wizard) yang mudah dipahami.
-<br>
-*   (c) 2026 ShareCLI. MIT License.
+
 
 ### 🌟 Fitur Unggulan
 
