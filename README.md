@@ -1,4 +1,4 @@
-<h1 align="center">FileShare v2.5</h1>
+# FileShare v2.0
 
 <p align="center">
   <img src="https://img.shields.io/badge/Platform-Debian%20%7C%20Ubuntu%20%7C%20Linux-green?style=for-the-badge">
@@ -17,14 +17,14 @@
 <div align="center">
   <img src="assets/demo.gif" alt="Demo Preview" width="100%">
   <br>
-  <i>(Demo Aplikasi FileShare v2.5)</i>
+  <i>(Demo Aplikasi FileShare v2.0)</i>
 </div>
 
 ---
 
 ## ✨ Tentang Aplikasi
 
-**FileShare v2.5** adalah aplikasi CLI (Command Line Interface) yang memudahkan Anda berbagi file di jaringan lokal (WiFi/LAN) secara aman dan fleksibel.
+**FileShare v2.0** adalah aplikasi CLI (Command Line Interface) yang memudahkan Anda berbagi file di jaringan lokal (WiFi/LAN) secara aman dan fleksibel.
 
 Kelebihan utama aplikasi ini adalah **Kendali Penuh di Tangan Anda**:
 *   📂 **Pilih Folder Bebas**: Tentukan folder mana saja yang ingin di-share, tidak terpaku pada direktori saat ini.
