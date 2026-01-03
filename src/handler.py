@@ -36,6 +36,87 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
     
     def log_message(self, format, *args):
         pass
+
+    def send_error(self, code, message=None, explain=None):
+        """Custom error page handler"""
+        if code == 404:
+            self.send_response(404)
+            self.send_header('Content-Type', 'text/html')
+            self.send_header('Connection', 'close')
+            self.end_headers()
+            
+            html = """
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>404 - File Not Found</title>
+                <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+                <style>
+                    :root { --bg-dark: #0f1115; --text-main: #e6edf3; --primary: #3b82f6; --accent: #60a5fa; }
+                    body { 
+                        background: var(--bg-dark); 
+                        color: var(--text-main); 
+                        font-family: 'Inter', system-ui, sans-serif; 
+                        display: flex; 
+                        flex-direction: column; 
+                        align-items: center; 
+                        justify-content: center; 
+                        height: 100vh; 
+                        margin: 0; 
+                        text-align: center;
+                        overflow: hidden;
+                    }
+                    .container { position: relative; z-index: 10; padding: 20px; }
+                    h1 { 
+                        font-size: 8rem; 
+                        margin: 0; 
+                        font-weight: 800;
+                        background: linear-gradient(135deg, var(--primary), var(--accent));
+                        -webkit-background-clip: text;
+                        -webkit-text-fill-color: transparent;
+                        line-height: 1;
+                        margin-bottom: 20px;
+                    }
+                    h2 { font-size: 2rem; margin: 0 0 10px; font-weight: 600; }
+                    p { font-size: 1.1rem; margin: 0 0 30px; opacity: 0.6; max-width: 400px; line-height: 1.5; }
+                    .btn { 
+                        padding: 14px 32px; 
+                        background: var(--primary); 
+                        color: white; 
+                        text-decoration: none; 
+                        border-radius: 50px; 
+                        font-weight: 600; 
+                        transition: all 0.3s ease;
+                        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+                        display: inline-block;
+                    }
+                    .btn:hover { 
+                        transform: translateY(-2px); 
+                        box-shadow: 0 8px 25px rgba(59, 130, 246, 0.6); 
+                    }
+                    .bg-mesh {
+                        position: absolute; width: 100%; height: 100%; top: 0; left: 0; z-index: 1;
+                        background-image: radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.1) 0%, transparent 50%);
+                        opacity: 0.5;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="bg-mesh"></div>
+                <div class="container">
+                    <h1>404</h1>
+                    <h2>File Not Found</h2>
+                    <p>Oops! The file or directory you are looking for seems to have vanished into the digital void.</p>
+                    <a href="/" class="btn">Back to Home</a>
+                </div>
+            </body>
+            </html>
+            """
+            self.wfile.write(html.encode('utf-8'))
+        else:
+            super().send_error(code, message, explain)
     
     def do_AUTHHEAD(self):
         self.send_response(401)
