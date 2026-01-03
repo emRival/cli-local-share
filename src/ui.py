@@ -303,6 +303,21 @@ def run_server_with_ui(port: int, directory: str, password: str, token: str,
                     box=box.ROUNDED
                 ))
                 
+                # Files
+                files = []
+                try:
+                    for f in os.listdir(directory)[:8]:
+                        path = os.path.join(directory, f)
+                        if os.path.isfile(path):
+                            size = format_size(os.path.getsize(path))
+                            files.append(f"📄 {f[:25]} ({size})")
+                        else:
+                            files.append(f"📁 {f[:25]}/")
+                except:
+                    files = ["[dim]Cannot read directory[/dim]"]
+                
+                files_text = "\n".join(files)
+
                 # Files Panel (Bottom - Full Width)
                 body_layout["bottom_row"].update(Panel(
                     files_text,
