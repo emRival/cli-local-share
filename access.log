@@ -1,0 +1,200 @@
+[2026-01-03 18:01:36] IP: 192.168.0.105 | Status: 🔒 AUTH FAILED | Path: /favicon.ico
+[2026-01-03 18:01:36] IP: 192.168.0.105 | Status: 🔒 AUTH FAILED | Path: /favicon.ico
+[2026-01-03 18:01:37] IP: 192.168.0.105 | Status: 🔒 AUTH FAILED | Path: /
+[2026-01-03 18:01:44] IP: 192.168.0.105 | Status: ✅ OK | Path: /
+[2026-01-03 18:01:45] IP: 192.168.0.105 | Status: 🔒 AUTH FAILED | Path: /favicon.ico
+[2026-01-03 18:01:45] IP: 192.168.0.105 | Status: 🔒 AUTH FAILED | Path: /favicon.ico
+[2026-01-03 18:01:57] IP: 192.168.0.105 | Status: ✅ OK | Path: /%5BRAPORT1%5D%20-%20__Afra_Dwi_Athalla%20-%201.pdf
+[2026-01-03 18:01:58] IP: 192.168.0.105 | Status: 🔒 AUTH FAILED | Path: /favicon.ico
+[2026-01-03 18:01:58] IP: 192.168.0.105 | Status: 🔒 AUTH FAILED | Path: /favicon.ico
+[2026-01-03 18:02:01] IP: 192.168.0.105 | Status: 🔒 AUTH FAILED | Path: /favicon.ico
+[2026-01-03 18:02:01] IP: 192.168.0.105 | Status: 🔒 AUTH FAILED | Path: /favicon.ico
+[2026-01-03 18:02:13] IP: 192.168.0.105 | Status: ✅ OK | Path: /%5BRAPORT1%5D%20-%20__Ammar_Maulana_Habibi%20-%203.pdf
+[2026-01-03 18:02:13] IP: 192.168.0.105 | Status: ✅ OK | Path: /%5BRAPORT1%5D%20-%20__Ammar_Maulana_Habibi%20-%203.pdf
+[2026-01-03 18:02:14] IP: 192.168.0.105 | Status: 🔒 AUTH FAILED | Path: /favicon.ico
+[2026-01-03 18:02:14] IP: 192.168.0.105 | Status: 🔒 AUTH FAILED | Path: /favicon.ico
+[2026-01-03 18:02:17] IP: 192.168.0.105 | Status: 🔒 AUTH FAILED | Path: /favicon.ico
+[2026-01-03 18:02:17] IP: 192.168.0.105 | Status: 🔒 AUTH FAILED | Path: /favicon.ico
+[2026-01-03 18:02:36] IP: 192.168.0.105 | Status: 🚫 BLOCKED (300s) | Path: -
+[2026-01-03 18:02:36] IP: 192.168.0.105 | Status: 🔒 AUTH FAILED | Path: /%5BRAPORT1%5D%20-%20__Afra_Dwi_Athalla%20-%201.pdf
+[2026-01-03 18:02:36] IP: 192.168.0.105 | Status: 🚫 BLOCKED | Path: /%5BRAPORT1%5D%20-%20__Afra_Dwi_Athalla%20-%201.pdf
+[2026-01-03 18:02:36] IP: 192.168.0.105 | Status: 🚫 BLOCKED | Path: /favicon.ico
+[2026-01-03 18:02:36] IP: 192.168.0.105 | Status: 🚫 BLOCKED | Path: /%5BRAPORT1%5D%20-%20__Afra_Dwi_Athalla%20-%201.pdf
+[2026-01-03 18:03:18] IP: 192.168.0.105 | Status: 🚫 BLOCKED | Path: /
+[2026-01-03 18:03:19] IP: 192.168.0.105 | Status: 🚫 BLOCKED | Path: /favicon.ico
+[2026-01-03 18:03:21] IP: 192.168.0.105 | Status: 🚫 BLOCKED | Path: /
+[2026-01-03 18:03:21] IP: 192.168.0.105 | Status: 🚫 BLOCKED | Path: /favicon.ico
+[2026-01-03 18:03:22] IP: 192.168.0.105 | Status: 🚫 BLOCKED | Path: /
+[2026-01-03 18:03:22] IP: 192.168.0.105 | Status: 🚫 BLOCKED | Path: /favicon.ico
+[2026-01-03 18:08:51] IP: 127.0.0.1 | Status: 🔒 AUTH FAILED | Path: /
+[2026-01-03 18:08:51] IP: 127.0.0.1 | Status: 🔒 AUTH FAILED | Path: /
+[2026-01-03 18:08:51] IP: 127.0.0.1 | Status: 🔒 AUTH FAILED | Path: /
+[2026-01-03 18:08:51] IP: 127.0.0.1 | Status: 🔒 AUTH FAILED | Path: /
+[2026-01-03 18:08:51] IP: 127.0.0.1 | Status: 🚫 BLOCKED (300s) | Path: -
+[2026-01-03 18:08:51] IP: 127.0.0.1 | Status: 🔒 AUTH FAILED | Path: /
+[2026-01-03 18:08:51] IP: 127.0.0.1 | Status: 🚫 BLOCKED | Path: /
+[2026-01-03 18:08:51] IP: 127.0.0.1 | Status: ✅ OK | Path: /
+[2026-01-03 18:13:14] IP: 127.0.0.1 | Status: ✅ OK | Path: /
+[2026-01-03 18:23:04] IP: 192.168.0.105 | Status: 🔒 AUTH FAILED | Path: /
+[2026-01-03 18:23:10] IP: 192.168.0.105 | Status: ✅ OK | Path: /
+[2026-01-03 18:23:19] IP: 192.168.0.105 | Status: ✅ OK | Path: ⬆️ Uploaded: 820fe741-acfb-4321-a12c-272e5dda72f0.jpeg
+[2026-01-03 18:23:19] IP: 192.168.0.105 | Status: ✅ OK | Path: /
+[2026-01-03 18:23:19] IP: 192.168.0.105 | Status: ✅ OK | Path: /
+[2026-01-03 18:39:55] IP: 192.168.0.103 | Status: ✅ OK | Path: /
+[2026-01-03 18:39:56] IP: 192.168.0.103 | Status: ✅ OK | Path: /favicon.ico
+[2026-01-03 18:40:14] IP: 192.168.0.103 | Status: ✅ OK | Path: 🗑️ DELETE: /820fe741-acfb-4321-a12c-272e5dda72f0.jpeg
+[2026-01-03 18:40:14] IP: 192.168.0.103 | Status: ✅ OK | Path: /
+[2026-01-03 18:40:14] IP: 192.168.0.103 | Status: ✅ OK | Path: /
+[2026-01-03 19:01:03] IP: 192.168.0.105 | Status: 🔒 AUTH FAILED | Path: /
+[2026-01-03 19:01:14] IP: 192.168.0.105 | Status: 📂 BROWSE | Path: /
+[2026-01-03 19:01:39] IP: 192.168.0.105 | Status: 📂 BROWSE | Path: /
+[2026-01-03 19:01:39] IP: 192.168.0.105 | Status: ⬇️ DOWNLOAD | Path: /005.%20Permohonan%20Izin%20Mengikuti%20Tes%20Kemampuan%20Akademik%20%28TKA%29.pdf
+[2026-01-03 19:02:09] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /
+[2026-01-03 19:02:11] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /
+[2026-01-03 19:19:22] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /
+[2026-01-03 19:19:29] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /
+[2026-01-03 19:19:30] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /
+[2026-01-03 19:19:34] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /
+[2026-01-03 19:19:36] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /
+[2026-01-03 19:19:39] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /
+[2026-01-03 19:19:41] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /
+[2026-01-03 19:21:37] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /
+[2026-01-03 19:22:22] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /
+[2026-01-03 19:22:31] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /
+[2026-01-03 19:22:32] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /
+[2026-01-03 19:23:01] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /
+[2026-01-03 19:23:08] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /
+[2026-01-03 19:23:08] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /
+[2026-01-03 19:25:59] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /
+[2026-01-03 19:26:09] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /
+[2026-01-03 19:28:49] IP: 192.168.0.103 | Status: 🔒 AUTH FAILED | Path: /
+[2026-01-03 19:28:56] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /
+[2026-01-03 19:29:03] IP: 192.168.0.103 | Status: ⬇️ DOWNLOAD | Path: /12.%20Muhammad%20Regno%20Schefendi.png
+[2026-01-03 19:29:08] IP: 192.168.0.103 | Status: ⬇️ DOWNLOAD | Path: /11%20DKV%20-%20ABSENSI%20SOLAT%20DUHA%20SISWA%20-%20Google%20Spreadsheet.pdf
+[2026-01-03 19:29:37] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /
+[2026-01-03 19:30:00] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /
+[2026-01-03 19:30:26] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /
+[2026-01-03 19:30:26] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /
+[2026-01-03 19:30:28] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /
+[2026-01-03 19:31:54] IP: 192.168.0.105 | Status: 🔒 AUTH FAILED | Path: /
+[2026-01-03 19:32:04] IP: 192.168.0.105 | Status: 📂 BROWSE | Path: /
+[2026-01-03 19:32:16] IP: 192.168.0.105 | Status: 🚪 LOGOUT | Path: Action
+[2026-01-03 19:32:19] IP: 192.168.0.105 | Status: 🚪 LOGOUT | Path: Action
+[2026-01-03 19:32:20] IP: 192.168.0.105 | Status: 📂 BROWSE | Path: /
+[2026-01-03 19:32:22] IP: 192.168.0.105 | Status: 📂 BROWSE | Path: /
+[2026-01-03 19:32:26] IP: 192.168.0.105 | Status: 📂 BROWSE | Path: /
+[2026-01-03 19:34:04] IP: 192.168.0.105 | Status: 📂 BROWSE | Path: /
+[2026-01-03 19:34:34] IP: 192.168.0.105 | Status: 📂 BROWSE | Path: /
+[2026-01-03 19:34:34] IP: 192.168.0.105 | Status: ⬇️ DOWNLOAD | Path: /004.%20Permohonan%20Izin%20Mengikuti%20Tes%20Kemampuan%20Akademik%20%28TKA%29%20%281%29.pdf
+[2026-01-03 19:34:36] IP: 192.168.0.105 | Status: ⬇️ DOWNLOAD | Path: /0074793113.jpg
+[2026-01-03 19:35:20] IP: 192.168.0.105 | Status: 📂 BROWSE | Path: /
+[2026-01-03 19:35:20] IP: 192.168.0.105 | Status: ⬇️ DOWNLOAD | Path: /0086451711.jpg
+[2026-01-03 19:35:36] IP: 192.168.0.105 | Status: 📂 BROWSE | Path: /
+[2026-01-03 19:35:50] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /
+[2026-01-03 19:38:37] IP: 192.168.0.103 | Status: 🔒 AUTH FAILED | Path: /
+[2026-01-03 19:38:42] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /
+[2026-01-03 19:38:54] IP: 192.168.0.103 | Status: ⬇️ DOWNLOAD | Path: /00119%20-%20Surat%20Edaran%20Pembaruan%20Jadwal%20KBM%20dan%20Penyesuaian%20JP%20Guru%20%2B%20lampiran-1-2.pdf
+[2026-01-03 19:39:11] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /
+[2026-01-03 19:39:46] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /
+[2026-01-03 19:57:51] IP: 192.168.0.103 | Status: 🔒 AUTH FAILED | Path: /
+[2026-01-03 19:57:58] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /
+[2026-01-03 20:02:48] IP: 192.168.0.103 | Status: 🔒 AUTH FAILED | Path: /
+[2026-01-03 20:02:52] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /
+[2026-01-03 20:02:58] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /
+[2026-01-03 20:02:58] IP: 192.168.0.103 | Status: ⬇️ DOWNLOAD | Path: /favicon.ico
+[2026-01-03 20:03:37] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /
+[2026-01-03 20:03:40] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /
+[2026-01-03 20:05:51] IP: 192.168.0.103 | Status: 🔒 AUTH FAILED | Path: /
+[2026-01-03 20:05:56] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /
+[2026-01-03 20:06:01] IP: 192.168.0.103 | Status: 🚪 LOGOUT | Path: Action
+[2026-01-03 20:06:01] IP: 192.168.0.103 | Status: 🔒 AUTH FAILED | Path: /
+[2026-01-03 20:06:04] IP: 192.168.0.103 | Status: 🔒 AUTH FAILED | Path: /
+[2026-01-04 00:11:29] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /
+[2026-01-04 00:11:29] IP: 192.168.0.103 | Status: ⬇️ DOWNLOAD | Path: /favicon.ico
+[2026-01-04 00:11:44] IP: 192.168.0.103 | Status: ⬇️ DOWNLOAD | Path: /Makefile
+[2026-01-04 00:11:56] IP: 192.168.0.103 | Status: ✅ UPLOAD | Path: ⬆️ Uploaded: Rekap_Nilai_Sem1_2_3_4_5_20260103_1003.xlsx
+[2026-01-04 00:11:56] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /
+[2026-01-04 00:11:57] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /
+[2026-01-04 00:12:17] IP: 192.168.0.103 | Status: 🚪 LOGOUT | Path: Action
+[2026-01-04 00:12:18] IP: 192.168.0.103 | Status: 🔒 AUTH FAILED | Path: /
+[2026-01-04 00:12:20] IP: 192.168.0.103 | Status: 🔒 AUTH FAILED | Path: /
+[2026-01-04 00:12:43] IP: 192.168.0.103 | Status: 🔒 AUTH FAILED | Path: /
+[2026-01-04 00:30:19] IP: 192.168.0.103 | Status: 🔒 AUTH FAILED | Path: /
+[2026-01-04 00:30:24] IP: 192.168.0.103 | Status: 🔒 AUTH FAILED | Path: /
+[2026-01-04 00:30:32] IP: 192.168.0.103 | Status: 🔒 AUTH FAILED | Path: /
+[2026-01-04 00:30:39] IP: 192.168.0.103 | Status: 🔒 AUTH FAILED | Path: /
+[2026-01-04 00:30:50] IP: 192.168.0.103 | Status: 🚫 BLOCKED (300s) | Path: -
+[2026-01-04 00:30:50] IP: 192.168.0.103 | Status: 🔒 AUTH FAILED | Path: /
+[2026-01-04 00:30:58] IP: 192.168.0.103 | Status: 🚫 BLOCKED | Path: /
+[2026-01-04 00:30:58] IP: 192.168.0.103 | Status: 🚫 BLOCKED | Path: /
+[2026-01-04 00:31:00] IP: 192.168.0.103 | Status: 🚫 BLOCKED | Path: /
+[2026-01-04 00:31:10] IP: 192.168.0.103 | Status: 🚫 BLOCKED | Path: /
+[2026-01-04 00:31:12] IP: 192.168.0.103 | Status: 🚫 BLOCKED | Path: /
+[2026-01-04 00:31:13] IP: 192.168.0.103 | Status: 🚫 BLOCKED | Path: /
+[2026-01-04 00:31:47] IP: 192.168.0.103 | Status: 🚫 BLOCKED | Path: /
+[2026-01-04 00:33:52] IP: 192.168.0.103 | Status: 🚫 BLOCKED | Path: /
+[2026-01-04 00:34:26] IP: 192.168.0.103 | Status: 🔒 AUTH FAILED | Path: /
+[2026-01-04 00:34:37] IP: 192.168.0.103 | Status: 🔒 AUTH FAILED | Path: /
+[2026-01-04 00:34:39] IP: 192.168.0.103 | Status: 🔒 AUTH FAILED | Path: /
+[2026-01-04 00:35:06] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /
+[2026-01-04 00:36:34] IP: 192.168.0.103 | Status: 🚪 LOGOUT | Path: Action
+[2026-01-04 00:36:34] IP: 192.168.0.103 | Status: 🔒 AUTH FAILED | Path: /
+[2026-01-04 00:36:41] IP: 192.168.0.103 | Status: 🔒 AUTH FAILED | Path: /
+[2026-01-04 00:37:02] IP: 192.168.0.103 | Status: 🔒 AUTH FAILED | Path: /
+[2026-01-04 00:38:10] IP: 192.168.0.103 | Status: 🔒 AUTH FAILED | Path: /
+[2026-01-04 00:54:05] IP: 192.168.0.103 | Status: 🔒 AUTH FAILED | Path: /
+[2026-01-04 00:54:08] IP: 192.168.0.103 | Status: 🔒 AUTH FAILED | Path: /
+[2026-01-04 00:54:16] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /
+[2026-01-04 00:54:17] IP: 192.168.0.103 | Status: ⬇️ DOWNLOAD | Path: /favicon.ico
+[2026-01-04 00:54:21] IP: 192.168.0.103 | Status: 🚪 LOGOUT | Path: Action
+[2026-01-04 00:54:27] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /
+[2026-01-04 00:54:31] IP: 192.168.0.103 | Status: 🚪 LOGOUT | Path: Action
+[2026-01-04 01:26:18] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /
+[2026-01-04 01:26:18] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /
+[2026-01-04 01:26:27] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /assets/
+[2026-01-04 01:26:38] IP: 192.168.0.103 | Status: ⬇️ DOWNLOAD | Path: /assets/demo.gif
+[2026-01-04 01:26:41] IP: 192.168.0.103 | Status: ⬇️ DOWNLOAD | Path: /assets/demo.mp4
+[2026-01-04 01:28:38] IP: 192.168.0.103 | Status: 🔒 AUTH FAILED | Path: /
+[2026-01-04 01:28:42] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /
+[2026-01-04 01:28:49] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /assets/
+[2026-01-04 01:28:55] IP: 192.168.0.103 | Status: ⬇️ DOWNLOAD | Path: /assets/terminal.png
+[2026-01-04 01:28:59] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /
+[2026-01-04 01:29:02] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /docs/
+[2026-01-04 01:29:04] IP: 192.168.0.103 | Status: ⬇️ DOWNLOAD | Path: /docs/script.js
+[2026-01-04 01:29:07] IP: 192.168.0.103 | Status: ⬇️ DOWNLOAD | Path: /docs/index.html
+[2026-01-04 01:29:07] IP: 192.168.0.103 | Status: ⬇️ DOWNLOAD | Path: /docs/style.css
+[2026-01-04 01:29:07] IP: 192.168.0.103 | Status: ⬇️ DOWNLOAD | Path: /docs/script.js
+[2026-01-04 01:29:16] IP: 192.168.0.103 | Status: ⬇️ DOWNLOAD | Path: /docs/style.css
+[2026-01-04 01:29:21] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /
+[2026-01-04 01:29:28] IP: 192.168.0.103 | Status: ⬇️ DOWNLOAD | Path: /setup.py
+[2026-01-04 01:29:32] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /assets/
+[2026-01-04 01:30:06] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /
+[2026-01-04 01:33:23] IP: 192.168.0.103 | Status: 🔒 AUTH FAILED | Path: /README.md
+[2026-01-04 01:33:28] IP: 192.168.0.103 | Status: ⬇️ DOWNLOAD | Path: /README.md
+[2026-01-04 01:33:36] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /assets/
+[2026-01-04 01:33:43] IP: 192.168.0.103 | Status: ⬇️ DOWNLOAD | Path: /assets/web.png
+[2026-01-04 01:33:48] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /assets/
+[2026-01-04 01:33:50] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /
+[2026-01-04 01:33:58] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /
+[2026-01-04 01:33:58] IP: 192.168.0.103 | Status: ⬇️ DOWNLOAD | Path: /favicon.ico
+[2026-01-04 01:34:20] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /assets/
+[2026-01-04 01:34:23] IP: 192.168.0.103 | Status: ⬇️ DOWNLOAD | Path: /assets/demo.mp4
+[2026-01-04 01:34:23] IP: 192.168.0.103 | Status: ⬇️ DOWNLOAD | Path: /assets/demo.mp4
+[2026-01-04 01:34:27] IP: 192.168.0.103 | Status: ⬇️ DOWNLOAD | Path: /assets/demo.gif
+[2026-01-04 01:34:31] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /
+[2026-01-04 01:34:38] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /docs/
+[2026-01-04 01:34:40] IP: 192.168.0.103 | Status: ⬇️ DOWNLOAD | Path: /docs/index.html
+[2026-01-04 01:34:41] IP: 192.168.0.103 | Status: ⬇️ DOWNLOAD | Path: /docs/style.css
+[2026-01-04 01:34:41] IP: 192.168.0.103 | Status: ⬇️ DOWNLOAD | Path: /docs/script.js
+[2026-01-04 01:34:48] IP: 192.168.0.103 | Status: ⬇️ DOWNLOAD | Path: /docs/index.html
+[2026-01-04 01:34:59] IP: 192.168.0.103 | Status: ⬇️ DOWNLOAD | Path: /docs/script.js
+[2026-01-04 01:35:31] IP: 192.168.0.103 | Status: 🔒 AUTH FAILED | Path: /docs/
+[2026-01-04 01:35:35] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /docs/
+[2026-01-04 01:35:55] IP: 192.168.0.103 | Status: ⬇️ DOWNLOAD | Path: /docs/style.css
+[2026-01-04 01:42:13] IP: 192.168.0.103 | Status: 🔒 AUTH FAILED | Path: /docs/
+[2026-01-04 01:42:17] IP: 192.168.0.103 | Status: ⬇️ DOWNLOAD | Path: /docs/
+[2026-01-04 01:42:27] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /
+[2026-01-04 01:43:08] IP: 192.168.0.103 | Status: ⬇️ DOWNLOAD | Path: /0071382647%20%282%29%20%281%29.jpg
+[2026-01-04 01:43:11] IP: 192.168.0.103 | Status: ⬇️ DOWNLOAD | Path: /0074793113.png
+[2026-01-04 01:44:29] IP: 192.168.0.103 | Status: 📂 BROWSE | Path: /ilai%20kelas%2010%20dkv/
+[2026-01-04 01:50:26] IP: 192.168.0.103 | Status: 🔒 AUTH FAILED | Path: /ilai%20kelas%2010%20dkv/

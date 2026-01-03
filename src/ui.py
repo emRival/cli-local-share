@@ -25,7 +25,7 @@ console = Console()
 
 def print_banner():
     """Print application banner using Rich Panel"""
-    title = Text("SHARE v2.5", style="bold green")
+    title = Text("SHARE v2.0", style="bold green")
     subtitle = Text("Secure File Sharing", style="bold white")
     
     content = Align.center(

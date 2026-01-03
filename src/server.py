@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-FileShare v2.5 - Secure File Sharing Server
+FileShare v2.0 - Secure File Sharing Server
 Refactored Modular Architecture
 
 Components:
