@@ -928,21 +928,20 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
                 .catch(e => window.location.reload());
             }}
         // Logic to clear Basic Auth credentials
+        // Logic to clear Basic Auth credentials
         function logout() {{
-            // 1. Notify server for logging (optional, fire & forget)
-            fetch(window.location.pathname + '?action=logout');
+            // Use XHR with explicit bad credentials to overwrite browser cache
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", "?action=logout", true, "logout", "logout");
+            xhr.send();
             
-            // 2. Force browser to discard credentials by navigating to same URL with invalid creds
-            // This is the most reliable way to "Logout" from Basic Auth without closing the browser
-            const protocol = window.location.protocol;
-            const host = window.location.host;
-            const path = window.location.pathname;
-            
-            // Use a dummy user:pass to overwrite the cached ones
-            const url = protocol + "//logout:logout@" + host + path;
-            
-            // Redirect
-            window.location.replace(url);
+            xhr.onreadystatechange = function() {{
+                if (xhr.readyState == 4) {{
+                    // When request completes (401), cache is updated.
+                    // Reloading will now force a new login prompt.
+                    window.location.href = window.location.pathname;
+                }}
+            }};
         }}
 
         function closeModal(e) {{
@@ -983,7 +982,9 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
         # Handle Logout Action
         if '?action=logout' in self.path:
             self.send_response(401)
-            self.send_header('WWW-Authenticate', 'Basic realm="Logout"')
+            # IMPORTANT: Realm must match the login realm to clear browser cache
+            realm = f'FileShare - User: {get_system_username()}'
+            self.send_header('WWW-Authenticate', f'Basic realm="{realm}"')
             self.end_headers()
             self.wfile.write(b'Logged out')
             log_access(client_ip, "Action", "🚪 LOGOUT")
