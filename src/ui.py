@@ -215,16 +215,18 @@ def run_server_with_ui(port: int, directory: str, password: str, token: str,
                 with STATE_LOCK:
                     if state.ACCESS_LOG:
                         log_internal = Table.grid(padding=(0,1), expand=True)
-                        log_internal.add_column(width=8, style="dim")
-                        log_internal.add_column(ratio=1, style="cyan")
-                        log_internal.add_column(width=14)
+                        log_internal.add_column(width=8, style="dim")     # Time
+                        log_internal.add_column(width=14, style="cyan")   # IP 
+                        log_internal.add_column(width=12)                 # Status
+                        log_internal.add_column(ratio=1, style="white")   # Path
                         
                         recent = list(state.ACCESS_LOG)[-5:]
                         for entry in recent:
                             log_internal.add_row(
                                 entry.get("time", "")[-8:],
                                 entry.get("ip", ""),
-                                entry.get("status", "")
+                                entry.get("status", ""),
+                                entry.get("path", "")
                             )
                         log_content = log_internal
 
