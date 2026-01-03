@@ -928,20 +928,23 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
                 .catch(e => window.location.reload());
             }}
         // Logic to clear Basic Auth credentials
-        // Logic to clear Basic Auth credentials
         function logout() {{
-            // Use XHR with explicit bad credentials to overwrite browser cache
-            var xhr = new XMLHttpRequest();
-            xhr.open("GET", "?action=logout", true, "logout", "logout");
-            xhr.send();
+            if (!confirm('Are you sure you want to logout?')) return;
             
-            xhr.onreadystatechange = function() {{
-                if (xhr.readyState == 4) {{
-                    // When request completes (401), cache is updated.
-                    // Reloading will now force a new login prompt.
-                    window.location.href = window.location.pathname;
-                }}
-            }};
+            // 1. Notify server for logging
+            fetch(window.location.pathname + '?action=logout');
+
+            // 2. Direct browser redirection with invalid credentials
+            // This forces the browser to re-negotiate auth
+            const protocol = window.location.protocol;
+            const host = window.location.host;
+            const path = window.location.pathname;
+            
+            // Construct URL with explicit 'logout' user
+            const url = protocol + "//logout:logout@" + host + path;
+            
+            // Redirect
+            window.location.replace(url);
         }}
 
         function closeModal(e) {{
