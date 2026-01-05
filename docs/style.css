@@ -139,12 +139,49 @@ nav a:hover {
     border: 1px solid var(--border);
     box-shadow: 0 20px 80px -20px rgba(0, 0, 0, 0.8);
     max-width: 900px;
+    min-height: 300px;
+    /* Reserve space */
+    background: #111;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.demo-section::after {
+    content: "Loading Demo...";
+    position: absolute;
+    color: #555;
+    font-size: 0.9rem;
+    z-index: 0;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 0.5;
+    }
+
+    50% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0.5;
+    }
 }
 
 .demo-section img {
     width: 100%;
     display: block;
+    position: relative;
+    z-index: 1;
+    background: var(--bg-main);
+    /* Cover the loading text */
+    min-height: 300px;
 }
+
+
 
 /* Features Grid (Bento) */
 .features {
@@ -329,11 +366,16 @@ footer {
         flex-direction: column;
         align-items: stretch;
         width: 100%;
+        overflow-x: auto;
+        /* Allow scrolling */
     }
 
     .cmd-text {
-        word-break: break-all;
-        font-size: 0.9rem;
+        white-space: pre;
+        /* Keep on one line to trigger scroll */
+        font-size: 0.85rem;
+        padding-bottom: 0.5rem;
+        /* Space for scrollbar */
     }
 
     /* Grid becomes single column */
