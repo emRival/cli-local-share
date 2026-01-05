@@ -4,8 +4,652 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Primary Meta Tags -->
     <title>ShareCLI v2.0 - Secure Local Sharing</title>
-    <link rel="stylesheet" href="style.css">
+    <meta name="title" content="ShareCLI v2.0 - Secure Local Sharing">
+    <meta name="description"
+        content="Secure, fast, and stylish file sharing directly from your terminal. No cloud needed. Just you and your local network. Features HTTPS, streaming uploads, and TUI.">
+    <meta name="keywords"
+        content="cli, file sharing, local network, python, terminal tool, secure sharing, p2p, open source">
+    <meta name="author" content="emRival">
+    <meta name="theme-color" content="#050505">
+
+    <!-- Favicon (Menggunakan SVG Logo) -->
+    <link rel="icon" type="image/svg+xml" href="../assets/logo_cli.svg">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://github.com/emRival/cli-local-share">
+    <meta property="og:title" content="ShareCLI v2.0 - Secure Local Sharing">
+    <meta property="og:description"
+        content="Secure, fast, and stylish file sharing directly from your terminal. No cloud needed. Just you and your local network.">
+    <meta property="og:image" content="https://raw.githubusercontent.com/emRival/cli-local-share/main/assets/demo.gif">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://github.com/emRival/cli-local-share">
+    <meta property="twitter:title" content="ShareCLI v2.0 - Secure Local Sharing">
+    <meta property="twitter:description"
+        content="Secure, fast, and stylish file sharing directly from your terminal. No cloud needed. Just you and your local network.">
+    <meta property="twitter:image"
+        content="https://raw.githubusercontent.com/emRival/cli-local-share/main/assets/demo.gif">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-main: #050505;
+            --bg-card: rgba(20, 20, 20, 0.6);
+            --text-primary: #ffffff;
+            --text-secondary: #a1a1aa;
+            --accent: #3b82f6;
+            --accent-glow: rgba(59, 130, 246, 0.5);
+            --success: #10b981;
+            --border: rgba(255, 255, 255, 0.1);
+            --font-main: 'Inter', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            /* Prevent horizontal scroll on the page level */
+            overflow-x: hidden;
+            width: 100%;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            font-family: var(--font-main);
+            line-height: 1.6;
+            overflow-x: hidden;
+            width: 100%;
+        }
+
+        /* --- Animated Background --- */
+        .bg-mesh {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            background: radial-gradient(circle at 50% 0%, #1e1b4b 0%, var(--bg-main) 70%);
+            overflow: hidden;
+        }
+
+        .bg-mesh::before,
+        .bg-mesh::after {
+            content: '';
+            position: absolute;
+            width: 60vw;
+            height: 60vw;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.15;
+            animation: float 10s infinite alternate ease-in-out;
+        }
+
+        .bg-mesh::before {
+            background: var(--accent);
+            top: -10%;
+            left: -10%;
+        }
+
+        .bg-mesh::after {
+            background: #8b5cf6;
+            bottom: -10%;
+            right: -10%;
+            animation-delay: -5s;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            100% {
+                transform: translate(20px, 40px) scale(1.1);
+            }
+        }
+
+        /* --- Layout --- */
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+            width: 100%;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* --- Header --- */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 2rem 0;
+            backdrop-filter: blur(5px);
+        }
+
+        .logo {
+            font-weight: 800;
+            font-size: 1.5rem;
+            background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.03em;
+
+            /* Logo Alignment Flexbox */
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        /* Gaya untuk IMG/SVG Logo Eksternal */
+        .logo img {
+            width: 32px;
+            height: 32px;
+            /* Filter glow tetap bisa digunakan */
+            filter: drop-shadow(0 0 8px var(--accent-glow));
+        }
+
+        nav {
+            display: flex;
+            gap: 2rem;
+        }
+
+        nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        nav a:hover {
+            color: #fff;
+        }
+
+        /* --- Hero Section --- */
+        .hero {
+            text-align: center;
+            padding: 6rem 0 4rem;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(180deg, #fff 0%, rgba(255, 255, 255, 0.6) 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            max-width: 600px;
+            margin: 0 auto 3rem;
+        }
+
+        /* --- REDESIGNED COMMAND BOX --- */
+        .cmd-wrapper {
+            position: relative;
+            max-width: 700px;
+            margin: 0 auto 3rem;
+            padding: 1px;
+            /* For border gradient */
+            border-radius: 12px;
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            box-shadow: 0 0 40px -10px var(--accent-glow);
+            overflow: hidden;
+            /* Fix spillover */
+        }
+
+        .cmd-box {
+            background: rgba(10, 10, 10, 0.8);
+            border-radius: 12px;
+            padding: 1rem 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            backdrop-filter: blur(12px);
+            cursor: pointer;
+            transition: transform 0.2s ease, background 0.2s;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .cmd-box:hover {
+            background: rgba(20, 20, 20, 0.9);
+        }
+
+        .cmd-box:active {
+            transform: scale(0.99);
+        }
+
+        /* The text area that scrolls horizontally on mobile */
+        .cmd-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+            /* Hide standard overflow */
+            position: relative;
+            min-width: 0;
+            /* Flexbox overflow fix */
+        }
+
+        .cmd-text {
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            color: #e2e8f0;
+            white-space: nowrap;
+            /* Forces single line */
+            overflow-x: auto;
+            /* Allow horizontal scroll */
+            scrollbar-width: none;
+            /* Hide scrollbar Firefox */
+            -ms-overflow-style: none;
+            /* Hide scrollbar IE/Edge */
+            padding-right: 1rem;
+            /* Space for fade effect */
+            user-select: all;
+            /* Easier to select */
+            max-width: 100%;
+            /* Ensure it respects container */
+        }
+
+        .cmd-text::-webkit-scrollbar {
+            display: none;
+            /* Hide scrollbar Chrome/Safari */
+        }
+
+        .cmd-text::before {
+            content: "$ ";
+            color: #64748b;
+            margin-right: 0.5rem;
+            user-select: none;
+        }
+
+        /* Copy Button */
+        .copy-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            padding: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s;
+            flex-shrink: 0;
+            /* Prevent shrinking */
+        }
+
+        .cmd-box:hover .copy-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+        }
+
+        .copy-btn.copied {
+            background: rgba(16, 185, 129, 0.2);
+            border-color: rgba(16, 185, 129, 0.4);
+            color: var(--success);
+        }
+
+        /* Demo Image */
+        .demo-section {
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            box-shadow: 0 20px 50px -20px rgba(0, 0, 0, 0.5);
+            margin-top: 2rem;
+            background: #000;
+        }
+
+        .demo-section img {
+            width: 100%;
+            height: auto;
+            display: block;
+            opacity: 0.9;
+        }
+
+        /* --- Features Grid --- */
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin: 6rem 0;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 2rem;
+            border-radius: 16px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(255, 255, 255, 0.2);
+            background: rgba(30, 30, 30, 0.8);
+            box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Subtle shine effect on hover */
+        .card::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(800px circle at var(--mouse-x) var(--mouse-y), rgba(255, 255, 255, 0.06), transparent 40%);
+            opacity: 0;
+            transition: opacity 0.5s;
+            pointer-events: none;
+        }
+
+        .card:hover::after {
+            opacity: 1;
+        }
+
+        .icon-box {
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            display: inline-block;
+            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.1));
+        }
+
+        .card h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.8rem;
+            color: #f1f5f9;
+        }
+
+        .card p {
+            color: #94a3b8;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* --- Documentation --- */
+        .docs-section {
+            padding: 4rem 0;
+            border-top: 1px solid var(--border);
+        }
+
+        .docs-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .docs-header h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+
+        .docs-grid {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 5rem;
+        }
+
+        .docs-nav {
+            position: sticky;
+            top: 2rem;
+            align-self: start;
+            padding-right: 2rem;
+            border-right: 1px solid var(--border);
+        }
+
+        .docs-nav ul {
+            list-style: none;
+        }
+
+        .docs-nav li {
+            margin-bottom: 0.5rem;
+        }
+
+        .docs-nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            display: block;
+            padding: 0.6rem 1rem;
+            /* Slightly taller click area */
+            border-radius: 6px;
+            font-size: 0.95rem;
+            /* Slightly larger font */
+            transition: all 0.2s;
+        }
+
+        .docs-nav a:hover,
+        .docs-nav a.active {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.05);
+            border-left: 2px solid var(--accent);
+        }
+
+        .docs-content {
+            /* Fixes Grid blowout on mobile for long pre/code content */
+            min-width: 0;
+            width: 100%;
+            /* Ensure it fills but doesn't overflow */
+        }
+
+        .docs-content h3 {
+            font-size: 1.5rem;
+            margin: 2.5rem 0 1rem;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .docs-content h3:first-child {
+            margin-top: 0;
+        }
+
+        .docs-content p {
+            margin-bottom: 1rem;
+            color: #cbd5e1;
+        }
+
+        .docs-content code {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: var(--font-mono);
+            font-size: 0.85em;
+            color: #e2e8f0;
+            /* Allow inline code to break */
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        /* Code Block Styling */
+        pre {
+            background: #0d0d0d !important;
+            border: 1px solid var(--border) !important;
+            padding: 1.5rem !important;
+            border-radius: 12px !important;
+            overflow-x: auto;
+            position: relative;
+            margin: 1.5rem 0;
+            /* CRITICAL: Ensure pre respects container width */
+            max-width: 100%;
+            width: 100%;
+            white-space: pre;
+            /* Ensure scroll works */
+        }
+
+        pre code {
+            background: transparent !important;
+            padding: 0 !important;
+            color: #a5b4fc !important;
+            font-size: 0.9rem !important;
+            /* Reset inline code styles for block */
+            word-wrap: normal;
+            overflow-wrap: normal;
+        }
+
+        /* Auth Grid */
+        .auth-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .auth-card {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .auth-card strong {
+            display: block;
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 4rem 0;
+            color: #52525b;
+            font-size: 0.9rem;
+            border-top: 1px solid var(--border);
+            margin-top: 4rem;
+        }
+
+        /* Scroll Animation Class */
+        .fade-in-up {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+
+        .fade-in-up.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* --- Mobile Responsiveness --- */
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            /* --- FIXED DOCS LAYOUT --- */
+            .docs-grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            /* Safe Mobile Sticky Nav */
+            .docs-nav {
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+                margin-bottom: 2rem;
+                position: sticky;
+                top: 0;
+                z-index: 100;
+
+                /* Full width using viewport width */
+                width: 100vw;
+                margin-left: -1.5rem;
+                /* Compensate for container padding */
+                margin-right: -1.5rem;
+                padding: 1rem 1.5rem;
+
+                background: rgba(5, 5, 5, 0.95);
+                backdrop-filter: blur(12px);
+            }
+
+            .docs-nav ul {
+                display: flex;
+                flex-wrap: nowrap;
+                gap: 0.8rem;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                margin: 0;
+                padding-bottom: 0.2rem;
+                scrollbar-width: none;
+                width: 100%;
+            }
+
+            .docs-nav ul::-webkit-scrollbar {
+                display: none;
+            }
+
+            .docs-nav li {
+                flex: 0 0 auto;
+                margin: 0;
+            }
+
+            .docs-nav a {
+                white-space: nowrap;
+                background: rgba(255, 255, 255, 0.05);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                padding: 0.5rem 1rem;
+                font-size: 0.85rem;
+                border-radius: 50px;
+            }
+
+            .docs-nav a.active {
+                background: var(--accent);
+                color: #fff;
+                border-color: var(--accent);
+                border-left: 1px solid var(--accent);
+            }
+
+            /* PRE Block Overflow Fix for Mobile */
+            pre {
+                /* Explicitly limit width to viewport minus margins */
+                max-width: calc(100vw - 3rem - 2px);
+                /* Ensures code doesn't force page width expansion */
+            }
+
+            .cmd-box {
+                padding: 0.8rem;
+            }
+
+            .cmd-text {
+                font-size: 0.8rem;
+            }
+        }
+    </style>
 </head>
 
 <body>
@@ -13,187 +657,274 @@
 
     <div class="container">
         <header>
-            <div class="logo">ShareCLI v2.0</div>
+            <div class="logo">
+                <!-- SVG LOGO (REPLACE WITH YOUR OWN) -->
+                <img src="../assets/logo_cli.svg" alt="ShareCLI Logo">
+                <span>ShareCLI v2.0</span>
+            </div>
             <nav>
                 <a href="#features">Features</a>
-                <a href="#docs">Documentation</a>
+                <a href="#docs">Docs</a>
                 <a href="https://github.com/emRival/cli-local-share" target="_blank">GitHub</a>
             </nav>
         </header>
 
-
-
-        <section class="hero">
-            <h1>Local File Sharing<br>Reimagined.</h1>
+        <section class="hero fade-in-up">
+            <h1>Local Sharing<br>Reimagined.</h1>
             <p>Secure, fast, and stylish file sharing directly from your terminal.<br>No cloud needed. Just you and your
                 local network.</p>
 
-            <div class="cmd-box" onclick="copyInstall()">
-                <span class="cmd-text">curl -sL
-                    https://raw.githubusercontent.com/emRival/cli-local-share/main/install.sh | bash</span>
-                <span class="copy-icon">📋</span>
+            <!-- Improved CMD Box -->
+            <div class="cmd-wrapper"
+                onclick="copyText('curl -sL https://raw.githubusercontent.com/emRival/cli-local-share/main/install.sh | bash', 'hero-cmd')">
+                <div class="cmd-box" id="hero-cmd">
+                    <div class="cmd-content">
+                        <!-- Horizontal scrolling handled here -->
+                        <span class="cmd-text">curl -sL
+                            https://raw.githubusercontent.com/emRival/cli-local-share/main/install.sh | bash</span>
+                    </div>
+                    <div class="copy-btn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                    </div>
+                </div>
             </div>
 
-            <div class="demo-section">
-                <!-- Using the repository's absolute path for the GIF so it works everywhere -->
+            <div class="demo-section fade-in-up">
                 <img src="https://raw.githubusercontent.com/emRival/cli-local-share/main/assets/demo.gif"
                     alt="App Demo">
             </div>
         </section>
 
         <section id="features" class="features">
-            <div class="card">
+            <!-- Cards with JS Mouse Hover Effect -->
+            <div class="card fade-in-up">
                 <div class="icon-box">🛡️</div>
-                <h3>Defense-in-Depth Security</h3>
+                <h3>Defense-in-Depth</h3>
                 <p>Enterprise-grade protection featuring self-signed HTTPS encryption, intelligent rate limiting, and
-                    strict IP whitelisting to ensure your data never leaves the local perimeter.</p>
+                    strict IP whitelisting.</p>
             </div>
-            <div class="card">
+            <div class="card fade-in-up">
                 <div class="icon-box">⏱️</div>
                 <h3>Ephemeral Sessions</h3>
-                <p>Configurable session lifecycles automatically terminate server access after a set duration, ensuring
-                    no open ports are left forgotten.</p>
+                <p>Configurable session lifecycles automatically terminate server access after a set duration. No open
+                    ports left behind.</p>
             </div>
-            <div class="card">
+            <div class="card fade-in-up">
                 <div class="icon-box">🔄</div>
                 <h3>Seamless OTA Updates</h3>
-                <p>Integrated update engine allows for one-click version upgrades directly from the CLI, ensuring you
-                    always have the latest security patches.</p>
+                <p>Integrated update engine allows for one-click version upgrades directly from the CLI to get the
+                    latest patches.</p>
             </div>
-            <div class="card">
+            <div class="card fade-in-up">
                 <div class="icon-box">🎬</div>
                 <h3>Rich Media Previews</h3>
                 <p>Stream videos, listen to audio, and view code/text files directly in the browser without downloading.
-                    Supports MP4, MP3, Python, JS, and more.</p>
+                </p>
             </div>
-            <div class="card">
+            <div class="card fade-in-up">
                 <div class="icon-box">🚀</div>
                 <h3>RAM-Safe Uploads</h3>
-                <p>New Streaming Upload engine handles files of any size (even 10GB+) with minimal memory footprint.
-                    Zero
-                    crashes, maximum speed.</p>
+                <p>Streaming Upload engine handles files of any size (even 10GB+) with minimal memory footprint. Zero
+                    crashes.</p>
             </div>
-            <div class="card">
-                <div class="icon-box">⚡</div>
-                <h3>High-Performance Core</h3>
-                <p>Built on top of Python's robust socket libraries with a zero-dependency (except Rich) architecture
-                    for maximum stability and speed.</p>
-            </div>
-            <div class="card">
+            <div class="card fade-in-up">
                 <div class="icon-box">💻</div>
                 <h3>Immersive Experience</h3>
-                <p>A sophisticated TUI (Terminal User Interface) for operators and a fluid, dark-mode responsive web
-                    client for end-users.</p>
-            </div>
-            <div class="card">
-                <div class="icon-box">📂</div>
-                <h3>Granular Control</h3>
-                <p>Precise permission management allows you to toggle client-side upload and deletion capabilities on a
-                    per-session basis.</p>
+                <p>A sophisticated TUI for operators and a fluid, dark-mode responsive web client for end-users.</p>
             </div>
         </section>
 
         <section id="docs" class="docs-section">
-            <h2>Documentation</h2>
+            <div class="docs-header fade-in-up">
+                <h2>Documentation</h2>
+            </div>
             <div class="docs-grid">
-                <aside class="docs-nav">
+                <aside class="docs-nav fade-in-up">
                     <ul>
                         <li><a href="#install" class="active">Installation</a></li>
                         <li><a href="#quickstart">Quick Start</a></li>
                         <li><a href="#wizard">Setup Wizard</a></li>
-                        <li><a href="#auth">Authentication Modes</a></li>
-                        <li><a href="#troubleshooting">Troubleshooting</a></li>
+                        <li><a href="#auth">Auth Modes</a></li>
                     </ul>
                 </aside>
-                <article class="docs-content">
+                <article class="docs-content fade-in-up">
                     <div id="install">
                         <h3>⚡ Installation</h3>
-                        <p><strong>System Requirements</strong>: Python 3.8+ (Mac, Linux, Windows/WSL, Android via
-                            Termux).</p>
-                        <p>The easiest method is using our automated installer script which handles dependencies and
-                            path configuration:</p>
-                        <div class="cmd-box" style="width:100%; margin-bottom: 1rem;">
-                            <span class="cmd-text">curl -sL
-                                https://raw.githubusercontent.com/emRival/cli-local-share/main/install.sh | bash</span>
+                        <p><strong>Requirements</strong>: Python 3.8+ (Mac, Linux, Windows/WSL, Android via Termux).</p>
+                        <p>Use our automated installer script:</p>
+
+                        <div class="cmd-wrapper" style="margin-bottom: 1.5rem;"
+                            onclick="copyText('curl -sL https://raw.githubusercontent.com/emRival/cli-local-share/main/install.sh | bash', 'install-cmd')">
+                            <div class="cmd-box" id="install-cmd">
+                                <div class="cmd-content">
+                                    <span class="cmd-text">curl -sL
+                                        https://raw.githubusercontent.com/emRival/cli-local-share/main/install.sh |
+                                        bash</span>
+                                </div>
+                                <div class="copy-btn">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                    </svg>
+                                </div>
+                            </div>
                         </div>
-                        <p>Alternatively, manual installation is supported for advanced users:</p>
-                        <pre
-                            style="background:rgba(255,255,255,0.05); padding:1.5rem; border-radius:12px; border:1px solid var(--border);"><code>git clone https://github.com/emRival/cli-local-share.git
+
+                        <p>Or manual installation:</p>
+                        <pre><code>git clone https://github.com/emRival/cli-local-share.git
 cd cli-local-share
 pip3 install .</code></pre>
                     </div>
 
                     <div id="quickstart">
                         <h3>🚀 Quick Start</h3>
-                        <p>Once installed, the global command <code>sharecli</code> becomes available.</p>
-                        <div class="cmd-box" style="width:100%; margin-bottom: 1rem;">
-                            <span class="cmd-text">sharecli</span>
+                        <p>Run the global command to launch the wizard:</p>
+                        <div class="cmd-wrapper" onclick="copyText('sharecli', 'qs-cmd')">
+                            <div class="cmd-box" id="qs-cmd">
+                                <div class="cmd-content">
+                                    <span class="cmd-text">sharecli</span>
+                                </div>
+                                <div class="copy-btn">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                    </svg>
+                                </div>
+                            </div>
                         </div>
-                        <p>This command launches the interactive configuration wizard. No command-line arguments are
-                            needed—everything is configured via the TUI.</p>
                     </div>
 
                     <div id="wizard">
                         <h3>⚙️ Setup Wizard</h3>
-                        <p>The application guides you through a secure setup process every time you run it:</p>
+                        <p>The application guides you through a secure setup process:</p>
                         <ul style="margin-left: 1.5rem; color: var(--text-secondary); margin-bottom: 1.5rem;">
-                            <li style="margin-bottom:0.8rem"><strong>Directory Selection</strong>: Choose "Browse" to
-                                navigate your filesystem interactively, or type a path manually.</li>
-                            <li style="margin-bottom:0.8rem"><strong>Port Configuration</strong>: Defaults to
-                                <code>8080</code>. The system automatically detects conflicts and suggests alternatives.
+                            <li style="margin-bottom:0.5rem"><strong>Directory</strong>: Interactive browser or manual
+                                path.</li>
+                            <li style="margin-bottom:0.5rem"><strong>Port</strong>: Auto-detects conflicts (Default:
+                                8080).</li>
+                            <li style="margin-bottom:0.5rem"><strong>HTTPS</strong>: Auto-generates self-signed certs.
                             </li>
-                            <li style="margin-bottom:0.8rem"><strong>HTTPS</strong>: Generates a self-signed certificate
-                                on the fly for encrypted transport.</li>
-                            <li style="margin-bottom:0.8rem"><strong>Session Timeout</strong>: Define how long the
-                                server remains active (e.g., "10" for 10 minutes). Input <code>0</code> for unlimited.
-                            </li>
-                            <li><strong>Permissions</strong>: Explicitly allow or deny <code>Upload</code> and
-                                <code>Delete</code> actions for connected clients.
-                            </li>
+                            <li><strong>Permissions</strong>: Toggle Upload/Delete capabilities.</li>
                         </ul>
                     </div>
 
                     <div id="auth">
                         <h3>🔐 Authentication Modes</h3>
-                        <p>We provide three tiers of access control:</p>
-                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem; margin-top:1.5rem;">
-                            <div style="background:rgba(255,255,255,0.03); padding:1rem; border-radius:8px;">
-                                <strong style="color:#fff">Token (Recommended)</strong>
-                                <p style="font-size:0.9rem; margin-top:0.5rem">Generates a cryptographically secure,
-                                    random URL token. Users with the link are logged in automatically.</p>
+                        <div class="auth-grid">
+                            <div class="auth-card">
+                                <strong>Token (Recommended)</strong>
+                                <p>Generates a random URL token. Users with the link are logged in automatically.</p>
                             </div>
-                            <div style="background:rgba(255,255,255,0.03); padding:1rem; border-radius:8px;">
-                                <strong style="color:#fff">Password</strong>
-                                <p style="font-size:0.9rem; margin-top:0.5rem">Traditional username/password flow. You
-                                    define the custom password during setup.</p>
+                            <div class="auth-card">
+                                <strong>Password</strong>
+                                <p>Traditional username/password flow defined during setup.</p>
                             </div>
                         </div>
-                        <p style="margin-top:1rem; font-size: 0.9em; opacity: 0.7;"><em>Note: "None" mode is also
-                                available but effectively disables security. Use only in trusted testing
-                                environments.</em></p>
-                    </div>
-
-                    <div id="troubleshooting">
-                        <h3>🔧 Troubleshooting</h3>
-                        <p><strong>Port Already in Use?</strong></p>
-                        <p>If port 8080 is busy, the wizard will prevent you from crashing and suggest 8081, 8082, etc.
-                        </p>
-
-                        <p><strong>"Not Secure" Warning?</strong></p>
-                        <p>When using HTTPS with a self-signed certificate, modern browsers will warn you. This is
-                            expected. Click "Advanced" -> "Proceed to site" to continue.</p>
                     </div>
                 </article>
             </div>
         </section>
-
 
         <footer>
             <p>© 2026 ShareCLI. MIT License.</p>
         </footer>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        // --- Copy Functionality (Fixed for Iframe/Sandbox) ---
+        function copyText(text, elementId) {
+            // Create temporary textarea element
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+
+            // Ensure it's not visible but part of DOM
+            textArea.style.position = "fixed";
+            textArea.style.left = "-9999px";
+            textArea.style.top = "0";
+            document.body.appendChild(textArea);
+
+            textArea.focus();
+            textArea.select();
+
+            try {
+                // Execute legacy copy command (works better in iframes)
+                const successful = document.execCommand('copy');
+
+                if (successful) {
+                    const box = document.getElementById(elementId);
+                    const btn = box.querySelector('.copy-btn');
+
+                    // Prevent glitch if clicked rapidly
+                    if (btn.classList.contains('copied')) return;
+
+                    const originalContent = btn.innerHTML;
+
+                    // Visual Feedback
+                    btn.classList.add('copied');
+                    btn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+
+                    setTimeout(() => {
+                        btn.classList.remove('copied');
+                        btn.innerHTML = originalContent;
+                    }, 2000);
+                }
+            } catch (err) {
+                console.error('Copy failed', err);
+            }
+
+            // Cleanup
+            document.body.removeChild(textArea);
+        }
+
+        // --- Intersection Observer for Fade In Animations ---
+        const observerOptions = {
+            threshold: 0.1
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.fade-in-up').forEach(el => {
+            observer.observe(el);
+        });
+
+        // --- Card Hover Spotlight Effect ---
+        document.querySelectorAll('.card').forEach(card => {
+            card.addEventListener('mousemove', e => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                card.style.setProperty('--mouse-x', `${x}px`);
+                card.style.setProperty('--mouse-y', `${y}px`);
+            });
+        });
+
+        // --- Smooth Scroll Navigation ---
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+
+                // Update active state in nav
+                document.querySelectorAll('.docs-nav a').forEach(a => a.classList.remove('active'));
+                this.classList.add('active');
+
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
 </body>
 
 </html>

@@ -247,7 +247,7 @@ def run_server_with_ui(port: int, directory: str, password: str, token: str,
                 if password:
                     info.add_row("🔑 Password", password)
                 if token:
-                    info.add_row("🎟️ Token", token[:12] + "..." if len(token) > 15 else token)
+                    info.add_row("🎟️ Token", token)
                 
                 # Log Content
                 log_content = Text("Waiting for traffic...", style="dim italic")
