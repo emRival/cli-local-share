@@ -110,7 +110,7 @@ def update_tool():
             if not install_path or not os.path.exists(install_path):
                 console.print("[red]❌ Update failed: Installation path not found.[/red]")
                 console.print("[yellow]Please run update manually with:[/yellow]")
-                console.print("cd /path/to/cli-local-share && git pull && pip3 install . --upgrade")
+                console.print("cd /path/to/cli-local-share && git pull && pip3 install . --upgrade --break-system-packages")
                 input("\nPress Enter to continue...")
                 return
             
