@@ -49,7 +49,6 @@ def format_size(size_bytes):
 
 
 
-
 def ask_robust_int(prompt_text, default=None):
     """
     Ask for an integer input robustly, handling ANSI escape codes 
@@ -92,71 +91,94 @@ def check_updates() -> bool:
 
 
 def update_tool():
-    """Update the tool from git and reinstall dependencies"""
-    console.print("\n[yellow]📦 Checking for updates...[/yellow]")
+    """Check and install updates from GitHub"""
+    console.print("\n[cyan]📦 Checking for updates...[/cyan]")
     
     try:
-        # Get script directory
-        script_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        from src.config import load_config
         
-        # Check remote
-        subprocess.run(["git", "fetch"], check=True, capture_output=True, cwd=script_dir)
+        # Determine git repository directory
+        current_dir = os.getcwd()
+        git_dir = current_dir
         
-        # Check status
-        status = subprocess.run(
-            ["git", "status", "-uno"], 
-            check=True, 
-            capture_output=True, 
+        # Check if current directory is a git repo
+        if not os.path.exists(os.path.join(current_dir, '.git')):
+            # Load install path from config
+            config = load_config()
+            install_path = config.get('install_path', '')
+            
+            if not install_path or not os.path.exists(install_path):
+                console.print("[red]❌ Update failed: Installation path not found.[/red]")
+                console.print("[yellow]Please run update manually with:[/yellow]")
+                console.print("cd /path/to/cli-local-share && git pull && pip3 install . --upgrade")
+                input("\nPress Enter to continue...")
+                return
+            
+            git_dir = install_path
+            console.print(f"[dim]Using install path: {git_dir}[/dim]")
+        
+        # Change to git directory
+        os.chdir(git_dir)
+        
+        # Fetch latest changes
+        subprocess.run(['git', 'fetch'], check=True, capture_output=True)
+        
+        # Check if there are updates
+        result = subprocess.run(
+            ['git', 'rev-list', 'HEAD...origin/main', '--count'],
+            capture_output=True,
             text=True,
-            cwd=script_dir
+            check=True
         )
         
-        if "Your branch is behind" in status.stdout:
-            console.print("[green]✨ Update available! Downloading...[/green]")
-            
-            # Pull latest code
-            subprocess.run(["git", "pull"], check=True, cwd=script_dir)
-            console.print("[green]✅ Code updated![/green]")
-            
-            # Reinstall dependencies
-            console.print("[yellow]📦 Updating dependencies...[/yellow]")
-            req_file = os.path.join(script_dir, "requirements.txt")
-            if os.path.exists(req_file):
-                try:
-                    # Try with --break-system-packages first (for newer pip)
-                    result = subprocess.run(
-                        [sys.executable, "-m", "pip", "install", "-r", req_file, 
-                         "--break-system-packages", "--quiet"],
-                        capture_output=True,
-                        text=True
-                    )
-                    if result.returncode != 0:
-                        # Fallback without --break-system-packages
-                        subprocess.run(
-                            [sys.executable, "-m", "pip", "install", "-r", req_file, "--quiet"],
-                            check=True
-                        )
-                    console.print("[green]✅ Dependencies updated![/green]")
-                except Exception as e:
-                    console.print(f"[yellow]⚠️ Dependency update failed: {e}[/yellow]")
-                    console.print("[dim]You may need to run: pip install -r requirements.txt[/dim]")
-            
-            console.print("\n[green]🎉 Update complete! Restarting...[/green]")
-            time.sleep(1)
-            
-            # Restart script
-            os.execv(sys.executable, [sys.executable] + sys.argv)
-        else:
-            console.print("[green]✅ You are using the latest version![/green]")
-            time.sleep(1)
-            
+        updates_count = int(result.stdout.strip())
+        
+        if updates_count == 0:
+            console.print("[green]✓ Already up to date![/green]")
+            input("\nPress Enter to continue...")
+            os.chdir(current_dir)  # Return to original directory
+            return
+        
+        console.print(f"[yellow]Found {updates_count} update(s). Pulling changes...[/yellow]")
+        
+        # Pull updates
+        subprocess.run(['git', 'pull'], check=True, capture_output=True)
+        
+        console.print("[cyan]📦 Reinstalling package and dependencies...[/cyan]")
+        
+        # Reinstall package with dependencies
+        try:
+            subprocess.run(
+                [sys.executable, '-m', 'pip', 'install', '.', '--upgrade', '--break-system-packages'],
+                check=True,
+                capture_output=True
+            )
+        except subprocess.CalledProcessError:
+            # Fallback without --break-system-packages
+            subprocess.run(
+                [sys.executable, '-m', 'pip', 'install', '.', '--upgrade'],
+                check=True,
+                capture_output=True
+            )
+        
+        console.print("[green]✓ Update complete! Restarting...[/green]")
+        time.sleep(1)
+        
+        # Restart the application
+        os.chdir(current_dir)  # Return to original directory before restarting
+        os.execv(sys.executable, [sys.executable] + sys.argv)
+        
     except subprocess.CalledProcessError as e:
         console.print(f"[red]❌ Update failed: {e}[/red]")
         console.print("[yellow]Please try 'git pull' manually.[/yellow]")
         input("\nPress Enter to continue...")
+        if 'git_dir' in locals() and git_dir != current_dir:
+            os.chdir(current_dir)  # Return to original directory
     except Exception as e:
-        console.print(f"[red]❌ Update failed: {e}[/red]")
+        console.print(f"[red]❌ Unexpected error: {e}[/red]")
         input("\nPress Enter to continue...")
+        if 'git_dir' in locals() and git_dir != current_dir:
+            os.chdir(current_dir)  # Return to original directory
 
 
 def uninstall_tool():

@@ -11,7 +11,8 @@ DEFAULT_CONFIG = {
     "auth_choice": "1",  # 1=Token, 2=Password, 3=None
     "timeout": 30,
     "enable_sftp": False,
-    "sftp_port": 2222
+    "sftp_port": 2222,
+    "install_path": ""  # Git repository path for updates
 }
 
 def load_config() -> Dict[str, Any]:

@@ -47,8 +47,20 @@ fi
 $PIP_CMD install . --break-system-packages > /dev/null 2>&1 || $PIP_CMD install . > /dev/null 2>&1
 
 echo ""
-echo -e "${GREEN}✅ Installation Complete!${NC}"
-echo "------------------------------------------------"
-echo -e "You can now run the server anywhere using:"
-echo -e "${GREEN}sharecli${NC}"
-echo "------------------------------------------------"
+echo -e "\n${GREEN}✓ Installation complete!${NC}"
+echo ""
+
+# Save install path to config for future updates
+INSTALL_DIR="$(pwd)"
+CONFIG_FILE="$HOME/.sharecli_config.json"
+
+if [ -f "$CONFIG_FILE" ]; then
+    # Update existing config with install_path using Python
+    python3 -c "import json; config=json.load(open('$CONFIG_FILE')); config['install_path']='$INSTALL_DIR'; json.dump(config, open('$CONFIG_FILE', 'w'), indent=4)" 2>/dev/null || true
+else
+    # Create new config with install_path
+    echo "{\"install_path\": \"$INSTALL_DIR\"}" > "$CONFIG_FILE"
+fi
+
+echo -e "${BLUE}Run '${GREEN}sharecli${BLUE}' to start the application${NC}"
+echo ""
