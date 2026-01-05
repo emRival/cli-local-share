@@ -92,25 +92,56 @@ def check_updates() -> bool:
 
 
 def update_tool():
-    """Update the tool from git"""
+    """Update the tool from git and reinstall dependencies"""
     console.print("\n[yellow]📦 Checking for updates...[/yellow]")
     
     try:
+        # Get script directory
+        script_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        
         # Check remote
-        subprocess.run(["git", "fetch"], check=True, capture_output=True)
+        subprocess.run(["git", "fetch"], check=True, capture_output=True, cwd=script_dir)
         
         # Check status
         status = subprocess.run(
             ["git", "status", "-uno"], 
             check=True, 
             capture_output=True, 
-            text=True
+            text=True,
+            cwd=script_dir
         )
         
         if "Your branch is behind" in status.stdout:
-            console.print("[green]✨ Update available! Installing...[/green]")
-            subprocess.run(["git", "pull"], check=True)
-            console.print("[green]✅ Update successful! Restarting...[/green]")
+            console.print("[green]✨ Update available! Downloading...[/green]")
+            
+            # Pull latest code
+            subprocess.run(["git", "pull"], check=True, cwd=script_dir)
+            console.print("[green]✅ Code updated![/green]")
+            
+            # Reinstall dependencies
+            console.print("[yellow]📦 Updating dependencies...[/yellow]")
+            req_file = os.path.join(script_dir, "requirements.txt")
+            if os.path.exists(req_file):
+                try:
+                    # Try with --break-system-packages first (for newer pip)
+                    result = subprocess.run(
+                        [sys.executable, "-m", "pip", "install", "-r", req_file, 
+                         "--break-system-packages", "--quiet"],
+                        capture_output=True,
+                        text=True
+                    )
+                    if result.returncode != 0:
+                        # Fallback without --break-system-packages
+                        subprocess.run(
+                            [sys.executable, "-m", "pip", "install", "-r", req_file, "--quiet"],
+                            check=True
+                        )
+                    console.print("[green]✅ Dependencies updated![/green]")
+                except Exception as e:
+                    console.print(f"[yellow]⚠️ Dependency update failed: {e}[/yellow]")
+                    console.print("[dim]You may need to run: pip install -r requirements.txt[/dim]")
+            
+            console.print("\n[green]🎉 Update complete! Restarting...[/green]")
             time.sleep(1)
             
             # Restart script
@@ -119,7 +150,53 @@ def update_tool():
             console.print("[green]✅ You are using the latest version![/green]")
             time.sleep(1)
             
-    except Exception as e:
+    except subprocess.CalledProcessError as e:
         console.print(f"[red]❌ Update failed: {e}[/red]")
         console.print("[yellow]Please try 'git pull' manually.[/yellow]")
         input("\nPress Enter to continue...")
+    except Exception as e:
+        console.print(f"[red]❌ Update failed: {e}[/red]")
+        input("\nPress Enter to continue...")
+
+
+def uninstall_tool():
+    """Uninstall the tool and dependencies"""
+    console.print("\n[red]🗑️  ShareCLI Uninstaller[/red]")
+    console.print("--------------------------------")
+    console.print("[yellow]Warning: This will remove:[/yellow]")
+    console.print("1. The 'sharecli' command and package")
+    console.print("2. Installed dependencies (rich, qrcode, paramiko, sftpserver)")
+    console.print("3. Configuration file (~/.sharecli_config.json)")
+    
+    confirm = Prompt.ask("\nAre you sure you want to uninstall?", choices=["y", "n"], default="n")
+    if confirm != "y":
+        console.print("Aborted.")
+        return
+
+    try:
+        # 1. Uninstall Dependencies
+        console.print("\n[yellow]⏳ Uninstalling dependencies...[/yellow]")
+        deps = ["rich", "qrcode", "paramiko", "sftpserver"]
+        subprocess.run(
+            [sys.executable, "-m", "pip", "uninstall", "-y"] + deps,
+            check=False
+        )
+        
+        # 2. Remove Config
+        console.print("\n[yellow]⏳ Removing configuration...[/yellow]")
+        config_path = os.path.expanduser("~/.sharecli_config.json")
+        if os.path.exists(config_path):
+            os.remove(config_path)
+            
+        # 3. Uninstall Package
+        console.print("\n[yellow]⏳ Uninstalling sharecli...[/yellow]")
+        subprocess.run(
+            [sys.executable, "-m", "pip", "uninstall", "-y", "cli-local-share"],
+            check=False
+        )
+        
+        console.print("\n[green]✅ Uninstall Complete![/green]")
+        console.print("To remove the source files, please delete this directory manually.")
+        
+    except Exception as e:
+        console.print(f"\n[red]❌ Uninstall failed: {e}[/red]")

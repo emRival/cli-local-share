@@ -11,6 +11,7 @@ setup(
     entry_points={
         "console_scripts": [
             "sharecli=src.server:main",
+            "sharecli-uninstall=src.utils:uninstall_tool",
         ],
     },
     python_requires=">=3.8",

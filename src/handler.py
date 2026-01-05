@@ -120,7 +120,8 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
     
     def do_AUTHHEAD(self):
         self.send_response(401)
-        realm = f'ShareCLI - User: {get_system_username()}'
+        import src.state as state
+        realm = f'ShareCLI - Session: {state.SESSION_ID} - User: {get_system_username()}'
         self.send_header('WWW-Authenticate', f'Basic realm="{realm}"')
         self.send_header('Content-type', 'text/html; charset=utf-8')
         self.end_headers()
@@ -903,7 +904,7 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
     
     <div class="container">
         <div class="header">
-            <h1>📁 FileShare</h1>
+            <h1>📁 ShareCLI</h1>
             <div style="display:flex;gap:10px;align-items:center">
                 <input type="text" id="searchInput" class="search-box" placeholder="🔍 Search files..." onkeyup="filterFiles()">
                 <a href="/logout" class="btn btn-del" style="background:rgba(255,51,51,0.2);color:#ff6666!important;border:1px solid rgba(255,51,51,0.3)">🚪 Logout</a>
@@ -931,7 +932,7 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
             </table>
         </div>
         
-        <p class="footer">🔒 Secured by FileShare v3.0 | {get_system_username()}@{get_local_ip()}</p>
+        <p class="footer">🔒 Secured by ShareCLI v2.0 | {get_system_username()}@{get_local_ip()}</p>
     </div>
 
     <!-- Preview Modal -->

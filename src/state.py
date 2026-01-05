@@ -15,3 +15,4 @@ STATE_LOCK = threading.Lock()
 MAX_FAILED_ATTEMPTS = 5
 BLOCK_DURATION_SECONDS = 300  # 5 minutes
 SYSTEM_USERNAME = ""
+SESSION_ID = datetime.now().strftime("%H%M%S") # Unique per session

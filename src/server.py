@@ -154,6 +154,21 @@ def main():
         allow_upload = Confirm.ask("[yellow]Enable File Upload?[/yellow] (Allows visitors to upload files)", default=default_upload)
         allow_remove = Confirm.ask("[yellow]Enable File Deletion? [/yellow] [red](WARNING: Visitors can delete files!)[/red]", default=default_remove)
 
+        # Additional Protocols
+        default_sftp = config.get("enable_sftp", False)
+        default_sftp_port = str(config.get("sftp_port", 2222))
+        
+        console.print("\n[bold cyan]🔌 ADDITIONAL PROTOCOLS[/bold cyan]")
+        console.print("[dim]SFTP allows secure file transfer via FileZilla, WinSCP, etc.[/dim]\n")
+        
+        enable_sftp = Confirm.ask("[yellow]Enable SFTP Server?[/yellow] (Secure FTP via SSH)", default=default_sftp)
+        sftp_port = None
+        if enable_sftp:
+            sftp_port = ask_robust_int("  [yellow]SFTP Port[/yellow]", default=default_sftp_port)
+            while is_port_in_use(sftp_port):
+                console.print(f"[red]❌ Port {sftp_port} is already in use![/red]")
+                sftp_port = ask_robust_int("  [yellow]SFTP Port[/yellow]", default=str(sftp_port + 1))
+
         # Save config BEFORE starting server
         try:
             new_config = {
@@ -163,7 +178,9 @@ def main():
                 "auth_choice": auth_choice,
                 "timeout": timeout,
                 "allow_upload": allow_upload,
-                "allow_remove": allow_remove
+                "allow_remove": allow_remove,
+                "enable_sftp": enable_sftp,
+                "sftp_port": sftp_port or 2222
             }
             save_config(new_config)
             # console.print("[dim]Configuration saved.[/dim]")
@@ -174,7 +191,11 @@ def main():
         setup_whitelist()
         
         # Start Server
-        run_server_with_ui(port, directory, password, token, timeout, use_https, allow_upload, allow_remove)
+        run_server_with_ui(
+            port, directory, password, token, timeout, use_https, 
+            allow_upload, allow_remove,
+            enable_sftp, sftp_port
+        )
             
     except KeyboardInterrupt:
         print("\n\nExiting...")

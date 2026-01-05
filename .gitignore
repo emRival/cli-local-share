@@ -4,3 +4,7 @@ __pycache__/
 dist/
 build/
 .DS_Store
+access.log
+*.log
+sharecli_host_key
+/tmp/sharecli_host_key

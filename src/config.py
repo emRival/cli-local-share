@@ -2,14 +2,16 @@ import json
 import os
 from typing import Dict, Any
 
-CONFIG_FILE = os.path.expanduser("~/.fileshare_config.json")
+CONFIG_FILE = os.path.expanduser("~/.sharecli_config.json")
 
 DEFAULT_CONFIG = {
     "last_directory": os.getcwd(),
     "port": 8080,
     "use_https": True,
     "auth_choice": "1",  # 1=Token, 2=Password, 3=None
-    "timeout": 30
+    "timeout": 30,
+    "enable_sftp": False,
+    "sftp_port": 2222
 }
 
 def load_config() -> Dict[str, Any]:

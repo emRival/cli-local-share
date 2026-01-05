@@ -118,9 +118,9 @@ def create_server(port: int, directory: str, password: str = None, token: str = 
     
     return server, False
 
-
 def run_server_with_ui(port: int, directory: str, password: str, token: str, 
-                        timeout: int, use_https: bool, allow_upload: bool = False, allow_remove: bool = False):
+                        timeout: int, use_https: bool, allow_upload: bool = False, allow_remove: bool = False,
+                        enable_sftp: bool = False, sftp_port: int = None):
     """Run server with live UI"""
     
     import src.state as state
@@ -133,6 +133,8 @@ def run_server_with_ui(port: int, directory: str, password: str, token: str,
     ip = get_local_ip()
     protocol = "https" if use_https else "http"
     url = f"{protocol}://{ip}:{port}"
+    ftp_url = None
+    webdav_url = None
     
     try:
         server, https_enabled = create_server(port, directory, password, token, use_https, allow_upload, allow_remove)
@@ -145,6 +147,43 @@ def run_server_with_ui(port: int, directory: str, password: str, token: str,
     server_thread = threading.Thread(target=server.serve_forever)
     server_thread.daemon = True
     server_thread.start()
+    
+    # Start SFTP server if enabled
+    sftp_started = False
+    sftp_url = None
+    if enable_sftp and sftp_port:
+        try:
+            from src.sftp_server import create_sftp_server, start_sftp_server, is_sftp_available
+            if is_sftp_available():
+                username = get_system_username()
+                sftp_password = password or token or ""
+                sftp_sock = create_sftp_server(
+                    directory, sftp_port, username, sftp_password,
+                    allow_upload or allow_remove
+                )
+                if sftp_sock and start_sftp_server(sftp_sock, username, sftp_password, directory, allow_upload or allow_remove):
+                    sftp_url = f"sftp://{ip}:{sftp_port}"
+                    sftp_started = True
+                    console.print(f"[green]✓ SFTP Server started on port {sftp_port}[/green]")
+                else:
+                    console.print(f"[yellow]⚠️ SFTP server could not be created[/yellow]")
+            else:
+                console.print("[yellow]⚠️ SFTP: paramiko not installed[/yellow]")
+        except Exception as e:
+            console.print(f"[yellow]⚠️ SFTP server failed: {e}[/yellow]")
+    
+    # Show access info
+    if sftp_started:
+        console.print("\n[bold cyan]📋 SFTP Access:[/bold cyan]")
+        console.print(f"   URL: [green]{sftp_url}[/green]")
+        console.print(f"   Username: [green]{get_system_username()}[/green]")
+        if password:
+            console.print(f"   Password: [green]{password}[/green]")
+        elif token:
+            console.print(f"   Password: [green]{token}[/green]")
+        console.print("")
+        import time as t
+        t.sleep(2)  # Give user time to see the info
     
     start_time = datetime.now()
     end_time = start_time + timedelta(minutes=timeout) if timeout > 0 else None
@@ -200,15 +239,15 @@ def run_server_with_ui(port: int, directory: str, password: str, token: str,
                 info.add_column(style="cyan", width=12)
                 info.add_column(style="white")
                 info.add_row("👤 User", get_system_username())
-                info.add_row("🌐 URL", url)
-                info.add_row("🔐 Protocol", "HTTPS" if https_enabled else "HTTP")
-                info.add_row("📁 Path", directory if len(directory) < 20 else "..."+directory[-17:])
-                info.add_row("🛡️ Rate Limit", f"5 tries / {BLOCK_DURATION_SECONDS}s ban")
+                info.add_row("🌐 Web", url)
+                if sftp_url:
+                    info.add_row("🔐 SFTP", sftp_url)
+                info.add_row("📂 Path", directory if len(directory) < 18 else "..."+directory[-15:])
                 
                 if password:
                     info.add_row("🔑 Password", password)
                 if token:
-                    info.add_row("🎟️ Token", token)
+                    info.add_row("🎟️ Token", token[:12] + "..." if len(token) > 15 else token)
                 
                 # Log Content
                 log_content = Text("Waiting for traffic...", style="dim italic")
@@ -314,6 +353,16 @@ def run_server_with_ui(port: int, directory: str, password: str, token: str,
     finally:
         console.show_cursor(True)
         state.SERVER_RUNNING = False
+        
+        # Stop SFTP server
+        if enable_sftp:
+            try:
+                from src.sftp_server import stop_sftp_server
+                stop_sftp_server()
+            except:
+                pass
+        
+        # Stop HTTP server
         try:
             server.shutdown()
             server.server_close()
