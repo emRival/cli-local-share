@@ -235,9 +235,7 @@ def _create_auth_server_class(username: str, password: str):
 
 def _handle_client(client, addr, host_key, username, password, root_dir, allow_write):
     """Handle a single SFTP connection."""
-    import paramiko
-    import src.state as state
-    from datetime import datetime
+    import src.security as security
     
     transport = None
     try:
@@ -246,13 +244,7 @@ def _handle_client(client, addr, host_key, username, password, root_dir, allow_w
         
         # Log connection attempt
         ip = addr[0]
-        with state.STATE_LOCK:
-            state.ACCESS_LOG.append({
-                "time": datetime.now().strftime("%H:%M:%S"),
-                "ip": ip,
-                "status": "SFTP Connect",
-                "path": "/"
-            })
+        security.log_access(ip, "/", "SFTP Connect")
         
         # Create custom SFTP server class with logging
         sftp_base_class = _create_sftp_server_class(root_dir, allow_write)
@@ -261,13 +253,7 @@ def _handle_client(client, addr, host_key, username, password, root_dir, allow_w
             def open(self, path, flags, attr):
                 # Log file access
                 try:
-                    with state.STATE_LOCK:
-                        state.ACCESS_LOG.append({
-                            "time": datetime.now().strftime("%H:%M:%S"),
-                            "ip": ip,
-                            "status": "SFTP Open",
-                            "path": path
-                        })
+                    security.log_access(ip, path, "SFTP Open")
                 except:
                     pass
                 return super().open(path, flags, attr)
