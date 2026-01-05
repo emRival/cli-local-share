@@ -306,3 +306,84 @@ footer {
     border-top: 1px solid var(--border);
     margin-top: 4rem;
 }
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .container {
+        padding: 0 1.5rem;
+    }
+
+    .hero {
+        padding: 4rem 0 2rem;
+    }
+
+    .hero h1 {
+        font-size: 2.5rem;
+    }
+
+    .hero p {
+        font-size: 1rem;
+    }
+
+    .cmd-box {
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+    }
+
+    .cmd-text {
+        word-break: break-all;
+        font-size: 0.9rem;
+    }
+
+    /* Grid becomes single column */
+    .docs-grid {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+
+    .docs-nav {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 1rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        position: static;
+        overflow-x: auto;
+    }
+
+    .docs-nav ul {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .docs-nav li {
+        margin-bottom: 0;
+    }
+
+    .docs-nav a {
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid var(--border);
+        white-space: nowrap;
+        font-size: 0.85rem;
+        padding: 0.4rem 0.8rem;
+    }
+
+    header {
+        flex-direction: column;
+        gap: 1.5rem;
+        text-align: center;
+    }
+
+    nav {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    nav a {
+        margin-left: 0;
+        margin: 0 0.5rem;
+    }
+}
