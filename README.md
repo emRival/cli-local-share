@@ -55,7 +55,16 @@ Kelebihan utama aplikasi ini adalah **Kendali Penuh di Tangan Anda**:
 > *   **Chroot**: User hanya bisa akses folder yang di-share, tidak bisa keluyuran ke folder sistem lain.
 > *   **Full Control**: Support upload, download, delete, rename, dan mkdir.
 
-**5. 🎬 Rich Media & Streaming**
+**5. 🔗 Share Links with Expiry (Newest!)**
+> Butuh share file sementara tanpa buka akses penuh server?
+> *   **Temporary Links**: Generate link yang auto-expired setelah waktu tertentu (1 jam - 7 hari).
+> *   **PIN Protection**: Opsional PIN 4-6 digit untuk file sensitive.
+> *   **Download Limits**: Set batas download (one-time, 5x, 10x, atau unlimited).
+> *   **Active Dashboard**: Monitor semua link aktif dengan auto-refresh.
+> *   **One-Click Revoke**: Hapus link kapan saja sebelum expired.
+> *   **Mobile Ready**: Dashboard responsive dan link bisa dibuka di device apapun.
+
+**6. 🎬 Rich Media & Streaming**
 > *   **Media Preview**: Nonton video, dengar musik, atau baca kodingan langsung di browser tanpa download.
 > *   **RAM-Safe Upload**: Upload file raksasa (5GB+) aman sentosa tanpa bikin laptop hang.
 > *   **Mobile Friendly**: Scan QR Code di terminal untuk connect instan dari HP.
@@ -104,9 +113,26 @@ Saat menjalankan `sharecli`, Anda akan disambut oleh Setup Wizard yang interakti
 
 1.  **Pilih Folder**: Bisa browse folder langsung di terminal.
 2.  **Set Port**: Default 8080 (bisa diganti sesuka hati).
-3.  **Enable SFTP**: Opsi menyalakan server SFTP (Port 2222).
+3.  **Enable HTTPS**: Opsi mengaktifkan SSL encryption.
 4.  **Mode Keamanan**: Pilih password sendiri, token acak, atau tanpa password.
-5.  **Fitur Tambahan**: Izinkan orang lain **Upload** atau **Hapus** file (Opsional).
+5.  **Fitur Tambahan**: 
+    - ✅ **Upload Files**: Izinkan visitor upload file
+    - ✅ **Delete Files**: Izinkan visitor hapus file (HATI-HATI!)
+    - ✅ **Share Links**: Izinkan create temporary share links dengan expiry
+6.  **Enable SFTP**: Opsi menyalakan server SFTP (Port 2222).
+
+### 🔗 Cara Pakai Share Links
+
+1. **Generate Link**: Klik tombol 🔗 Share di file yang ingin dibagikan
+2. **Atur Setting**:
+   - Expiry Time (1h, 6h, 24h, 7d)
+   - Download Limit (1x, 5x, 10x, unlimited)
+   - Optional PIN (4-6 digit)
+3. **Copy Link**: Share link otomatis ter-copy, kirim ke siapa saja
+4. **Monitor**: Lihat dashboard "Active Share Links" untuk tracking
+5. **Revoke**: Klik tombol Revoke kapan saja untuk batalkan link
+
+> **Note**: Link bisa diakses tanpa login server. Tapi creator harus login untuk generate/revoke link.
 
 ---
 

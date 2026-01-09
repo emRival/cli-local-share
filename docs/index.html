@@ -16,7 +16,7 @@
     <meta name="theme-color" content="#050505">
 
     <!-- Favicon (Menggunakan SVG Logo) -->
-    <link rel="icon" type="image/svg+xml" href="../assets/logo_cli.svg">
+    <link rel="icon" type="image/svg+xml" href="cli-local-share/assets/logo_cli.svg">
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
@@ -659,7 +659,7 @@
         <header>
             <div class="logo">
                 <!-- SVG LOGO (REPLACE WITH YOUR OWN) -->
-                <img src="../assets/logo_cli.svg" alt="ShareCLI Logo">
+                <img src="cli-local-share/assets/logo_cli.svg" alt="ShareCLI Logo">
                 <span>ShareCLI v2.0</span>
             </div>
             <nav>
@@ -736,6 +736,12 @@
                 <h3>Immersive Experience</h3>
                 <p>A sophisticated TUI for operators and a fluid, dark-mode responsive web client for end-users.</p>
             </div>
+            <div class="card fade-in-up">
+                <div class="icon-box">🔗</div>
+                <h3>Share Links with Expiry</h3>
+                <p>Generate temporary share links with configurable expiry (1h-7d), optional PIN protection, and
+                    download limits. Monitor all active links from the dashboard.</p>
+            </div>
         </section>
 
         <section id="docs" class="docs-section">
@@ -810,7 +816,25 @@ pip3 install .</code></pre>
                                 8080).</li>
                             <li style="margin-bottom:0.5rem"><strong>HTTPS</strong>: Auto-generates self-signed certs.
                             </li>
-                            <li><strong>Permissions</strong>: Toggle Upload/Delete capabilities.</li>
+                            <li style="margin-bottom:0.5rem"><strong>Permissions</strong>: Toggle Upload/Delete/Share
+                                Links capabilities.</li>
+                        </ul>
+                    </div>
+
+                    <div id="sharelinks" style="margin-top: 2rem;">
+                        <h3>🔗 Share Links Feature</h3>
+                        <p>Create temporary share links for files without exposing full server access:</p>
+                        <ul style="margin-left: 1.5rem; color: var(--text-secondary); margin-bottom: 1.5rem;">
+                            <li style="margin-bottom:0.5rem"><strong>Expiry Time</strong>: Set link lifetime (1h, 6h,
+                                24h, or 7 days).</li>
+                            <li style="margin-bottom:0.5rem"><strong>Download Limits</strong>: Configure max downloads
+                                (1x, 5x, 10x, or unlimited).</li>
+                            <li style="margin-bottom:0.5rem"><strong>PIN Protection</strong>: Add optional 4-6 digit PIN
+                                for sensitive files.</li>
+                            <li style="margin-bottom:0.5rem"><strong>Dashboard</strong>: Monitor active links with
+                                auto-refresh and one-click revoke.</li>
+                            <li><strong>Public Access</strong>: Links work without login, but only authorized users can
+                                create them.</li>
                         </ul>
                     </div>
 
