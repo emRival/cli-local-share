@@ -98,9 +98,9 @@ def browse_directory() -> str:
 class ReusableTCPServer(socketserver.TCPServer):
     allow_reuse_address = True
 
-def create_server(port: int, directory: str, password: str = None, token: str = None, use_https: bool = False, allow_upload: bool = False, allow_remove: bool = False):
+def create_server(port: int, directory: str, password: str = None, token: str = None, use_https: bool = False, allow_upload: bool = False, allow_remove: bool = False, allow_share_links: bool = False):
     """Create HTTP/HTTPS server"""
-    handler = partial(SecureAuthHandler, password=password, token=token, directory=directory, allow_upload=allow_upload, allow_remove=allow_remove)
+    handler = partial(SecureAuthHandler, password=password, token=token, directory=directory, allow_upload=allow_upload, allow_remove=allow_remove, allow_share_links=allow_share_links)
     server = ReusableTCPServer(("", port), handler)
     
     if use_https:
@@ -120,7 +120,7 @@ def create_server(port: int, directory: str, password: str = None, token: str = 
 
 def run_server_with_ui(port: int, directory: str, password: str, token: str, 
                         timeout: int, use_https: bool, allow_upload: bool = False, allow_remove: bool = False,
-                        enable_sftp: bool = False, sftp_port: int = None):
+                        allow_share_links: bool = False, enable_sftp: bool = False, sftp_port: int = None):
     """Run server with live UI"""
     
     import src.state as state
@@ -137,7 +137,7 @@ def run_server_with_ui(port: int, directory: str, password: str, token: str,
     webdav_url = None
     
     try:
-        server, https_enabled = create_server(port, directory, password, token, use_https, allow_upload, allow_remove)
+        server, https_enabled = create_server(port, directory, password, token, use_https, allow_upload, allow_remove, allow_share_links)
         if use_https and not https_enabled:
             url = f"http://{ip}:{port}"
     except OSError as e:

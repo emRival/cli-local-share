@@ -153,6 +153,10 @@ def main():
         console.print("")
         allow_upload = Confirm.ask("[yellow]Enable File Upload?[/yellow] (Allows visitors to upload files)", default=default_upload)
         allow_remove = Confirm.ask("[yellow]Enable File Deletion? [/yellow] [red](WARNING: Visitors can delete files!)[/red]", default=default_remove)
+        
+        # Share Links Permission
+        default_share_links = config.get("allow_share_links", False)
+        allow_share_links = Confirm.ask("[yellow]Enable Share Links?[/yellow] (Allows creating temporary share links for files)", default=default_share_links)
 
         # Additional Protocols
         default_sftp = config.get("enable_sftp", False)
@@ -179,6 +183,7 @@ def main():
                 "timeout": timeout,
                 "allow_upload": allow_upload,
                 "allow_remove": allow_remove,
+                "allow_share_links": allow_share_links,
                 "enable_sftp": enable_sftp,
                 "sftp_port": sftp_port or 2222
             }
@@ -193,7 +198,7 @@ def main():
         # Start Server
         run_server_with_ui(
             port, directory, password, token, timeout, use_https, 
-            allow_upload, allow_remove,
+            allow_upload, allow_remove, allow_share_links,
             enable_sftp, sftp_port
         )
             

@@ -2,12 +2,15 @@ import http.server
 import os
 import base64
 import urllib.parse
+import json
+import ssl
 from functools import partial
 from typing import Optional
 
 from src.state import BLOCK_DURATION_SECONDS, BLOCKED_IPS, STATE_LOCK
 from src.utils import format_size, get_system_username, get_local_ip
 from src.security import is_ip_blocked, is_ip_whitelisted, log_access, record_failed_attempt, FAILED_ATTEMPTS
+from src.share_manager import get_share_manager
 
 def safe_handler(func):
     """Decorator to handle exceptions gracefully"""
@@ -26,12 +29,13 @@ def safe_handler(func):
 class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
     """HTTP handler with enhanced security and download UI"""
     
-    def __init__(self, *args, password=None, token=None, directory=None, allow_upload=False, allow_remove=False, **kwargs):
+    def __init__(self, *args, password=None, token=None, directory=None, allow_upload=False, allow_remove=False, allow_share_links=False, **kwargs):
         self.auth_password = password
         self.auth_token = token
         self.share_directory = directory
         self.allow_upload = allow_upload
         self.allow_remove = allow_remove
+        self.allow_share_links = allow_share_links
         super().__init__(*args, directory=directory, **kwargs)
     
     def log_message(self, format, *args):
@@ -234,6 +238,79 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
         # Check for query params (e.g. ?action=delete)
         parsed_path = urllib.parse.urlparse(self.path)
         query = urllib.parse.parse_qs(parsed_path.query)
+        
+        # Handle Share Link API Endpoints (REQUIRES AUTH)
+        if self.path.startswith('/api/share/'):
+            # These endpoints return JSON
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            
+            try:
+                share_manager = get_share_manager()
+                
+                # Create Share Link
+                if self.path == '/api/share/create':
+                    content_length = int(self.headers.get('Content-Length', 0))
+                    post_data = self.rfile.read(content_length).decode('utf-8')
+                    params = json.loads(post_data)
+                    
+                    file_path = params.get('file_path')
+                    expiry_hours = int(params.get('expiry_hours', 24))
+                    max_downloads = int(params.get('max_downloads', 0))
+                    pin = params.get('pin')
+                    
+                    # Generate share link
+                    link_info = share_manager.generate_share_link(
+                        file_path=file_path,
+                        expiry_hours=expiry_hours,
+                        max_downloads=max_downloads,
+                        pin=pin,
+                        creator_ip=client_ip
+                    )
+                    
+                    # Build full share URL
+                    host = self.headers.get('Host', get_local_ip() + ':8080')
+                    protocol = 'https' if isinstance(self.connection, ssl.SSLSocket) else 'http'
+                    share_url = f"{protocol}://{host}/s/{link_info['token']}"
+                    
+                    response = {
+                        'success': True,
+                        'share_url': share_url,
+                        'token': link_info['token'],
+                        'expires_at': link_info['expires_at'],
+                        'max_downloads': link_info['max_downloads'],
+                        'has_pin': link_info['has_pin']
+                    }
+                    
+                    self.wfile.write(json.dumps(response).encode())
+                    log_access(client_ip, f"CREATE SHARE: {file_path}", "🔗 CREATED")
+                    return
+                
+                # Revoke Share Link
+                elif self.path == '/api/share/revoke':
+                    content_length = int(self.headers.get('Content-Length', 0))
+                    post_data = self.rfile.read(content_length).decode('utf-8')
+                    params = json.loads(post_data)
+                    
+                    token = params.get('token')
+                    success = share_manager.revoke_link(token)
+                    
+                    response = {
+                        'success': success
+                    }
+                    
+                    self.wfile.write(json.dumps(response).encode())
+                    log_access(client_ip, f"REVOKE SHARE: {token}", "🔗 REVOKED")
+                    return
+                
+            except Exception as e:
+                error_response = {
+                    'success': False,
+                    'error': str(e)
+                }
+                self.wfile.write(json.dumps(error_response).encode())
+                return
         
         # Handle Deletion
         if query.get('action') == ['delete']:
@@ -538,6 +615,13 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
             elif not item['is_dir']:
                 # Download
                 actions += f'<a href="{item["download"]}" download class="btn btn-dl">⬇ DL</a>'
+                
+                # Share Link (Only if enabled)
+                if self.allow_share_links:
+                    file_full_path = os.path.join(full_path, item['name'].replace('📄 ', ''))
+                    file_basename = os.path.basename(file_full_path)
+                    actions += f'<button onclick="openShareModal(\'{file_full_path}\', \'{js_safe_name.replace("📄 ", "")}\')" class="btn btn-share">🔗 Share</button>'
+                
                 # Preview
                 if item['preview']:
                     actions += f'<button onclick="previewFile(\'{item["href"]}\', \'{js_safe_name}\')" class="btn btn-view">👁️ View</button>'
@@ -759,6 +843,103 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
         .btn-del {{ background: rgba(255, 51, 51, 0.1); color: #ff3333 !important; border: 1px solid rgba(255, 51, 51, 0.2); }}
         .btn-del:hover {{ background: rgba(255, 51, 51, 0.2); transform: translateY(-1px); }}
         
+        .btn-share {{ background: rgba(139, 92, 246, 0.1); color: #8b5cf6 !important; border: 1px solid rgba(139, 92, 246, 0.2); }}
+        .btn-share:hover {{ background: rgba(139, 92, 246, 0.2); transform: translateY(-1px); }}
+        
+        /* Share Modal */
+        .share-modal {{ 
+            display: none; 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(0,0,0,0.9); 
+            z-index: 2000; 
+            justify-content: center; 
+            align-items: center; 
+            backdrop-filter: blur(5px); 
+        }}
+        .share-modal-content {{ 
+            max-width: 500px; 
+            width: 90%; 
+            background: #1e1e1e; 
+            padding: 2rem; 
+            border-radius: 16px; 
+            position: relative; 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5); 
+            border: 1px solid var(--glass-border); 
+        }}
+        .share-modal-close {{ 
+            position: absolute; 
+            top: 15px; 
+            right: 20px; 
+            color: white; 
+            font-size: 24px; 
+            cursor: pointer; 
+            opacity: 0.7; 
+            transition: 0.2s; 
+        }}
+        .share-modal-close:hover {{ opacity: 1; }}
+        .share-modal h3 {{ color: white; margin-bottom: 1.5rem; font-weight: 500; }}
+        .share-form-group {{ margin-bottom: 1.2rem; }}
+        .share-form-group label {{ 
+            display: block; 
+            color: var(--text-muted); 
+            margin-bottom: 0.5rem; 
+            font-size: 0.9rem; 
+        }}
+        .share-form-group select,
+        .share-form-group input[type="text"] {{
+            width: 100%;
+            padding: 10px 15px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            color: white;
+            font-size: 0.95rem;
+        }}
+        .share-form-group input[type="checkbox"] {{
+            margin-right: 8px;
+        }}
+        .share-btn-primary {{
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }}
+        .share-btn-primary:hover {{ transform: translateY(-2px); box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4); }}
+        .share-result {{
+            display: none;
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            background: rgba(139, 92, 246, 0.1);
+            border-radius: 8px;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+        }}
+        .share-result h4 {{ color: #8b5cf6; margin-bottom: 1rem; }}
+        .share-url-container {{
+            display: flex;
+            gap: 10px;
+            margin-bottom: 1rem;
+        }}
+        .share-url {{ 
+            flex: 1; 
+            padding: 10px; 
+            background: rgba(0,0,0,0.3); 
+            border: 1px solid var(--glass-border); 
+            border-radius: 6px; 
+            color: white; 
+            font-family: monospace; 
+            font-size: 0.85rem; 
+        }}
+        .share-info {{ color: var(--text-muted); font-size: 0.9rem; line-height: 1.8; }}
+        
         /* Loading Overlay */
         .loading-overlay {{
             position: fixed;
@@ -770,6 +951,35 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
             flex-direction: column;
             justify-content: center;
             align-items: center;
+        }}
+        
+        /* Share Links Dashboard Spacing */
+        .share-links-dashboard {{
+            margin-bottom: 2rem;
+        }}
+        
+        /* Logout Button */
+        .logout-btn {{
+            padding: 10px 20px;
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(220, 38, 38, 0.15) 100%);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 12px;
+            color: #fca5a5 !important;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }}
+        .logout-btn:hover {{
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.25) 0%, rgba(220, 38, 38, 0.25) 100%);
+            border-color: rgba(239, 68, 68, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(239, 68, 68, 0.3);
+            color: #ff6b6b !important;
         }}
         
         .spinner {{
@@ -908,7 +1118,7 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
             <h1>📁 ShareCLI</h1>
             <div style="display:flex;gap:10px;align-items:center">
                 <input type="text" id="searchInput" class="search-box" placeholder="🔍 Search files..." onkeyup="filterFiles()">
-                <a href="/logout" class="btn btn-del" style="background:rgba(255,51,51,0.2);color:#ff6666!important;border:1px solid rgba(255,51,51,0.3)">🚪 Logout</a>
+                <a href="/logout" class="logout-btn">🚪 Logout</a>
             </div>
         </div>
         
@@ -917,6 +1127,37 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
         </div>
         
         {upload_section}
+
+        <!-- Active Share Links Dashboard (Only if sharing is enabled) -->
+        {f'''
+        <div class="share-links-dashboard" id="shareLinksSection" style="display: {'block' if self.allow_share_links else 'none'};">
+            <h3 style="color: white; margin-bottom: 1rem; display: flex; align-items: center; gap: 10px;">
+                🔗 Active Share Links 
+                <span id="linkCount" style="font-size: 0.9rem; color: var(--text-muted);">(0)</span>
+                <button onclick="refreshShareLinks()" class="btn btn-dl" style="margin-left: auto; font-size: 0.85rem; padding: 8px 16px;">🔄 Refresh</button>
+            </h3>
+            <div class="table-wrapper">
+                <table id="shareLinksTable">
+                    <thead>
+                        <tr>
+                            <th width="30%">File</th>
+                            <th width="18%">Created</th>
+                            <th width="18%">Expires</th>
+                            <th width="15%">Downloads</th>
+                            <th width="19%">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="shareLinksBody">
+                        <tr>
+                            <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                                Loading share links...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        ''' if self.allow_share_links else ''}
 
         <div class="table-wrapper">
             <table id="fileTable">
@@ -942,6 +1183,55 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
             <span class="modal-close" onclick="closeModal()">&times;</span>
             <h3 id="previewTitle" style="color:white; margin-bottom:15px; font-weight:500">Preview</h3>
             <div id="previewContainer"></div>
+        </div>
+    </div>
+
+    <!-- Share Link Modal -->
+    <div id="shareModal" class="share-modal">
+        <div class="share-modal-content">
+            <span class="share-modal-close" onclick="closeShareModal()">&times;</span>
+            <h3>🔗 Create Share Link</h3>
+            <div id="shareFormContainer">
+                <p style="color: #a1a1aa; margin-bottom: 1.5rem;" id="shareFileName"></p>
+                
+                <div class="share-form-group">
+                    <label>Expires After:</label>
+                    <select id="expiryTime">
+                        <option value="1">1 hour</option>
+                        <option value="6">6 hours</option>
+                        <option value="24" selected>24 hours (recommended)</option>
+                        <option value="168">7 days</option>
+                    </select>
+                </div>
+                
+                <div class="share-form-group">
+                    <label>Max Downloads:</label>
+                    <select id="maxDownloads">
+                        <option value="1">One-time download</option>
+                        <option value="0" selected>Unlimited (until expiry)</option>
+                        <option value="5">5 downloads</option>
+                        <option value="10">10 downloads</option>
+                    </select>
+                </div>
+                
+                <div class="share-form-group">
+                    <label>
+                        <input type="checkbox" id="enablePin" onchange="togglePinInput()"> Protect with PIN
+                    </label>
+                    <input type="text" id="pinCode" placeholder="Enter 4-6 digit PIN" maxlength="6" pattern="[0-9]*" style="display:none; margin-top:10px;">
+                </div>
+                
+                <button class="share-btn-primary" onclick="generateShareLink()">Generate Share Link</button>
+            </div>
+            
+            <div id="shareResult" class="share-result">
+                <h4>✅ Link Created Successfully!</h4>
+                <div class="share-url-container">
+                    <input type="text" id="shareUrlInput" class="share-url" readonly>
+                    <button class="btn btn-dl" onclick="copyShareLink()" style="flex-shrink:0;">📋 Copy</button>
+                </div>
+                <div class="share-info" id="shareInfo"></div>
+            </div>
         </div>
     </div>
 
@@ -1121,6 +1411,282 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
             if (e) e.stopPropagation();
             document.getElementById('previewModal').style.display = 'none';
         }}
+
+        // Share Link Functions
+        let currentShareFilePath = '';
+        let currentShareFileName = '';
+
+        function openShareModal(filePath, fileName) {{
+            currentShareFilePath = filePath;
+            currentShareFileName = fileName;
+            
+            document.getElementById('shareFileName').textContent = fileName;
+            document.getElementById('shareFormContainer').style.display = 'block';
+            document.getElementById('shareResult').style.display = 'none';
+            document.getElementById('shareModal').style.display = 'flex';
+            
+            // Reset form
+            document.getElementById('expiryTime').value = '24';
+            document.getElementById('maxDownloads').value = '0';
+            document.getElementById('enablePin').checked = false;
+            document.getElementById('pinCode').style.display = 'none';
+            document.getElementById('pinCode').value = '';
+        }}
+
+        function closeShareModal() {{
+            document.getElementById('shareModal').style.display = 'none';
+        }}
+
+        function togglePinInput() {{
+            const checkbox = document.getElementById('enablePin');
+            const pinInput = document.getElementById('pinCode');
+            pinInput.style.display = checkbox.checked ? 'block' : 'none';
+            if (!checkbox.checked) {{
+                pinInput.value = '';
+            }}
+        }}
+
+        async function generateShareLink() {{
+            const expiryHours = parseInt(document.getElementById('expiryTime').value);
+            const maxDownloads = parseInt(document.getElementById('maxDownloads').value);
+            const enablePin = document.getElementById('enablePin').checked;
+            const pin = enablePin ? document.getElementById('pinCode').value : null;
+
+            // Validate PIN
+            if (enablePin && (!pin || pin.length < 4)) {{
+                alert('Please enter a valid PIN (4-6 digits)');
+                return;
+            }}
+
+            try {{
+                const response = await fetch('/api/share/create', {{
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {{
+                        'Content-Type': 'application/json'
+                    }},
+                    body: JSON.stringify({{
+                        file_path: currentShareFilePath,
+                        expiry_hours: expiryHours,
+                        max_downloads: maxDownloads,
+                        pin: pin
+                    }})
+                }});
+
+                const data = await response.json();
+
+                if (data.success) {{
+                    // Show result
+                    document.getElementById('shareFormContainer').style.display = 'none';
+                    document.getElementById('shareResult').style.display = 'block';
+                    document.getElementById('shareUrlInput').value = data.share_url;
+                    
+                    // Format expiry time
+                    const expiryDate = new Date(data.expires_at);
+                    const expiryStr = expiryDate.toLocaleString();
+                    
+                    const downloadLimit = data.max_downloads === 0 ? '∞' : data.max_downloads;
+                    const pinInfo = data.has_pin ? `<br>🔐 PIN: <strong>${{pin}}</strong>` : '';
+                    
+                    document.getElementById('shareInfo').innerHTML = `
+                        📅 Expires: <strong>${{expiryStr}}</strong><br>
+                        ⬇️ Downloads: <strong>0 / ${{downloadLimit}}</strong>${{pinInfo}}<br><br>
+                        <button onclick="closeShareModal(); loadShareLinks();" class="btn btn-dl" style="padding: 10px 20px;">✅ Close</button>
+                        <button onclick="document.getElementById('shareFormContainer').style.display='block'; document.getElementById('shareResult').style.display='none';" class="btn btn-share" style="padding: 10px 20px; margin-left: 10px;">🔗 Create Another</button>
+                    `;
+                    
+                    // Refresh dashboard to show new link
+                    if (typeof loadShareLinks === 'function') {{
+                        setTimeout(() => loadShareLinks(), 500);
+                    }}
+                }} else {{
+                    alert('Error creating share link: ' + data.error);
+                }}
+            }} catch (error) {{
+                console.error('Error in generateShareLink:', error);
+                alert('Failed to create share link: ' + error);
+            }}
+        }}
+
+        function copyShareLink() {{
+            const input = document.getElementById('shareUrlInput');
+            input.select();
+            document.execCommand('copy');
+            
+            // Visual feedback
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '✅ Copied!';
+            btn.style.background = 'rgba(16, 185, 129, 0.2)';
+            
+            setTimeout(() => {{
+                btn.innerHTML = originalText;
+                btn.style.background = '';
+            }}, 2000);
+        }}
+
+        // Active Share Links Dashboard Functions
+        async function loadShareLinks() {{
+            console.log('[DEBUG] loadShareLinks called');
+            try {{
+                const response = await fetch('/api/share/list', {{
+                    credentials: 'include'  // Include authentication credentials
+                }});
+                console.log('[DEBUG] API Response status:', response.status);
+                const data = await response.json();
+                console.log('[DEBUG] API Data:', data);
+                
+                if (data.success) {{
+                    const tbody = document.getElementById('shareLinksBody');
+                    const linkCount = document.getElementById('linkCount');
+                    const links = data.links || [];
+                    
+                    console.log('[DEBUG] Links count:', links.length);
+                    console.log('[DEBUG] Links data:', links);
+                    
+                    linkCount.textContent = `(${{links.length}})`;
+                    
+                    if (links.length === 0) {{
+                        tbody.innerHTML = `
+                            <tr>
+                                <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                                    No active share links. Create one by clicking 🔗 Share button on any file.
+                                </td>
+                            </tr>
+                        `;
+                        return;
+                    }}
+                    
+                    tbody.innerHTML = links.map(link => {{
+                        const createdDate = new Date(link.created_at);
+                        const expiresDate = new Date(link.expires_at);
+                        const now = new Date();
+                        const isExpiringSoon = (expiresDate - now) < 3600000; // Less than 1 hour
+                        const downloadText = link.max_downloads === 0 ? '∞' : link.max_downloads;
+                        const expiresClass = isExpiringSoon ? 'style="color: #fbbf24;"' : '';
+                        
+                        return `
+                            <tr>
+                                <td>📄 ${{link.file_name}}</td>
+                                <td>${{formatDate(createdDate)}}</td>
+                                <td ${{expiresClass}}>${{formatDate(expiresDate)}}</td>
+                                <td>${{link.download_count}} / ${{downloadText}}</td>
+                                <td>
+                                    <div style="display: flex; gap: 8px;">
+                                        <button onclick="copyToClipboard('/s/${{link.token}}')" class="btn btn-dl" style="font-size: 0.85rem; padding: 6px 12px;">📋 Copy</button>
+                                        <button onclick="revokeShareLink('${{link.token}}')" class="btn btn-del" style="font-size: 0.85rem; padding: 6px 12px;">🗑️ Revoke</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    }}).join('');
+                    
+                    console.log('[DEBUG] Table updated successfully');
+                }} else {{
+                    console.error('[DEBUG] API returned success=false');
+                }}
+            }} catch (error) {{
+                console.error('[DEBUG] Failed to load share links:', error);
+            }}
+        }}
+
+        function refreshShareLinks() {{
+            loadShareLinks();
+        }}
+
+        async function revokeShareLink(token) {{
+            if (!confirm('Are you sure you want to revoke this share link? It will no longer be accessible.')) {{
+                return;
+            }}
+            
+            try {{
+                const response = await fetch('/api/share/revoke', {{
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {{ 'Content-Type': 'application/json' }},
+                    body: JSON.stringify({{ token: token }})
+                }});
+                
+                const data = await response.json();
+                
+                if (data.success) {{
+                    // Reload share links
+                    loadShareLinks();
+                }} else {{
+                    alert('Failed to revoke link');
+                }}
+            }} catch (error) {{
+                alert('Error: ' + error);
+            }}
+        }}
+
+        function copyToClipboard(path) {{
+            const url = window.location.origin + path;
+            const input = document.createElement('textarea');
+            input.value = url;
+            document.body.appendChild(input);
+            input.select();
+            document.execCommand('copy');
+            document.body.removeChild(input);
+            
+            // Visual feedback
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '✅ Copied!';
+            setTimeout(() => {{ btn.innerHTML = originalText; }}, 1500);
+        }}
+
+        function formatDate(date) {{
+            // Ensure date is a Date object
+            if (!(date instanceof Date) || isNaN(date.getTime())) {{
+                return 'Invalid date';
+            }}
+            
+            // Show short date format: MM/DD HH:MM or relative if recent
+            const now = new Date();
+            const diffMs = now - date; // Positive if date is in the past
+            const diffMins = Math.floor(Math.abs(diffMs) / 60000);
+            const diffHours = Math.floor(Math.abs(diffMs) / 3600000);
+            
+            // If less than 5 minutes, show "just now"
+            if (diffMins < 5 && diffMs >= 0) {{
+                return 'Just now';
+            }}
+            
+            // If less than 1 hour, show minutes
+            if (diffHours < 1) {{
+                if (diffMs >= 0) {{
+                    return `${{diffMins}}m ago`;
+                }} else {{
+                    return `In ${{diffMins}}m`;
+                }}
+            }}
+            
+            // If within 24 hours, show hours
+            if (diffHours < 24) {{
+                if (diffMs >= 0) {{
+                    return `${{diffHours}}h ago`;
+                }} else {{
+                    return `In ${{diffHours}}h`;
+                }}
+            }}
+            
+            // Otherwise show actual date/time
+            const month = date.getMonth() + 1;
+            const day = date.getDate();
+            const hour = date.getHours().toString().padStart(2, '0');
+            const minute = date.getMinutes().toString().padStart(2, '0');
+            
+            return `${{month}}/${{day}} ${{hour}}:${{minute}}`;
+        }}
+
+        // Auto-refresh share links every 10 seconds if dashboard exists
+        if (document.getElementById('shareLinksBody')) {{
+            loadShareLinks(); // Initial load
+            setInterval(loadShareLinks, 10000); // Refresh every 10 seconds
+        }}
+        
+        
     </script>
 </body>
 </html>'''
@@ -1148,9 +1714,280 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
         
         return buffer.getvalue()
     
+    def _generate_error_page(self, title, message):
+        """Generate a modern error page for share links."""
+        return f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>{title} - ShareCLI</title>
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <style>
+                * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+                body {{ 
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                    background-color: #050505;
+                    color: #ffffff;
+                    display: flex; 
+                    align-items: center; 
+                    justify-content: center; 
+                    min-height: 100vh; 
+                    text-align: center;
+                }}
+                .bg-mesh {{
+                    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1;
+                    background: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #050505 70%);
+                }}
+                .card {{ 
+                    background: rgba(20, 20, 20, 0.6);
+                    backdrop-filter: blur(20px);
+                    padding: 3rem 2.5rem;
+                    border-radius: 20px;
+                    border: 1px solid rgba(255,255,255,0.1);
+                    max-width: 90%;
+                    width: 450px;
+                    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+                }}
+                .icon {{ font-size: 4rem; margin-bottom: 1.5rem; }}
+                h1 {{ 
+                    margin-bottom: 1rem;
+                    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    font-weight: 700;
+                    font-size: 2rem;
+                }}
+                p {{ margin-bottom: 2rem; color: #a1a1aa; font-size: 1.05rem; }}
+                .footer {{ margin-top: 2rem; font-size: 0.85rem; color: #71717a; }}
+            </style>
+        </head>
+        <body>
+            <div class="bg-mesh"></div>
+            <div class="card">
+                <div class="icon">⚠️</div>
+                <h1>{title}</h1>
+                <p>{message}</p>
+                <div class="footer">ShareCLI v2.0</div>
+            </div>
+        </body>
+        </html>
+        """
+    
+    def _generate_pin_page(self, token, filename, error=False):
+        """Generate PIN input page for protected share links."""
+        error_message = ""
+        shake_animation = ""
+        error_class = ""
+        
+        if error:
+            error_message = '<p style="color: #ef4444; margin-bottom: 1rem; font-weight: 600;">❌ Incorrect PIN. Please try again.</p>'
+            shake_animation = """
+                @keyframes shake {{
+                    0%, 100% {{ transform: translateX(0); }}
+                    10%, 30%, 50%, 70%, 90% {{ transform: translateX(-5px); }}
+                    20%, 40%, 60%, 80% {{ transform: translateX(5px); }}
+                }}
+                .shake {{ animation: shake 0.5s; }}
+            """
+            error_class = "shake"
+        
+        return f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>Enter PIN - ShareCLI</title>
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <style>
+                * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+                body {{ 
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                    background-color: #050505;
+                    color: #ffffff;
+                    display: flex; 
+                    align-items: center; 
+                    justify-content: center; 
+                    min-height: 100vh; 
+                    text-align: center;
+                }}
+                .bg-mesh {{
+                    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1;
+                    background: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #050505 70%);
+                }}
+                .card {{ 
+                    background: rgba(20, 20, 20, 0.6);
+                    backdrop-filter: blur(20px);
+                    padding: 3rem 2.5rem;
+                    border-radius: 20px;
+                    border: 1px solid rgba(255,255,255,0.1);
+                    max-width: 90%;
+                    width: 450px;
+                    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+                }}
+                .icon {{ font-size: 4rem; margin-bottom: 1.5rem; }}
+                h1 {{ 
+                    margin-bottom: 0.5rem;
+                    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    font-weight: 700;
+                    font-size: 2rem;
+                }}
+                p {{ margin-bottom: 2rem; color: #a1a1aa; font-size: 1.05rem; }}
+                input {{
+                    width: 100%;
+                    max-width: 200px;
+                    padding: 14px 20px;
+                    font-size: 1.5rem;
+                    text-align: center;
+                    border: 1px solid rgba(255,255,255,0.2);
+                    background: rgba(255,255,255,0.05);
+                    color: #fff;
+                    border-radius: 10px;
+                    margin-bottom: 1.5rem;
+                    letter-spacing: 0.5rem;
+                }}
+                input:focus {{ outline: none; border-color: #fbbf24; }}
+                button {{
+                    color: #000;
+                    font-weight: 600;
+                    padding: 14px 32px;
+                    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+                    border: none;
+                    border-radius: 10px;
+                    font-size: 16px;
+                    cursor: pointer;
+                    box-shadow: 0 4px 15px rgba(251, 191, 36, 0.3);
+                    width: 100%;
+                    max-width: 200px;
+                }}
+                button:hover {{ transform: translateY(-2px); box-shadow: 0 6px 25px rgba(251, 191, 36, 0.5); }}
+                .footer {{ margin-top: 2rem; font-size: 0.85rem; color: #71717a; }}
+                {shake_animation}
+            </style>
+        </head>
+        <body>
+            <div class="bg-mesh"></div>
+            <div class="card {error_class}">
+                <div class="icon">🔐</div>
+                <h1>Protected File</h1>
+                {error_message}
+                <p><strong>{filename}</strong><br>This file is PIN-protected. Enter the PIN to download.</p>
+                <form method="GET" action="/s/{token}">
+                    <input type="text" name="pin" placeholder="••••" maxlength="6" pattern="[0-9]*" inputmode="numeric" required autofocus>
+                    <br>
+                    <button type="submit">Download</button>
+                </form>
+                <div class="footer">ShareCLI v2.0</div>
+            </div>
+        </body>
+        </html>
+        """
+    
     @safe_handler
     def do_GET(self):
         client_ip = self.client_address[0]
+
+        # Handle Share Link Access (NO AUTH REQUIRED)
+        if self.path.startswith('/s/'):
+            parts = self.path.split('?')[0].split('/')
+            if len(parts) >= 3:
+                token = parts[2]
+                
+                # Get PIN from query string if provided
+                pin = None
+                if '?' in self.path:
+                    query_string = self.path.split('?')[1]
+                    query_params = urllib.parse.parse_qs(query_string)
+                    pin = query_params.get('pin', [None])[0]
+                
+                # Validate share link
+                share_manager = get_share_manager()
+                link_info = share_manager.validate_link(token, pin)
+                
+                if not link_info:
+                    # Invalid or expired link
+                    self.send_response(410)
+                    self.send_header('Content-Type', 'text/html; charset=utf-8')
+                    self.end_headers()
+                    self.wfile.write(self._generate_error_page('Link Expired', 'This share link has expired or is no longer valid.').encode())
+                    log_access(client_ip, f"/s/{token}", "🔗 EXPIRED LINK")
+                    return
+                
+                if link_info.get('requires_pin'):
+                    # Show PIN input page
+                    self.send_response(200)
+                    self.send_header('Content-Type', 'text/html; charset=utf-8')
+                    self.end_headers()
+                    self.wfile.write(self._generate_pin_page(token, link_info['file_name']).encode())
+                    return
+                
+                if link_info.get('pin_invalid'):
+                    # Invalid PIN - Show retry form with error message
+                    self.send_response(200)
+                    self.send_header('Content-Type', 'text/html; charset=utf-8')
+                    self.end_headers()
+                    self.wfile.write(self._generate_pin_page(token, link_info.get('file_name', 'File'), error=True).encode())
+                    log_access(client_ip, f"/s/{token}", "🔒 WRONG PIN")
+                    return
+                
+                # Valid link - serve file
+                file_path = link_info['file_path']
+                if os.path.exists(file_path) and os.path.isfile(file_path):
+                    # Increment download counter
+                    share_manager.increment_download(token)
+                    
+                    # Serve file
+                    self.send_response(200)
+                    file_size = os.path.getsize(file_path)
+                    self.send_header('Content-Type', 'application/octet-stream')
+                    self.send_header('Content-Disposition', f'attachment; filename=\"{link_info["file_name"]}\"')
+                    self.send_header('Content-Length', str(file_size))
+                    self.end_headers()
+                    
+                    with open(file_path, 'rb') as f:
+                        self.wfile.write(f.read())
+                    
+                    log_access(client_ip, f"/s/{token} ({link_info['file_name']})", "🔗 SHARE DOWNLOAD")
+                else:
+                    self.send_response(404)
+                    self.send_header('Content-Type', 'text/html; charset=utf-8')
+                    self.end_headers()
+                    self.wfile.write(self._generate_error_page('File Not Found', 'The shared file no longer exists.').encode())
+                return
+        
+        # API Endpoint: List Share Links (REQUIRES AUTH)
+        if self.path == '/api/share/list':
+            # Check authentication
+            auth_result = self.check_auth()
+            
+            if auth_result != 1:
+                # Return JSON error instead of HTML redirect
+                self.send_response(401)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    'success': False,
+                    'error': 'Authentication required'
+                }).encode())
+                log_access(client_ip, self.path, "🔒 AUTH FAILED")
+                return
+            
+            # User is authenticated, return share links
+            share_manager = get_share_manager()
+            links = share_manager.list_active_links()
+            
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            response = {
+                'success': True,
+                'links': links
+            }
+            self.wfile.write(json.dumps(response).encode())
+            return
+        
 
         # Handle Logout Action
         if self.path == '/logout':
