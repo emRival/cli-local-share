@@ -274,25 +274,27 @@ def run_server_with_ui(port: int, directory: str, password: str, token: str,
                     Panel(log_content, title="[bold green] Live Log [/bold green]", border_style="green", box=box.ROUNDED)
                 )
 
-                # QR Code Generation (Testing Branch)
+                # QR Code Generation (iPhone Compatible)
                 qr_panel = Panel("Generating QR...", title="[bold yellow]Mobile Scan[/bold yellow]")
                 try:
                     import qrcode
                     import io
-                    # Optimize for size: Low error correction (L) covers ~7% damage, allows smaller matrix
+                    # iPhone-compatible settings:
+                    # - border=4: QR spec requires minimum 4-unit quiet zone
+                    # - ERROR_CORRECT_M: Medium (15%) better than Low for camera scanning
                     qr = qrcode.QRCode(
                         version=None, 
-                        error_correction=qrcode.constants.ERROR_CORRECT_L,
+                        error_correction=qrcode.constants.ERROR_CORRECT_M,
                         box_size=10, 
-                        border=1
+                        border=4
                     )
                     qr.add_data(url)
                     qr.make(fit=True)
                     f = io.StringIO()
-                    qr.print_ascii(out=f)
+                    qr.print_ascii(out=f, invert=True)
                     f.seek(0)
                     qr_str = f.read()
-                    qr_panel = Panel(Text(qr_str, style="white on black", justify="center"), title="[bold yellow]Scan to Connect[/bold yellow]", border_style="yellow", box=box.ROUNDED)
+                    qr_panel = Panel(Text(qr_str, style="black on white", justify="center"), title="[bold yellow]Scan to Connect[/bold yellow]", border_style="yellow", box=box.ROUNDED)
                 except ImportError:
                     qr_panel = Panel("[red]Install 'qrcode' lib[/red]", title="QR Error")
 

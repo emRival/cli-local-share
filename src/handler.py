@@ -1113,28 +1113,8 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
         function logout() {{
             if (!confirm('Are you sure you want to logout?')) return;
             
-            // 1. Notify server for logging (optional, best effort)
-            fetch(window.location.pathname + '?action=logout');
-
-            // 2. Use Iframe to overwrite credentials in background
-            // This prevents the "logout:logout@" appearing in the main URL bar
-            var iframe = document.createElement('iframe');
-            iframe.style.display = "none";
-            
-            const protocol = window.location.protocol;
-            const host = window.location.host;
-            const path = window.location.pathname;
-            
-            // URL with invalid credentials
-            iframe.src = protocol + "//logout:logout@" + host + path;
-            
-            document.body.appendChild(iframe);
-            
-            // 3. Reload main page after a short delay
-            // The iframe request invalidates the cache, so reload triggers new login
-            setTimeout(function() {{
-                window.location.reload(true);
-            }}, 500); 
+            // Fast logout: Directly redirect to logout endpoint
+            window.location.href = '/logout';
         }}
 
         function closeModal(e) {{
@@ -1189,43 +1169,159 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
                 <title>Logged Out - ShareCLI</title>
                 <meta name="viewport" content="width=device-width, initial-scale=1">
                 <style>
-                    body { background: #121212; color: #e0e0e0; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; }
-                    .card { background: rgba(255,255,255,0.05); padding: 2rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); max-width: 90%; width: 400px; }
-                    h1 { margin-bottom: 1rem; color: #00d9ff; }
-                    p { margin-bottom: 2rem; opacity: 0.8; }
+                    * { margin: 0; padding: 0; box-sizing: border-box; }
+                    
+                    body { 
+                        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+                        background-color: #050505;
+                        color: #ffffff;
+                        display: flex; 
+                        align-items: center; 
+                        justify-content: center; 
+                        min-height: 100vh; 
+                        margin: 0; 
+                        text-align: center;
+                        position: relative;
+                        overflow: hidden;
+                    }
+                    
+                    /* Animated Background Mesh */
+                    .bg-mesh {
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        width: 100vw;
+                        height: 100vh;
+                        z-index: -1;
+                        background: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #050505 70%);
+                    }
+                    
+                    .bg-mesh::before,
+                    .bg-mesh::after {
+                        content: '';
+                        position: absolute;
+                        width: 60vw;
+                        height: 60vw;
+                        border-radius: 50%;
+                        filter: blur(100px);
+                        opacity: 0.15;
+                        animation: float 10s infinite alternate ease-in-out;
+                    }
+                    
+                    .bg-mesh::before {
+                        background: #3b82f6;
+                        top: -10%;
+                        left: -10%;
+                    }
+                    
+                    .bg-mesh::after {
+                        background: #8b5cf6;
+                        bottom: -10%;
+                        right: -10%;
+                        animation-delay: -5s;
+                    }
+                    
+                    @keyframes float {
+                        0% { transform: translate(0, 0) scale(1); }
+                        100% { transform: translate(20px, 40px) scale(1.1); }
+                    }
+                    
+                    @keyframes fadeIn {
+                        from { opacity: 0; transform: translateY(20px); }
+                        to { opacity: 1; transform: translateY(0); }
+                    }
+                    
+                    .card { 
+                        background: rgba(20, 20, 20, 0.6);
+                        backdrop-filter: blur(20px);
+                        padding: 3rem 2.5rem;
+                        border-radius: 20px;
+                        border: 1px solid rgba(255,255,255,0.1);
+                        max-width: 90%;
+                        width: 450px;
+                        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+                        animation: fadeIn 0.6s ease-out;
+                        position: relative;
+                        z-index: 1;
+                    }
+                    
+                    .icon {
+                        font-size: 4rem;
+                        margin-bottom: 1.5rem;
+                        filter: drop-shadow(0 0 20px rgba(16, 185, 129, 0.5));
+                        animation: pulse 2s ease-in-out infinite;
+                    }
+                    
+                    @keyframes pulse {
+                        0%, 100% { opacity: 1; transform: scale(1); }
+                        50% { opacity: 0.8; transform: scale(1.05); }
+                    }
+                    
+                    h1 { 
+                        margin-bottom: 1rem;
+                        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                        -webkit-background-clip: text;
+                        -webkit-text-fill-color: transparent;
+                        background-clip: text;
+                        font-weight: 700;
+                        font-size: 2rem;
+                        letter-spacing: -0.02em;
+                    }
+                    
+                    p { 
+                        margin-bottom: 2.5rem;
+                        color: #a1a1aa;
+                        font-size: 1.05rem;
+                        line-height: 1.6;
+                    }
+                    
                     button { 
-                        color: #fff; 
-                        text-decoration: none; 
-                        padding: 12px 24px; 
-                        background: #007bff; 
+                        color: #fff;
+                        font-weight: 600;
+                        font-family: 'Inter', sans-serif;
+                        padding: 14px 32px;
+                        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
                         border: none;
-                        border-radius: 6px; 
+                        border-radius: 10px;
                         font-size: 16px;
                         cursor: pointer;
-                        transition: background 0.2s;
+                        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+                        width: 100%;
+                        max-width: 250px;
                     }
-                    button:hover { background: #0056b3; }
+                    
+                    button:hover { 
+                        transform: translateY(-2px);
+                        box-shadow: 0 6px 25px rgba(59, 130, 246, 0.5);
+                        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+                    }
+                    
+                    button:active {
+                        transform: translateY(0);
+                    }
+                    
+                    .footer {
+                        margin-top: 2rem;
+                        font-size: 0.85rem;
+                        color: #71717a;
+                    }
                 </style>
                 <script>
                     function loginAgain() {
-                        // 1. Send request with BAD credentials to force browser to drop old ones
-                        var xhr = new XMLHttpRequest();
-                        xhr.open("GET", "/", true, "logout", "logout");
-                        xhr.onreadystatechange = function () {
-                            // 2. Once done (likely 401), redirect to login
-                            if (xhr.readyState == 4) {
-                                window.location.href = '/';
-                            }
-                        };
-                        xhr.send();
+                        // Simple and fast: just redirect
+                        window.location.href = '/';
                     }
                 </script>
             </head>
             <body>
+                <div class="bg-mesh"></div>
                 <div class="card">
-                    <h1>Logged Out</h1>
-                    <p>You have been safely logged out.</p>
+                    <div class="icon">✅</div>
+                    <h1>Logged Out Successfully</h1>
+                    <p>Your session has ended securely.<br>See you next time!</p>
                     <button onclick="loginAgain()">Login Again</button>
+                    <div class="footer">ShareCLI v2.0</div>
                 </div>
             </body>
             </html>
@@ -1260,33 +1356,156 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
                 <!DOCTYPE html>
                 <html>
                 <head>
-                    <title>Authentication Required - ShareCLI</title>
+                    <title>Authentication Failed - ShareCLI</title>
                     <meta name="viewport" content="width=device-width, initial-scale=1">
                     <style>
-                        body { background: #121212; color: #e0e0e0; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; }
-                        .card { background: rgba(255,255,255,0.05); padding: 2rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); max-width: 90%; width: 400px; }
-                        h1 { margin-bottom: 1rem; color: #ffeb3b; }
-                        p { margin-bottom: 2rem; opacity: 0.8; }
+                        * { margin: 0; padding: 0; box-sizing: border-box; }
+                        
+                        body { 
+                            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+                            background-color: #050505;
+                            color: #ffffff;
+                            display: flex; 
+                            align-items: center; 
+                            justify-content: center; 
+                            min-height: 100vh; 
+                            margin: 0; 
+                            text-align: center;
+                            position: relative;
+                            overflow: hidden;
+                        }
+                        
+                        /* Animated Background Mesh */
+                        .bg-mesh {
+                            position: fixed;
+                            top: 0;
+                            left: 0;
+                            width: 100vw;
+                            height: 100vh;
+                            z-index: -1;
+                            background: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #050505 70%);
+                        }
+                        
+                        .bg-mesh::before,
+                        .bg-mesh::after {
+                            content: '';
+                            position: absolute;
+                            width: 60vw;
+                            height: 60vw;
+                            border-radius: 50%;
+                            filter: blur(100px);
+                            opacity: 0.15;
+                            animation: float 10s infinite alternate ease-in-out;
+                        }
+                        
+                        .bg-mesh::before {
+                            background: #3b82f6;
+                            top: -10%;
+                            left: -10%;
+                        }
+                        
+                        .bg-mesh::after {
+                            background: #8b5cf6;
+                            bottom: -10%;
+                            right: -10%;
+                            animation-delay: -5s;
+                        }
+                        
+                        @keyframes float {
+                            0% { transform: translate(0, 0) scale(1); }
+                            100% { transform: translate(20px, 40px) scale(1.1); }
+                        }
+                        
+                        @keyframes fadeIn {
+                            from { opacity: 0; transform: translateY(20px); }
+                            to { opacity: 1; transform: translateY(0); }
+                        }
+                        
+                        @keyframes shake {
+                            0%, 100% { transform: translateX(0); }
+                            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+                            20%, 40%, 60%, 80% { transform: translateX(5px); }
+                        }
+                        
+                        .card { 
+                            background: rgba(20, 20, 20, 0.6);
+                            backdrop-filter: blur(20px);
+                            padding: 3rem 2.5rem;
+                            border-radius: 20px;
+                            border: 1px solid rgba(255,255,255,0.1);
+                            max-width: 90%;
+                            width: 450px;
+                            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+                            animation: fadeIn 0.6s ease-out, shake 0.5s ease-out;
+                            position: relative;
+                            z-index: 1;
+                        }
+                        
+                        .icon {
+                            font-size: 4rem;
+                            margin-bottom: 1.5rem;
+                            filter: drop-shadow(0 0 20px rgba(251, 191, 36, 0.5));
+                        }
+                        
+                        h1 { 
+                            margin-bottom: 1rem;
+                            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+                            -webkit-background-clip: text;
+                            -webkit-text-fill-color: transparent;
+                            background-clip: text;
+                            font-weight: 700;
+                            font-size: 2rem;
+                            letter-spacing: -0.02em;
+                        }
+                        
+                        p { 
+                            margin-bottom: 2.5rem;
+                            color: #a1a1aa;
+                            font-size: 1.05rem;
+                            line-height: 1.6;
+                        }
+                        
                         button { 
-                            color: #000; 
-                            font-weight: bold;
-                            text-decoration: none; 
-                            padding: 12px 24px; 
-                            background: #ffeb3b; 
+                            color: #000;
+                            font-weight: 600;
+                            font-family: inherit;
+                            padding: 14px 32px;
+                            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
                             border: none;
-                            border-radius: 6px; 
+                            border-radius: 10px;
                             font-size: 16px;
                             cursor: pointer;
-                            transition: transform 0.2s;
+                            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                            box-shadow: 0 4px 15px rgba(251, 191, 36, 0.3);
+                            width: 100%;
+                            max-width: 250px;
                         }
-                        button:hover { transform: scale(1.05); }
+                        
+                        button:hover { 
+                            transform: translateY(-2px);
+                            box-shadow: 0 6px 25px rgba(251, 191, 36, 0.5);
+                            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+                        }
+                        
+                        button:active {
+                            transform: translateY(0);
+                        }
+                        
+                        .footer {
+                            margin-top: 2rem;
+                            font-size: 0.85rem;
+                            color: #71717a;
+                        }
                     </style>
                 </head>
                 <body>
+                    <div class="bg-mesh"></div>
                     <div class="card">
-                        <h1>🔒 Locked</h1>
-                        <p>This resource is protected.<br>Please log in to continue.</p>
-                        <button onclick="location.reload()">Login</button>
+                        <div class="icon">🔒</div>
+                        <h1>Authentication Failed</h1>
+                        <p>Invalid credentials.<br>Please try again.</p>
+                        <button onclick="location.reload()">Retry Login</button>
+                        <div class="footer">ShareCLI v2.0</div>
                     </div>
                 </body>
                 </html>
@@ -1307,30 +1526,153 @@ class SecureAuthHandler(http.server.SimpleHTTPRequestHandler):
                     <title>Authentication Required - ShareCLI</title>
                     <meta name="viewport" content="width=device-width, initial-scale=1">
                     <style>
-                        body { background: #121212; color: #e0e0e0; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; }
-                        .card { background: rgba(255,255,255,0.05); padding: 2rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); max-width: 90%; width: 400px; }
-                        h1 { margin-bottom: 1rem; color: #00d9ff; }
-                        p { margin-bottom: 2rem; opacity: 0.8; }
+                        * { margin: 0; padding: 0; box-sizing: border-box; }
+                        
+                        body { 
+                            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+                            background-color: #050505;
+                            color: #ffffff;
+                            display: flex; 
+                            align-items: center; 
+                            justify-content: center; 
+                            min-height: 100vh; 
+                            margin: 0; 
+                            text-align: center;
+                            position: relative;
+                            overflow: hidden;
+                        }
+                        
+                        /* Animated Background Mesh */
+                        .bg-mesh {
+                            position: fixed;
+                            top: 0;
+                            left: 0;
+                            width: 100vw;
+                            height: 100vh;
+                            z-index: -1;
+                            background: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #050505 70%);
+                        }
+                        
+                        .bg-mesh::before,
+                        .bg-mesh::after {
+                            content: '';
+                            position: absolute;
+                            width: 60vw;
+                            height: 60vw;
+                            border-radius: 50%;
+                            filter: blur(100px);
+                            opacity: 0.15;
+                            animation: float 10s infinite alternate ease-in-out;
+                        }
+                        
+                        .bg-mesh::before {
+                            background: #3b82f6;
+                            top: -10%;
+                            left: -10%;
+                        }
+                        
+                        .bg-mesh::after {
+                            background: #8b5cf6;
+                            bottom: -10%;
+                            right: -10%;
+                            animation-delay: -5s;
+                        }
+                        
+                        @keyframes float {
+                            0% { transform: translate(0, 0) scale(1); }
+                            100% { transform: translate(20px, 40px) scale(1.1); }
+                        }
+                        
+                        @keyframes fadeIn {
+                            from { opacity: 0; transform: translateY(20px); }
+                            to { opacity: 1; transform: translateY(0); }
+                        }
+                        
+                        .card { 
+                            background: rgba(20, 20, 20, 0.6);
+                            backdrop-filter: blur(20px);
+                            padding: 3rem 2.5rem;
+                            border-radius: 20px;
+                            border: 1px solid rgba(255,255,255,0.1);
+                            max-width: 90%;
+                            width: 450px;
+                            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+                            animation: fadeIn 0.6s ease-out;
+                            position: relative;
+                            z-index: 1;
+                        }
+                        
+                        .icon {
+                            font-size: 4rem;
+                            margin-bottom: 1.5rem;
+                            filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.5));
+                            animation: pulse 2s ease-in-out infinite;
+                        }
+                        
+                        @keyframes pulse {
+                            0%, 100% { opacity: 1; transform: scale(1); }
+                            50% { opacity: 0.8; transform: scale(1.05); }
+                        }
+                        
+                        h1 { 
+                            margin-bottom: 1rem;
+                            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+                            -webkit-background-clip: text;
+                            -webkit-text-fill-color: transparent;
+                            background-clip: text;
+                            font-weight: 700;
+                            font-size: 2rem;
+                            letter-spacing: -0.02em;
+                        }
+                        
+                        p { 
+                            margin-bottom: 2.5rem;
+                            color: #a1a1aa;
+                            font-size: 1.05rem;
+                            line-height: 1.6;
+                        }
+                        
                         button { 
-                            color: #fff; 
-                            font-weight: bold;
-                            text-decoration: none; 
-                            padding: 12px 24px; 
-                            background: #007bff; 
+                            color: #fff;
+                            font-weight: 600;
+                            font-family: inherit;
+                            padding: 14px 32px;
+                            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
                             border: none;
-                            border-radius: 6px; 
+                            border-radius: 10px;
                             font-size: 16px;
                             cursor: pointer;
-                            transition: transform 0.2s;
+                            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+                            width: 100%;
+                            max-width: 250px;
                         }
-                        button:hover { background: #0056b3; }
+                        
+                        button:hover { 
+                            transform: translateY(-2px);
+                            box-shadow: 0 6px 25px rgba(59, 130, 246, 0.5);
+                            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+                        }
+                        
+                        button:active {
+                            transform: translateY(0);
+                        }
+                        
+                        .footer {
+                            margin-top: 2rem;
+                            font-size: 0.85rem;
+                            color: #71717a;
+                        }
                     </style>
                 </head>
                 <body>
+                    <div class="bg-mesh"></div>
                     <div class="card">
-                        <h1>🔐 Authenticate</h1>
-                        <p>Access to this server is restricted.</p>
+                        <div class="icon">🔐</div>
+                        <h1>Secure Access Required</h1>
+                        <p>This server requires authentication.<br>Please log in to continue.</p>
                         <button onclick="location.reload()">Login</button>
+                        <div class="footer">ShareCLI v2.0</div>
                     </div>
                 </body>
                 </html>
