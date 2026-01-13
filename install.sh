@@ -19,11 +19,23 @@ if ! command -v python3 &> /dev/null; then
     exit 1
 fi
 
-# 2. Clone or Update Repository
+# 2. Check if git is installed
+if ! command -v git &> /dev/null; then
+    echo -e "${RED}❌ Git is required but not found. Please install git first.${NC}"
+    exit 1
+fi
+
+# 3. Clone or Update Repository
 if [ -d "$INSTALL_DIR/.git" ]; then
     echo -e "${BLUE}🔄 Updating existing installation in $INSTALL_DIR...${NC}"
-    cd "$INSTALL_DIR"
-    git pull origin $BRANCH >/dev/null 2>&1
+    cd "$INSTALL_DIR" || {
+        echo -e "${RED}❌ Failed to access $INSTALL_DIR${NC}"
+        exit 1
+    }
+    if ! git pull origin $BRANCH > /dev/null 2>&1; then
+        echo -e "${RED}❌ Failed to update repository${NC}"
+        exit 1
+    fi
 else
     # Check if we are already IN the repo directory (ran locally)
     if [ -f "src/server.py" ]; then
@@ -31,12 +43,19 @@ else
         echo -e "${GREEN}✓ Running from local directory: $INSTALL_DIR${NC}"
     else
         echo -e "${BLUE}⬇️ Cloning repository to $INSTALL_DIR...${NC}"
-        git clone -b $BRANCH $REPO_URL "$INSTALL_DIR" >/dev/null 2>&1
-        cd "$INSTALL_DIR"
+        if ! git clone -b $BRANCH $REPO_URL "$INSTALL_DIR"; then
+            echo -e "${RED}❌ Failed to clone repository from $REPO_URL${NC}"
+            echo -e "${RED}   Please check your internet connection and try again.${NC}"
+            exit 1
+        fi
+        cd "$INSTALL_DIR" || {
+            echo -e "${RED}❌ Failed to access $INSTALL_DIR after cloning${NC}"
+            exit 1
+        }
     fi
 fi
 
-# 3. Install Package (enables 'sharecli' command)
+# 4. Install Package (enables 'sharecli' command)
 echo -e "${BLUE}📦 Installing application...${NC}"
 PIP_CMD="pip3"
 if ! command -v pip3 &> /dev/null; then
@@ -50,7 +69,7 @@ echo ""
 echo -e "\n${GREEN}✓ Installation complete!${NC}"
 echo ""
 
-# Save install path to config for future updates
+# 5. Save install path to config for future updates
 INSTALL_DIR="$(pwd)"
 CONFIG_FILE="$HOME/.sharecli_config.json"
 
