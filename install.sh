@@ -24,6 +24,7 @@ if ! command -v git &> /dev/null; then
     echo -e "${RED}❌ Git is required but not found. Please install git first.${NC}"
     exit 1
 fi
+echo -e "${GREEN}✓ Git found: $(git --version)${NC}"
 
 # 3. Clone or Update Repository
 if [ -d "$INSTALL_DIR/.git" ]; then
@@ -43,11 +44,27 @@ else
         echo -e "${GREEN}✓ Running from local directory: $INSTALL_DIR${NC}"
     else
         echo -e "${BLUE}⬇️ Cloning repository to $INSTALL_DIR...${NC}"
-        if ! git clone -b $BRANCH $REPO_URL "$INSTALL_DIR"; then
+        
+        # Attempt to clone and capture the result
+        if git clone -b $BRANCH $REPO_URL "$INSTALL_DIR" 2>&1; then
+            echo -e "${GREEN}✓ Repository cloned successfully${NC}"
+        else
+            CLONE_EXIT_CODE=$?
             echo -e "${RED}❌ Failed to clone repository from $REPO_URL${NC}"
-            echo -e "${RED}   Please check your internet connection and try again.${NC}"
+            echo -e "${RED}   Exit code: $CLONE_EXIT_CODE${NC}"
+            echo -e "${RED}   Please check:${NC}"
+            echo -e "${RED}   - Your internet connection${NC}"
+            echo -e "${RED}   - Git is properly installed (try: git --version)${NC}"
+            echo -e "${RED}   - You have access to GitHub${NC}"
             exit 1
         fi
+        
+        # Verify the directory was created
+        if [ ! -d "$INSTALL_DIR" ]; then
+            echo -e "${RED}❌ Clone appeared to succeed but directory $INSTALL_DIR was not created${NC}"
+            exit 1
+        fi
+        
         cd "$INSTALL_DIR" || {
             echo -e "${RED}❌ Failed to access $INSTALL_DIR after cloning${NC}"
             exit 1
