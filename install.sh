@@ -74,16 +74,60 @@ fi
 
 # 4. Install Package (enables 'sharecli' command)
 echo -e "${BLUE}📦 Installing application...${NC}"
-PIP_CMD="pip3"
-if ! command -v pip3 &> /dev/null; then
+
+# Check for pip/pip3
+PIP_CMD=""
+if command -v pip3 &> /dev/null; then
+    PIP_CMD="pip3"
+elif command -v pip &> /dev/null; then
     PIP_CMD="pip"
+else
+    echo -e "${RED}❌ pip is not installed. Please install Python pip:${NC}"
+    echo -e "${RED}   sudo apt install python3-pip${NC}"
+    exit 1
 fi
 
-# Install the current directory as a package
-$PIP_CMD install . --break-system-packages > /dev/null 2>&1 || $PIP_CMD install . > /dev/null 2>&1
+echo -e "${BLUE}Using: $PIP_CMD install${NC}"
+
+# Try to install with --break-system-packages (for newer systems), fallback to regular install
+if $PIP_CMD install . --break-system-packages 2>&1 | tee /tmp/sharecli_install.log; then
+    echo -e "${GREEN}✓ Package installed successfully${NC}"
+elif $PIP_CMD install . 2>&1 | tee /tmp/sharecli_install.log; then
+    echo -e "${GREEN}✓ Package installed successfully${NC}"
+else
+    echo -e "${RED}❌ Failed to install package${NC}"
+    echo -e "${RED}Installation log saved to: /tmp/sharecli_install.log${NC}"
+    exit 1
+fi
+
+# Detect where the script was installed
+USER_BIN="$HOME/.local/bin"
+if [ -d "$USER_BIN" ] && [ -f "$USER_BIN/sharecli" ]; then
+    SCRIPT_LOCATION="$USER_BIN/sharecli"
+else
+    # Try to find it
+    SCRIPT_LOCATION=$(which sharecli 2>/dev/null || find ~/.local/bin /usr/local/bin -name "sharecli" 2>/dev/null | head -n 1)
+fi
 
 echo ""
-echo -e "\n${GREEN}✓ Installation complete!${NC}"
+echo -e "${GREEN}✓ Installation complete!${NC}"
+echo ""
+
+# Check if sharecli is in PATH
+if command -v sharecli &> /dev/null; then
+    echo -e "${GREEN}✓ 'sharecli' command is ready to use!${NC}"
+else
+    echo -e "${BLUE}⚠️  The 'sharecli' command is not in your PATH${NC}"
+    if [ -n "$SCRIPT_LOCATION" ]; then
+        echo -e "${BLUE}   Script installed at: $SCRIPT_LOCATION${NC}"
+    fi
+    echo -e "${BLUE}   Add this to your ~/.bashrc or ~/.zshrc:${NC}"
+    echo -e "${GREEN}   export PATH=\"\$HOME/.local/bin:\$PATH\"${NC}"
+    echo ""
+    echo -e "${BLUE}   Then run: ${GREEN}source ~/.bashrc${NC} ${BLUE}(or logout and login)${NC}"
+    echo ""
+    echo -e "${BLUE}   Or run directly: ${GREEN}$HOME/.local/bin/sharecli${NC}"
+fi
 echo ""
 
 # 5. Save install path to config for future updates
