@@ -19,12 +19,49 @@ if ! command -v python3 &> /dev/null; then
     exit 1
 fi
 
-# 2. Check if git is installed
+# 2. Check if git is installed, auto-install if missing
 if ! command -v git &> /dev/null; then
-    echo -e "${RED}❌ Git is required but not found. Please install git first.${NC}"
-    exit 1
+    echo -e "${BLUE}📥 Git not found. Installing git...${NC}"
+    if command -v apt &> /dev/null; then
+        sudo apt update && sudo apt install git -y
+    elif command -v yum &> /dev/null; then
+        sudo yum install git -y
+    elif command -v dnf &> /dev/null; then
+        sudo dnf install git -y
+    else
+        echo -e "${RED}❌ Could not auto-install git. Please install git manually.${NC}"
+        exit 1
+    fi
+    
+    # Verify installation
+    if ! command -v git &> /dev/null; then
+        echo -e "${RED}❌ Git installation failed.${NC}"
+        exit 1
+    fi
 fi
 echo -e "${GREEN}✓ Git found: $(git --version)${NC}"
+
+# 2.5. Check if pip is installed, auto-install if missing
+if ! command -v pip3 &> /dev/null && ! command -v pip &> /dev/null; then
+    echo -e "${BLUE}📥 pip not found. Installing python3-pip...${NC}"
+    if command -v apt &> /dev/null; then
+        sudo apt install python3-pip -y
+    elif command -v yum &> /dev/null; then
+        sudo yum install python3-pip -y
+    elif command -v dnf &> /dev/null; then
+        sudo dnf install python3-pip -y
+    else
+        echo -e "${RED}❌ Could not auto-install pip. Please install python3-pip manually.${NC}"
+        exit 1
+    fi
+    
+    # Verify installation
+    if ! command -v pip3 &> /dev/null && ! command -v pip &> /dev/null; then
+        echo -e "${RED}❌ pip installation failed.${NC}"
+        exit 1
+    fi
+fi
+echo -e "${GREEN}✓ pip found${NC}"
 
 # 3. Clone or Update Repository
 if [ -d "$INSTALL_DIR/.git" ]; then
