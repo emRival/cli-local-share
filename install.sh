@@ -90,13 +90,26 @@ fi
 echo -e "${BLUE}Using: $PIP_CMD install${NC}"
 
 # Try to install with --break-system-packages (for newer systems), fallback to regular install
-if $PIP_CMD install . --break-system-packages 2>&1 | tee /tmp/sharecli_install.log; then
-    echo -e "${GREEN}✓ Package installed successfully${NC}"
-elif $PIP_CMD install . 2>&1 | tee /tmp/sharecli_install.log; then
+echo -e "${BLUE}Attempting installation with --break-system-packages...${NC}"
+$PIP_CMD install . --break-system-packages 2>&1 | tee /tmp/sharecli_install.log
+INSTALL_STATUS=${PIPESTATUS[0]}
+
+if [ $INSTALL_STATUS -ne 0 ]; then
+    echo -e "${BLUE}Retrying without --break-system-packages...${NC}"
+    $PIP_CMD install . 2>&1 | tee /tmp/sharecli_install.log
+    INSTALL_STATUS=${PIPESTATUS[0]}
+fi
+
+if [ $INSTALL_STATUS -eq 0 ]; then
     echo -e "${GREEN}✓ Package installed successfully${NC}"
 else
-    echo -e "${RED}❌ Failed to install package${NC}"
+    echo -e "${RED}❌ Failed to install package (exit code: $INSTALL_STATUS)${NC}"
     echo -e "${RED}Installation log saved to: /tmp/sharecli_install.log${NC}"
+    echo ""
+    echo -e "${RED}Common issues:${NC}"
+    echo -e "${RED}  - Missing pip: sudo apt install python3-pip${NC}"
+    echo -e "${RED}  - Permission issues: try adding --user flag${NC}"
+    echo -e "${RED}  - Check the log file for details${NC}"
     exit 1
 fi
 

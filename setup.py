@@ -6,7 +6,9 @@ setup(
     packages=find_packages(),
     install_requires=[
         "rich",
-        "qrcode"
+        "qrcode",
+        "paramiko",
+        "sftpserver",
     ],
     entry_points={
         "console_scripts": [
